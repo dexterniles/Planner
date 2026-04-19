@@ -4,6 +4,14 @@ import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL!;
 
-const client = postgres(connectionString, { prepare: false });
+// Cache the client in globalThis to survive HMR in dev
+const globalForDb = globalThis as unknown as { pgClient: postgres.Sql };
+
+const client =
+  globalForDb.pgClient ?? postgres(connectionString, { prepare: false });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.pgClient = client;
+}
 
 export const db = drizzle(client, { schema });

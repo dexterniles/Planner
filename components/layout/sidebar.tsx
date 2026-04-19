@@ -27,13 +27,13 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r bg-background">
-      <div className="flex h-14 items-center border-b px-4">
-        <Link href="/" className="text-lg font-semibold">
+    <aside className="flex h-full w-64 flex-col border-r bg-sidebar">
+      <div className="flex h-14 items-center border-b border-sidebar-border px-5">
+        <Link href="/" className="text-lg font-semibold tracking-tight text-primary">
           Planner
         </Link>
       </div>
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-0.5 p-3">
         {navItems.map((item) => {
           const isActive =
             item.href === "/"
@@ -44,10 +44,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
                 isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
               )}
             >
               <item.icon className="h-4 w-4" />

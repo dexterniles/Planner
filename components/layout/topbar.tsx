@@ -13,7 +13,7 @@ import { Sidebar } from "./sidebar";
 
 export function Topbar() {
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-background px-4">
+    <header className="flex h-12 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4">
       <Sheet>
         <SheetTrigger
           render={<Button variant="ghost" size="icon" className="md:hidden" />}
