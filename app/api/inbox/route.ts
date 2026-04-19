@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { inboxItems, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createInboxItemSchema } from "@/lib/validations/inbox";
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {

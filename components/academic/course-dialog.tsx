@@ -83,7 +83,7 @@ export function CourseDialog({
   const onSubmit = async (data: CreateCourseInput) => {
     try {
       if (isEditing) {
-        const { workspaceId: _, ...updateData } = data;
+        const { workspaceId: _omitted, ...updateData } = data;
         await updateCourse.mutateAsync({ id: course.id, data: updateData });
         toast.success("Course updated");
       } else {

@@ -109,7 +109,7 @@ export function ProjectDialog({
   const onSubmit = async (data: CreateProjectInput) => {
     try {
       if (isEditing) {
-        const { workspaceId: _, ...updateData } = data;
+        const { workspaceId: _omitted, ...updateData } = data;
         await updateProject.mutateAsync({ id: project.id, data: updateData });
         toast.success("Project updated");
       } else {

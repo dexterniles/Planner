@@ -9,7 +9,6 @@ import {
   date,
   jsonb,
   pgEnum,
-  pgView,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";

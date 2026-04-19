@@ -103,7 +103,7 @@ export function AssignmentDialog({
   const onSubmit = async (data: CreateAssignmentInput) => {
     try {
       if (isEditing) {
-        const { courseId: _, ...updateData } = data;
+        const { courseId: _omitted, ...updateData } = data;
         await updateAssignment.mutateAsync({
           id: assignment.id,
           data: updateData,

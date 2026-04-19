@@ -65,7 +65,7 @@ export function MilestoneDialog({
   const onSubmit = async (data: CreateMilestoneInput) => {
     try {
       if (isEditing) {
-        const { projectId: _, ...updateData } = data;
+        const { projectId: _omitted, ...updateData } = data;
         await updateMilestone.mutateAsync({
           id: milestone.id,
           data: updateData,

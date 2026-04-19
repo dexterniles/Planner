@@ -15,7 +15,6 @@ import {
 import { useAssignments, useDeleteAssignment } from "@/lib/hooks/use-assignments";
 import { useGradeCategories } from "@/lib/hooks/use-grade-categories";
 import { AssignmentDialog } from "./assignment-dialog";
-import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toast } from "sonner";
 
 interface AssignmentListProps {

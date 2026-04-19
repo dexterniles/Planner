@@ -101,7 +101,7 @@ export function TaskDialog({
   const onSubmit = async (data: CreateTaskInput) => {
     try {
       if (isEditing) {
-        const { projectId: _, ...updateData } = data;
+        const { projectId: _omitted, ...updateData } = data;
         await updateTask.mutateAsync({ id: task.id, data: updateData });
         toast.success("Task updated");
       } else {

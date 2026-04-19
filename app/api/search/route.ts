@@ -6,7 +6,7 @@ import {
   tasks,
   SINGLE_USER_ID,
 } from "@/lib/db/schema";
-import { eq, ilike, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -16,8 +16,6 @@ export async function GET(request: Request) {
   if (!q || q.length < 2) {
     return NextResponse.json([]);
   }
-
-  const pattern = `%${q}%`;
 
   const [courseResults, projectResults, assignmentResults, taskResults] =
     await Promise.all([

@@ -63,7 +63,7 @@ export function GradeCategoryDialog({
   const onSubmit = async (data: CreateGradeCategoryInput) => {
     try {
       if (isEditing) {
-        const { courseId: _, ...updateData } = data;
+        const { courseId: _omitted, ...updateData } = data;
         await updateCategory.mutateAsync({ id: category.id, data: updateData });
         toast.success("Category updated");
       } else {

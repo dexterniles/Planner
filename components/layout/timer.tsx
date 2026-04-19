@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Play, Square, Timer, Clock, Pause } from "lucide-react";
+import { Play, Square, Timer, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -44,7 +44,6 @@ export function ActiveTimer() {
         setPomodoroRemaining(remaining);
 
         if (remaining <= 0) {
-          // Auto-notify when Pomodoro is done
           setPomodoroRemaining(0);
         }
       } else {

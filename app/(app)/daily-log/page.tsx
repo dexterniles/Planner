@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,8 +34,12 @@ export default function DailyLogPage() {
 
   const { data: log, isLoading } = useDailyLog(selectedDate);
   const upsertLog = useUpsertDailyLog();
+  const lastSyncedRef = useRef<string | null>(null);
 
-  useEffect(() => {
+  // Sync from server data without useEffect setState
+  const logKey = log?.id ?? `empty-${selectedDate}`;
+  if (lastSyncedRef.current !== logKey) {
+    lastSyncedRef.current = logKey;
     if (log) {
       setContent(log.content ?? "");
       setMood(log.mood ?? "");
@@ -44,7 +48,7 @@ export default function DailyLogPage() {
       setMood("");
     }
     setIsDirty(false);
-  }, [log, isLoading]);
+  }
 
   const handleSave = useCallback(async () => {
     try {
