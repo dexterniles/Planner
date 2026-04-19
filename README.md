@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Planner
 
-## Getting Started
+A personal, single-user webapp for tracking academic coursework and side projects in one place.
 
-First, run the development server:
+## Prerequisites
+
+- **Node.js 22 LTS** (recommended via [nvm](https://github.com/nvm-sh/nvm))
+- **Supabase** account with a project created ([supabase.com](https://supabase.com))
+- **Vercel** account (for deployment, optional for local dev)
+
+## Local Setup
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Copy the example env file and fill in your values:
+
+```bash
+cp .env.example .env.local
+```
+
+**Where to find these values in the Supabase dashboard:**
+
+| Variable | Location |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Settings → API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Settings → API → Project API keys → `anon` `public` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Settings → API → Project API keys → `service_role` (keep secret) |
+| `DATABASE_URL` | Settings → Database → Connection string → URI (use the "Transaction" pooler for Vercel/serverless) |
+
+### 3. Run database migrations
+
+Generate and run migrations against your Supabase database:
+
+```bash
+npm run db:generate
+npm run db:migrate
+```
+
+### 4. Seed the database
+
+Creates starter "Academic" and "Projects" workspaces:
+
+```bash
+npm run db:seed
+```
+
+### 5. Start the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 6. Verify database connectivity
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+curl http://localhost:3000/api/health
+# Should return: {"status":"ok","db":"connected"}
+```
 
-## Learn More
+## Deploy to Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Push your repo to GitHub
+2. Import the repo in Vercel
+3. Add the four environment variables from `.env.example` to Vercel's project settings
+4. Deploy — Vercel auto-builds on push
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/
+  (app)/              ← Main app layout with sidebar + topbar
+    page.tsx           ← Dashboard (today view placeholder)
+    calendar/          ← Calendar placeholder
+    items/             ← All items placeholder
+    academic/          ← Academic placeholder
+    projects/          ← Projects placeholder
+    daily-log/         ← Daily log placeholder
+    settings/          ← Settings placeholder
+  api/health/          ← DB connectivity check
+  layout.tsx           ← Root layout with providers
+components/
+  layout/              ← Sidebar, topbar, theme toggle
+  providers.tsx        ← TanStack Query + next-themes
+  ui/                  ← shadcn/ui components
+lib/
+  db/
+    schema.ts          ← Full Drizzle schema (all tables)
+    index.ts           ← DB client
+    migrations/        ← Generated Drizzle migrations
+  supabase/
+    client.ts          ← Supabase browser client
+  utils.ts             ← Utility functions (cn helper)
+scripts/
+  seed.ts              ← Database seed script
+```
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Next.js 15** (App Router, TypeScript, strict mode)
+- **Tailwind CSS v4** with dark mode (class strategy)
+- **shadcn/ui** component library
+- **Supabase** (Postgres database)
+- **Drizzle ORM** (type-safe queries, generate + migrate workflow)
+- **TanStack Query** (client-side data fetching)
+- **react-hook-form + Zod** (forms and validation)
+- **next-themes** (dark/light/system theme)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Phase Roadmap
+
+- **Phase 1: Foundation** — current
+  - Project scaffolding, full DB schema, layout shell, dark mode, deploy pipeline
+- **Phase 2: Academic Tracking**
+  - Course CRUD, assignment management, grade calculator
+- **Phase 3: Project Tracking**
+  - Project CRUD, task management, milestones
+- **Phase 4: Cross-cutting Features**
+  - Calendar view, daily log, notes, resources, tags, inbox
+- **Phase 5: Productivity**
+  - Time tracking, Pomodoro timer, search palette
+- **Phase 6: Polish**
+  - Mobile optimization, data export, recurring items

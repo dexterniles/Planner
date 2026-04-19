@@ -1,0 +1,440 @@
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  integer,
+  decimal,
+  boolean,
+  date,
+  jsonb,
+  pgEnum,
+  pgView,
+  index,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+
+// ─── Hardcoded single-user ID ───────────────────────────────────────────────
+export const SINGLE_USER_ID = "00000000-0000-0000-0000-000000000001";
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+export const workspaceTypeEnum = pgEnum("workspace_type", [
+  "academic",
+  "projects",
+  "custom",
+]);
+
+export const courseStatusEnum = pgEnum("course_status", [
+  "active",
+  "completed",
+  "dropped",
+  "planned",
+]);
+
+export const assignmentStatusEnum = pgEnum("assignment_status", [
+  "not_started",
+  "in_progress",
+  "submitted",
+  "graded",
+]);
+
+export const projectStatusEnum = pgEnum("project_status", [
+  "planning",
+  "active",
+  "paused",
+  "done",
+]);
+
+export const priorityEnum = pgEnum("priority", [
+  "low",
+  "medium",
+  "high",
+  "urgent",
+]);
+
+export const taskStatusEnum = pgEnum("task_status", [
+  "not_started",
+  "in_progress",
+  "done",
+  "cancelled",
+]);
+
+export const noteParentTypeEnum = pgEnum("note_parent_type", [
+  "course",
+  "project",
+  "assignment",
+  "task",
+  "session",
+  "daily_log",
+  "standalone",
+]);
+
+export const resourceParentTypeEnum = pgEnum("resource_parent_type", [
+  "course",
+  "project",
+  "assignment",
+  "task",
+]);
+
+export const resourceTypeEnum = pgEnum("resource_type", [
+  "link",
+  "file",
+  "book_reference",
+]);
+
+export const recurrenceOwnerTypeEnum = pgEnum("recurrence_owner_type", [
+  "assignment",
+  "task",
+]);
+
+export const recurrenceFrequencyEnum = pgEnum("recurrence_frequency", [
+  "daily",
+  "weekly",
+  "biweekly",
+  "monthly",
+  "custom",
+]);
+
+export const timeLogParentTypeEnum = pgEnum("time_log_parent_type", [
+  "course",
+  "project",
+  "assignment",
+  "task",
+]);
+
+// ─── Helper: common timestamp columns ───────────────────────────────────────
+const timestamps = {
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+};
+
+// ─── Tables ─────────────────────────────────────────────────────────────────
+
+export const workspaces = pgTable(
+  "workspaces",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    type: workspaceTypeEnum("type").notNull(),
+    color: text("color"),
+    icon: text("icon"),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("workspaces_user_id_idx").on(table.userId)],
+);
+
+export const courses = pgTable(
+  "courses",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .references(() => workspaces.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    code: text("code"),
+    instructor: text("instructor"),
+    semester: text("semester"),
+    credits: integer("credits"),
+    meetingSchedule: jsonb("meeting_schedule"),
+    syllabusFilePath: text("syllabus_file_path"),
+    color: text("color"),
+    status: courseStatusEnum("status").default("active").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("courses_user_id_idx").on(table.userId),
+    index("courses_workspace_id_idx").on(table.workspaceId),
+  ],
+);
+
+export const gradeCategories = pgTable("grade_categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  courseId: uuid("course_id")
+    .references(() => courses.id, { onDelete: "cascade" })
+    .notNull(),
+  name: text("name").notNull(),
+  weight: decimal("weight", { precision: 5, scale: 2 }).notNull(),
+  dropLowestN: integer("drop_lowest_n").default(0).notNull(),
+});
+
+export const recurrenceRules = pgTable("recurrence_rules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  ownerType: recurrenceOwnerTypeEnum("owner_type").notNull(),
+  ownerId: uuid("owner_id").notNull(),
+  frequency: recurrenceFrequencyEnum("frequency").notNull(),
+  interval: integer("interval").default(1).notNull(),
+  daysOfWeek: integer("days_of_week").array(),
+  endDate: date("end_date"),
+  count: integer("count"),
+  ...timestamps,
+});
+
+export const assignments = pgTable(
+  "assignments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    courseId: uuid("course_id")
+      .references(() => courses.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    dueDate: timestamp("due_date", { withTimezone: true }),
+    categoryId: uuid("category_id").references(() => gradeCategories.id, {
+      onDelete: "set null",
+    }),
+    status: assignmentStatusEnum("status").default("not_started").notNull(),
+    pointsEarned: decimal("points_earned", { precision: 7, scale: 2 }),
+    pointsPossible: decimal("points_possible", { precision: 7, scale: 2 }),
+    notes: text("notes"),
+    recurrenceRuleId: uuid("recurrence_rule_id").references(
+      () => recurrenceRules.id,
+      { onDelete: "set null" },
+    ),
+    ...timestamps,
+  },
+  (table) => [
+    index("assignments_user_id_idx").on(table.userId),
+    index("assignments_due_date_idx").on(table.dueDate),
+  ],
+);
+
+export const projects = pgTable(
+  "projects",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .references(() => workspaces.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    goal: text("goal"),
+    status: projectStatusEnum("status").default("planning").notNull(),
+    priority: priorityEnum("priority").default("medium").notNull(),
+    startDate: date("start_date"),
+    targetDate: date("target_date"),
+    color: text("color"),
+    ...timestamps,
+  },
+  (table) => [
+    index("projects_user_id_idx").on(table.userId),
+    index("projects_workspace_id_idx").on(table.workspaceId),
+  ],
+);
+
+export const tasks = pgTable(
+  "tasks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .references(() => projects.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    dueDate: timestamp("due_date", { withTimezone: true }),
+    status: taskStatusEnum("status").default("not_started").notNull(),
+    priority: priorityEnum("priority").default("medium").notNull(),
+    parentTaskId: uuid("parent_task_id"),
+    notes: text("notes"),
+    recurrenceRuleId: uuid("recurrence_rule_id").references(
+      () => recurrenceRules.id,
+      { onDelete: "set null" },
+    ),
+    ...timestamps,
+  },
+  (table) => [
+    index("tasks_user_id_idx").on(table.userId),
+    index("tasks_due_date_idx").on(table.dueDate),
+  ],
+);
+
+export const milestones = pgTable("milestones", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id")
+    .references(() => projects.id, { onDelete: "cascade" })
+    .notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  targetDate: date("target_date"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  ...timestamps,
+});
+
+export const notes = pgTable(
+  "notes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    parentType: noteParentTypeEnum("parent_type").notNull(),
+    parentId: uuid("parent_id"),
+    title: text("title"),
+    content: text("content"),
+    sessionDate: date("session_date"),
+    ...timestamps,
+  },
+  (table) => [
+    index("notes_user_id_idx").on(table.userId),
+    index("notes_parent_idx").on(table.parentType, table.parentId),
+  ],
+);
+
+export const resources = pgTable(
+  "resources",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    parentType: resourceParentTypeEnum("parent_type").notNull(),
+    parentId: uuid("parent_id").notNull(),
+    type: resourceTypeEnum("type").notNull(),
+    title: text("title").notNull(),
+    url: text("url"),
+    filePath: text("file_path"),
+    metadata: jsonb("metadata"),
+    ...timestamps,
+  },
+  (table) => [
+    index("resources_user_id_idx").on(table.userId),
+    index("resources_parent_idx").on(table.parentType, table.parentId),
+  ],
+);
+
+export const tags = pgTable(
+  "tags",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    color: text("color"),
+    ...timestamps,
+  },
+  (table) => [
+    index("tags_user_id_idx").on(table.userId),
+    uniqueIndex("tags_user_id_name_idx").on(table.userId, table.name),
+  ],
+);
+
+export const taggings = pgTable(
+  "taggings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tagId: uuid("tag_id")
+      .references(() => tags.id, { onDelete: "cascade" })
+      .notNull(),
+    taggableType: text("taggable_type").notNull(),
+    taggableId: uuid("taggable_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index("taggings_parent_idx").on(table.taggableType, table.taggableId),
+  ],
+);
+
+export const dailyLogs = pgTable(
+  "daily_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    logDate: date("log_date").notNull(),
+    content: text("content"),
+    mood: text("mood"),
+    ...timestamps,
+  },
+  (table) => [
+    index("daily_logs_user_id_idx").on(table.userId),
+    uniqueIndex("daily_logs_user_id_log_date_idx").on(
+      table.userId,
+      table.logDate,
+    ),
+  ],
+);
+
+export const inboxItems = pgTable(
+  "inbox_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    content: text("content").notNull(),
+    capturedAt: timestamp("captured_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    triagedAt: timestamp("triaged_at", { withTimezone: true }),
+    resultingItemType: text("resulting_item_type"),
+    resultingItemId: uuid("resulting_item_id"),
+  },
+  (table) => [index("inbox_items_user_id_idx").on(table.userId)],
+);
+
+export const timeLogs = pgTable(
+  "time_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    loggableType: timeLogParentTypeEnum("loggable_type").notNull(),
+    loggableId: uuid("loggable_id").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    endedAt: timestamp("ended_at", { withTimezone: true }),
+    durationSeconds: integer("duration_seconds"),
+    wasPomodoro: boolean("was_pomodoro").default(false).notNull(),
+    pomodoroIntervalMinutes: integer("pomodoro_interval_minutes"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [index("time_logs_user_id_idx").on(table.userId)],
+);
+
+// ─── Calendar Items View ────────────────────────────────────────────────────
+// Defined as raw SQL to avoid TypeScript UNION type mismatches across enums.
+// Drizzle will not manage this view — we create it via a custom migration.
+export const calendarItemsSQL = sql`
+  CREATE OR REPLACE VIEW calendar_items AS
+  SELECT
+    'assignment' AS source_type,
+    a.id AS source_id,
+    a.user_id,
+    c.workspace_id,
+    a.title,
+    a.due_date,
+    a.status::text AS status,
+    c.color
+  FROM assignments a
+  INNER JOIN courses c ON a.course_id = c.id
+  UNION ALL
+  SELECT
+    'task' AS source_type,
+    t.id AS source_id,
+    t.user_id,
+    p.workspace_id,
+    t.title,
+    t.due_date,
+    t.status::text AS status,
+    p.color
+  FROM tasks t
+  INNER JOIN projects p ON t.project_id = p.id
+  UNION ALL
+  SELECT
+    'milestone' AS source_type,
+    m.id AS source_id,
+    p.user_id,
+    p.workspace_id,
+    m.title,
+    m.target_date::timestamptz AS due_date,
+    CASE WHEN m.completed_at IS NOT NULL THEN 'done' ELSE 'pending' END AS status,
+    p.color
+  FROM milestones m
+  INNER JOIN projects p ON m.project_id = p.id
+`;
