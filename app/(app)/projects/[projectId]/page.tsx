@@ -9,6 +9,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useProject } from "@/lib/hooks/use-projects";
 import { TaskList } from "@/components/projects/task-list";
 import { MilestoneList } from "@/components/projects/milestone-list";
+import { TimerStartButton } from "@/components/layout/timer";
+import { TimeLogHistory } from "@/components/time-log-history";
 
 const statusLabels: Record<string, string> = {
   planning: "Planning",
@@ -69,15 +71,16 @@ export default function ProjectDetailPage({
           </Button>
         </Link>
         <div className="flex-1">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <div
-              className="h-3 w-3 rounded-full"
+              className="h-3 w-3 rounded-full shrink-0"
               style={{ backgroundColor: project.color ?? "#8B5CF6" }}
             />
-            <h1 className="text-2xl font-bold">{project.name}</h1>
+            <h1 className="text-xl md:text-2xl font-bold">{project.name}</h1>
             <Badge variant="secondary">
               {statusLabels[project.status] ?? project.status}
             </Badge>
+            <TimerStartButton loggableType="project" loggableId={projectId} />
             <span
               className={`text-sm font-medium ${priorityColors[project.priority] ?? ""}`}
             >
@@ -107,6 +110,7 @@ export default function ProjectDetailPage({
         <TabsList>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="milestones">Milestones</TabsTrigger>
+          <TabsTrigger value="time">Time Log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tasks" className="mt-4">
@@ -115,6 +119,10 @@ export default function ProjectDetailPage({
 
         <TabsContent value="milestones" className="mt-4">
           <MilestoneList projectId={projectId} />
+        </TabsContent>
+
+        <TabsContent value="time" className="mt-4">
+          <TimeLogHistory loggableType="project" loggableId={projectId} />
         </TabsContent>
       </Tabs>
     </div>

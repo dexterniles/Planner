@@ -1,0 +1,202 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { Play, Square, Timer, Clock, Pause } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  useActiveTimer,
+  useStartTimer,
+  useStopTimer,
+} from "@/lib/hooks/use-time-logs";
+import { toast } from "sonner";
+
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+export function ActiveTimer() {
+  const { data: activeLog } = useActiveTimer();
+  const stopTimer = useStopTimer();
+  const [elapsed, setElapsed] = useState(0);
+  const [pomodoroRemaining, setPomodoroRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!activeLog) {
+      setElapsed(0);
+      setPomodoroRemaining(null);
+      return;
+    }
+
+    const update = () => {
+      const started = new Date(activeLog.startedAt).getTime();
+      const now = Date.now();
+      const secs = Math.floor((now - started) / 1000);
+      setElapsed(secs);
+
+      if (activeLog.wasPomodoro && activeLog.pomodoroIntervalMinutes) {
+        const target = activeLog.pomodoroIntervalMinutes * 60;
+        const remaining = target - secs;
+        setPomodoroRemaining(remaining);
+
+        if (remaining <= 0) {
+          // Auto-notify when Pomodoro is done
+          setPomodoroRemaining(0);
+        }
+      } else {
+        setPomodoroRemaining(null);
+      }
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [activeLog]);
+
+  const handleStop = useCallback(async () => {
+    if (!activeLog) return;
+    try {
+      await stopTimer.mutateAsync({ id: activeLog.id });
+      toast.success(`Timer stopped — ${formatDuration(elapsed)}`);
+    } catch {
+      toast.error("Failed to stop timer");
+    }
+  }, [activeLog, stopTimer, elapsed]);
+
+  // Auto-stop when Pomodoro finishes
+  useEffect(() => {
+    if (pomodoroRemaining !== null && pomodoroRemaining <= 0 && activeLog) {
+      toast.success("Pomodoro complete!", { duration: 5000 });
+      stopTimer.mutate({ id: activeLog.id });
+    }
+  }, [pomodoroRemaining, activeLog, stopTimer]);
+
+  if (!activeLog) return null;
+
+  const isPomodoro = activeLog.wasPomodoro && activeLog.pomodoroIntervalMinutes;
+  const displayTime = isPomodoro && pomodoroRemaining !== null && pomodoroRemaining > 0
+    ? formatDuration(pomodoroRemaining)
+    : formatDuration(elapsed);
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5">
+        {isPomodoro ? (
+          <Timer className="h-3.5 w-3.5 text-primary animate-pulse" />
+        ) : (
+          <Clock className="h-3.5 w-3.5 text-primary" />
+        )}
+        <span className="text-sm font-mono font-medium tabular-nums">
+          {displayTime}
+        </span>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        onClick={handleStop}
+        title="Stop timer"
+        className="text-destructive"
+      >
+        <Square className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+interface TimerStartButtonProps {
+  loggableType: "course" | "project" | "assignment" | "task";
+  loggableId: string;
+  label?: string;
+  size?: "sm" | "default";
+}
+
+export function TimerStartButton({
+  loggableType,
+  loggableId,
+  label,
+  size = "sm",
+}: TimerStartButtonProps) {
+  const { data: activeLog } = useActiveTimer();
+  const startTimer = useStartTimer();
+  const stopTimer = useStopTimer();
+  const [showOptions, setShowOptions] = useState(false);
+
+  const isRunningHere =
+    activeLog &&
+    activeLog.loggableType === loggableType &&
+    activeLog.loggableId === loggableId;
+
+  const handleStart = async (pomodoro: boolean) => {
+    try {
+      await startTimer.mutateAsync({
+        loggableType,
+        loggableId,
+        wasPomodoro: pomodoro,
+        pomodoroIntervalMinutes: pomodoro ? 25 : null,
+      });
+      setShowOptions(false);
+      toast.success(pomodoro ? "Pomodoro started (25 min)" : "Timer started");
+    } catch {
+      toast.error("Failed to start timer");
+    }
+  };
+
+  const handleStop = async () => {
+    if (!activeLog) return;
+    try {
+      await stopTimer.mutateAsync({ id: activeLog.id });
+      toast.success("Timer stopped");
+    } catch {
+      toast.error("Failed to stop timer");
+    }
+  };
+
+  if (isRunningHere) {
+    return (
+      <Button
+        variant="destructive"
+        size={size}
+        onClick={handleStop}
+      >
+        <Square className="mr-1.5 h-3.5 w-3.5" />
+        Stop
+      </Button>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <Button
+        variant="outline"
+        size={size}
+        onClick={() => setShowOptions(!showOptions)}
+        disabled={startTimer.isPending}
+      >
+        <Play className="mr-1.5 h-3.5 w-3.5" />
+        {label ?? "Timer"}
+      </Button>
+      {showOptions && (
+        <Card className="absolute right-0 top-full z-50 mt-1 w-44 p-1.5 space-y-0.5">
+          <button
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+            onClick={() => handleStart(false)}
+          >
+            <Clock className="h-3.5 w-3.5" />
+            Stopwatch
+          </button>
+          <button
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+            onClick={() => handleStart(true)}
+          >
+            <Timer className="h-3.5 w-3.5" />
+            Pomodoro (25 min)
+          </button>
+        </Card>
+      )}
+    </div>
+  );
+}

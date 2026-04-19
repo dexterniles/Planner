@@ -77,8 +77,8 @@ export default function ItemsPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">All Items</h1>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="space-y-3">
+        <div className="relative">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search items..."
@@ -88,31 +88,33 @@ export default function ItemsPage() {
           />
         </div>
 
-        <div className="flex gap-1">
-          {typeFilters.map((f) => (
-            <Button
-              key={f}
-              variant={typeFilter === f ? "default" : "outline"}
-              size="sm"
-              onClick={() => setTypeFilter(f)}
-            >
-              {f === "all" ? "All Types" : f === "assignment" ? "Assignments" : "Tasks"}
-            </Button>
-          ))}
-        </div>
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          <div className="flex gap-1 shrink-0">
+            {typeFilters.map((f) => (
+              <Button
+                key={f}
+                variant={typeFilter === f ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTypeFilter(f)}
+              >
+                {f === "all" ? "All Types" : f === "assignment" ? "Assignments" : "Tasks"}
+              </Button>
+            ))}
+          </div>
 
-        <div className="flex gap-1">
-          {statusFilters.map((f) => (
-            <Button
-              key={f}
-              variant={statusFilter === f ? "default" : "outline"}
-              size="sm"
-              onClick={() => setStatusFilter(f)}
-              className="text-xs"
-            >
-              {f === "all" ? "All" : statusLabels[f] ?? f}
-            </Button>
-          ))}
+          <div className="flex gap-1 shrink-0">
+            {statusFilters.map((f) => (
+              <Button
+                key={f}
+                variant={statusFilter === f ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter(f)}
+                className="text-xs"
+              >
+                {f === "all" ? "All" : statusLabels[f] ?? f}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -125,7 +127,7 @@ export default function ItemsPage() {
             : "No items match your filters."}
         </p>
       ) : (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

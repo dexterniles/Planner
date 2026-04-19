@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -9,9 +9,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "./theme-toggle";
+import { ActiveTimer } from "./timer";
 import { Sidebar } from "./sidebar";
 
 export function Topbar() {
+  const openSearch = () => {
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", metaKey: true }),
+    );
+  };
+
   return (
     <header className="flex h-12 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4">
       <Sheet>
@@ -26,7 +33,19 @@ export function Topbar() {
           <Sidebar />
         </SheetContent>
       </Sheet>
-      <div className="flex-1" />
+      <div className="flex-1 flex justify-center">
+        <button
+          onClick={openSearch}
+          className="hidden sm:flex w-full max-w-md items-center gap-2 rounded-lg border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span>Search...</span>
+          <kbd className="ml-auto inline-flex h-5 items-center gap-0.5 rounded border bg-background px-1.5 text-[10px] font-medium">
+            &#8984;K
+          </kbd>
+        </button>
+      </div>
+      <ActiveTimer />
       <ThemeToggle />
     </header>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,6 +29,7 @@ interface Task {
   priority: "low" | "medium" | "high" | "urgent";
   parentTaskId: string | null;
   notes: string | null;
+  recurrenceRuleId: string | null;
 }
 
 const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -99,6 +100,9 @@ export function TaskList({ projectId }: TaskListProps) {
             <ChevronRight className="h-3 w-3 text-muted-foreground" />
           )}
           <span className={isSubtask ? "pl-2" : ""}>{task.title}</span>
+          {task.recurrenceRuleId && (
+            <Repeat className="h-3 w-3 text-primary" />
+          )}
         </div>
       </TableCell>
       <TableCell>
@@ -176,7 +180,7 @@ export function TaskList({ projectId }: TaskListProps) {
           No tasks yet. Add one to get started.
         </p>
       ) : (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

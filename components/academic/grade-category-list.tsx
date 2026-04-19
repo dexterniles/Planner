@@ -83,7 +83,7 @@ export function GradeCategoryList({ courseId }: GradeCategoryListProps) {
           No grade categories yet. Add categories to track weighted grades.
         </p>
       ) : (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

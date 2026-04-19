@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,6 +150,33 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+      </div>
+
+      <Separator />
+
+      <div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Data Export</h2>
+          <p className="text-sm text-muted-foreground">
+            Download all your data as JSON (full backup) or CSV (items summary).
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => window.open("/api/export?format=json", "_blank")}
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Export JSON
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => window.open("/api/export?format=csv", "_blank")}
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

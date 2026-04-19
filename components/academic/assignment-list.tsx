@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,6 +15,7 @@ import {
 import { useAssignments, useDeleteAssignment } from "@/lib/hooks/use-assignments";
 import { useGradeCategories } from "@/lib/hooks/use-grade-categories";
 import { AssignmentDialog } from "./assignment-dialog";
+import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toast } from "sonner";
 
 interface AssignmentListProps {
@@ -45,6 +46,7 @@ interface Assignment {
   pointsEarned: string | null;
   pointsPossible: string | null;
   notes: string | null;
+  recurrenceRuleId: string | null;
 }
 
 export function AssignmentList({ courseId }: AssignmentListProps) {
@@ -91,7 +93,7 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
           No assignments yet. Add one to get started.
         </p>
       ) : (
-        <div className="rounded-lg border">
+        <div className="rounded-lg border overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -106,7 +108,14 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
             <TableBody>
               {assignments?.map((a: Assignment) => (
                 <TableRow key={a.id}>
-                  <TableCell className="font-medium">{a.title}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1.5">
+                      {a.title}
+                      {a.recurrenceRuleId && (
+                        <Repeat className="h-3 w-3 text-primary" />
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {a.categoryId ? (categoryMap.get(a.categoryId) ?? "—") : "—"}
                   </TableCell>

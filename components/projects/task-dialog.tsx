@@ -26,6 +26,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
@@ -55,6 +56,7 @@ interface TaskDialogProps {
     priority: "low" | "medium" | "high" | "urgent";
     parentTaskId: string | null;
     notes: string | null;
+    recurrenceRuleId: string | null;
   };
   parentTaskId?: string | null;
 }
@@ -213,6 +215,14 @@ export function TaskDialog({
               rows={2}
             />
           </div>
+
+          {isEditing && (
+            <RecurrencePicker
+              ownerType="task"
+              ownerId={task.id}
+              recurrenceRuleId={task.recurrenceRuleId}
+            />
+          )}
 
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>

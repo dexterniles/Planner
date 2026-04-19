@@ -10,6 +10,8 @@ import { useCourse } from "@/lib/hooks/use-courses";
 import { AssignmentList } from "@/components/academic/assignment-list";
 import { GradeCategoryList } from "@/components/academic/grade-category-list";
 import { GradeCalculator } from "@/components/academic/grade-calculator";
+import { TimerStartButton } from "@/components/layout/timer";
+import { TimeLogHistory } from "@/components/time-log-history";
 
 const statusLabels: Record<string, string> = {
   active: "Active",
@@ -56,15 +58,16 @@ export default function CourseDetailPage({
           </Button>
         </Link>
         <div className="flex-1">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <div
-              className="h-3 w-3 rounded-full"
+              className="h-3 w-3 rounded-full shrink-0"
               style={{ backgroundColor: course.color ?? "#3B82F6" }}
             />
-            <h1 className="text-2xl font-bold">{course.name}</h1>
+            <h1 className="text-xl md:text-2xl font-bold">{course.name}</h1>
             <Badge variant="secondary">
               {statusLabels[course.status] ?? course.status}
             </Badge>
+            <TimerStartButton loggableType="course" loggableId={courseId} />
           </div>
           <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
             {course.code && <span>{course.code}</span>}
@@ -80,6 +83,7 @@ export default function CourseDetailPage({
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="categories">Grade Categories</TabsTrigger>
           <TabsTrigger value="grades">Grade Calculator</TabsTrigger>
+          <TabsTrigger value="time">Time Log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="assignments" className="mt-4">
@@ -92,6 +96,10 @@ export default function CourseDetailPage({
 
         <TabsContent value="grades" className="mt-4">
           <GradeCalculator courseId={courseId} />
+        </TabsContent>
+
+        <TabsContent value="time" className="mt-4">
+          <TimeLogHistory loggableType="course" loggableId={courseId} />
         </TabsContent>
       </Tabs>
     </div>

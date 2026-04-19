@@ -134,7 +134,7 @@ export default function CalendarPage() {
               return (
                 <div
                   key={i}
-                  className={`min-h-[100px] border-b border-r p-1.5 ${
+                  className={`min-h-[70px] md:min-h-[100px] border-b border-r p-1 md:p-1.5 ${
                     day ? "bg-background" : "bg-muted/20"
                   }`}
                 >

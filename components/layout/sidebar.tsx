@@ -28,7 +28,7 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-full w-64 flex-col border-r bg-sidebar">
-      <div className="flex h-14 items-center border-b border-sidebar-border px-5">
+      <div className="flex h-12 items-center border-b border-sidebar-border px-5">
         <Link href="/" className="text-lg font-semibold tracking-tight text-primary">
           Planner
         </Link>

@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toast } from "sonner";
 
 interface AssignmentDialogProps {
@@ -46,6 +47,7 @@ interface AssignmentDialogProps {
     pointsEarned: string | null;
     pointsPossible: string | null;
     notes: string | null;
+    recurrenceRuleId: string | null;
   };
 }
 
@@ -247,6 +249,14 @@ export function AssignmentDialog({
               rows={2}
             />
           </div>
+
+          {isEditing && (
+            <RecurrencePicker
+              ownerType="assignment"
+              ownerId={assignment.id}
+              recurrenceRuleId={assignment.recurrenceRuleId}
+            />
+          )}
 
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>
