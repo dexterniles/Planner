@@ -12,7 +12,7 @@ import type { EventCategory, EventStatus } from "@/lib/validations/event";
 export interface EventCategoryMeta {
   value: EventCategory;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   /** Tailwind gradient tone used for icon background */
   gradient: string;
   /** Tailwind text color for icon/label */

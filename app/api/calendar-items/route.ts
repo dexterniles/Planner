@@ -13,20 +13,28 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const month = searchParams.get("month"); // format: YYYY-MM
+  const month = searchParams.get("month"); // YYYY-MM
+  const from = searchParams.get("from"); // ISO date
+  const to = searchParams.get("to"); // ISO date
 
-  if (!month) {
+  let startDate: Date;
+  let endDate: Date;
+
+  if (from && to) {
+    startDate = new Date(from);
+    endDate = new Date(to);
+  } else if (month) {
+    const [yearStr, monthStr] = month.split("-");
+    const year = parseInt(yearStr, 10);
+    const mon = parseInt(monthStr, 10);
+    startDate = new Date(year, mon - 1, 1);
+    endDate = new Date(year, mon, 1); // first of next month
+  } else {
     return NextResponse.json(
-      { error: "month parameter is required (YYYY-MM)" },
+      { error: "Provide either ?month=YYYY-MM or ?from=...&to=..." },
       { status: 400 },
     );
   }
-
-  const [yearStr, monthStr] = month.split("-");
-  const year = parseInt(yearStr, 10);
-  const mon = parseInt(monthStr, 10);
-  const startDate = new Date(year, mon - 1, 1);
-  const endDate = new Date(year, mon, 1); // first of next month
 
   const [assignmentRows, taskRows, milestoneRows, eventRows] = await Promise.all([
     db
@@ -95,7 +103,6 @@ export async function GET(request: Request) {
       .from(milestones)
       .innerJoin(projects, eq(milestones.projectId, projects.id))
       .where(eq(projects.userId, SINGLE_USER_ID)),
-    // Events: include if they start in month, end in month, or span across it
     db
       .select({
         sourceType: sql<string>`'event'`.as("source_type"),
@@ -116,31 +123,24 @@ export async function GET(request: Request) {
         and(
           eq(events.userId, SINGLE_USER_ID),
           or(
-            // Starts in month
             and(
               gte(events.startsAt, startDate),
               lte(events.startsAt, endDate),
             ),
-            // Ends in month
             and(
               sql`${events.endsAt} IS NOT NULL`,
               gte(events.endsAt, startDate),
               lte(events.endsAt, endDate),
             ),
-            // Spans across month (starts before, ends after)
             and(
               lte(events.startsAt, startDate),
-              or(
-                isNull(events.endsAt),
-                gte(events.endsAt, endDate),
-              ),
+              or(isNull(events.endsAt), gte(events.endsAt, endDate)),
             ),
           ),
         ),
       ),
   ]);
 
-  // Filter milestones in JS (date column is stored as text, not timestamp)
   const filteredMilestones = milestoneRows.filter((m) => {
     if (!m.dueDate) return false;
     const d = new Date(m.dueDate as string);

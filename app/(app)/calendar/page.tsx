@@ -1,386 +1,228 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useCalendarItems } from "@/lib/hooks/use-calendar-items";
-import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { MonthView } from "@/components/calendar/month-view";
+import { WeekView } from "@/components/calendar/week-view";
+import { DayView } from "@/components/calendar/day-view";
 import {
-  EVENT_CATEGORIES,
-  formatEventTime,
-} from "@/components/events/event-categories";
-import type { EventCategory } from "@/lib/validations/event";
+  endOfWeek,
+  isSameDay,
+  startOfWeek,
+} from "@/components/calendar/calendar-utils";
 
-interface CalendarItem {
-  sourceType: "assignment" | "task" | "milestone" | "event";
-  sourceId: string;
-  parentId: string;
-  userId: string;
-  workspaceId: string | null;
-  title: string;
-  dueDate: string;
-  endDate: string | null;
-  allDay: boolean;
-  category: string | null;
-  status: string;
-  color: string | null;
-}
-
-function getItemLink(item: CalendarItem): string {
-  if (item.sourceType === "assignment") return `/academic/${item.parentId}`;
-  if (item.sourceType === "event") return `/events/${item.sourceId}`;
-  return `/projects/${item.parentId}`;
-}
-
-const sourceLabels: Record<string, string> = {
-  assignment: "Assignment",
-  task: "Task",
-  milestone: "Milestone",
-  event: "Event",
-};
-
-const statusLabels: Record<string, string> = {
-  not_started: "Not Started",
-  in_progress: "In Progress",
-  submitted: "Submitted",
-  graded: "Graded",
-  done: "Done",
-  cancelled: "Cancelled",
-  pending: "Pending",
-  confirmed: "Confirmed",
-  tentative: "Tentative",
-  completed: "Completed",
-};
-
-function formatMonth(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function getMonthDays(year: number, month: number) {
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startPad = firstDay.getDay(); // 0=Sun
-  const totalDays = lastDay.getDate();
-
-  const days: (number | null)[] = [];
-  for (let i = 0; i < startPad; i++) days.push(null);
-  for (let d = 1; d <= totalDays; d++) days.push(d);
-  while (days.length % 7 !== 0) days.push(null);
-  return days;
-}
-
-/** Expand a multi-day event into a list of {day, continues} markers */
-function getEventDaysInMonth(
-  item: CalendarItem,
-  year: number,
-  month: number,
-): Array<{
-  day: number;
-  isStart: boolean;
-  isEnd: boolean;
-}> {
-  const start = new Date(item.dueDate);
-  const end = item.endDate ? new Date(item.endDate) : null;
-  const monthStart = new Date(year, month, 1);
-  const monthEnd = new Date(year, month + 1, 0);
-
-  const effectiveStart = start > monthStart ? start : monthStart;
-  const effectiveEnd = end && end < monthEnd ? end : end ? end : start;
-  const finalEnd = effectiveEnd > monthEnd ? monthEnd : effectiveEnd;
-
-  const result: Array<{ day: number; isStart: boolean; isEnd: boolean }> = [];
-
-  // Single-day or single-point events
-  if (!end) {
-    if (
-      start.getFullYear() === year &&
-      start.getMonth() === month
-    ) {
-      result.push({ day: start.getDate(), isStart: true, isEnd: true });
-    }
-    return result;
-  }
-
-  // Multi-day: iterate through each day
-  const current = new Date(
-    effectiveStart.getFullYear(),
-    effectiveStart.getMonth(),
-    effectiveStart.getDate(),
-  );
-  const last = new Date(
-    finalEnd.getFullYear(),
-    finalEnd.getMonth(),
-    finalEnd.getDate(),
-  );
-
-  while (current <= last) {
-    if (current.getMonth() === month && current.getFullYear() === year) {
-      const isStart =
-        current.getFullYear() === start.getFullYear() &&
-        current.getMonth() === start.getMonth() &&
-        current.getDate() === start.getDate();
-      const isEnd =
-        current.getFullYear() === end.getFullYear() &&
-        current.getMonth() === end.getMonth() &&
-        current.getDate() === end.getDate();
-      result.push({ day: current.getDate(), isStart, isEnd });
-    }
-    current.setDate(current.getDate() + 1);
-  }
-
-  return result;
-}
-
-interface DayItem {
-  item: CalendarItem;
-  /** For events: whether this cell is the event's start day */
-  isStart: boolean;
-  /** For events: whether this cell is the event's end day */
-  isEnd: boolean;
-}
+type View = "month" | "week" | "day";
+const STORAGE_KEY = "planner:calendar-view";
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const monthStr = formatMonth(currentDate);
+  const [view, setViewState] = useState<View>("month");
+  const [ready, setReady] = useState(false);
 
-  const { data: items, isLoading } = useCalendarItems(monthStr);
-
-  const days = getMonthDays(year, month);
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  // Expand items into per-day entries (events may span multiple days).
-  // React Compiler handles memoization automatically.
-  const itemsByDay = new Map<number, DayItem[]>();
-  if (items) {
-    for (const item of items as CalendarItem[]) {
-      if (item.sourceType === "event") {
-        const occurrences = getEventDaysInMonth(item, year, month);
-        for (const occ of occurrences) {
-          const existing = itemsByDay.get(occ.day) ?? [];
-          existing.push({
-            item,
-            isStart: occ.isStart,
-            isEnd: occ.isEnd,
-          });
-          itemsByDay.set(occ.day, existing);
-        }
-      } else {
-        const d = new Date(item.dueDate);
-        if (d.getFullYear() === year && d.getMonth() === month) {
-          const existing = itemsByDay.get(d.getDate()) ?? [];
-          existing.push({ item, isStart: true, isEnd: true });
-          itemsByDay.set(d.getDate(), existing);
-        }
+  // Hydrate from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "month" || stored === "week" || stored === "day") {
+        setViewState(stored);
       }
+    } catch {
+      // ignore
     }
-  }
+    setReady(true);
+  }, []);
 
-  const navigateMonth = (delta: number) => {
-    const next = new Date(year, month + delta, 1);
-    setCurrentDate(next);
-  };
+  const setView = useCallback((next: View) => {
+    setViewState(next);
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const navigate = useCallback(
+    (delta: number) => {
+      const next = new Date(currentDate);
+      if (view === "month") {
+        next.setMonth(next.getMonth() + delta);
+      } else if (view === "week") {
+        next.setDate(next.getDate() + delta * 7);
+      } else {
+        next.setDate(next.getDate() + delta);
+      }
+      setCurrentDate(next);
+    },
+    [currentDate, view],
+  );
+
+  // Keyboard navigation: left/right arrows when not in input
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        navigate(-1);
+      } else if (e.key === "ArrowRight") {
+        navigate(1);
+      } else if (e.key === "t" || e.key === "T") {
+        setCurrentDate(new Date());
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [navigate]);
+
+  const selectDay = useCallback(
+    (date: Date) => {
+      setCurrentDate(date);
+      setView("day");
+    },
+    [setView],
+  );
 
   const today = new Date();
-  const isCurrentMonth =
-    today.getFullYear() === year && today.getMonth() === month;
+  const isOnToday = () => {
+    if (view === "month") {
+      return (
+        currentDate.getFullYear() === today.getFullYear() &&
+        currentDate.getMonth() === today.getMonth()
+      );
+    }
+    if (view === "week") {
+      const ws = startOfWeek(currentDate);
+      const we = endOfWeek(currentDate);
+      return today >= ws && today <= we;
+    }
+    return isSameDay(currentDate, today);
+  };
+
+  // Format the current title based on view
+  const renderTitle = () => {
+    if (view === "month") {
+      return currentDate.toLocaleDateString([], {
+        month: "long",
+        year: "numeric",
+      });
+    }
+    if (view === "week") {
+      const ws = startOfWeek(currentDate);
+      const we = endOfWeek(currentDate);
+      const sameMonth = ws.getMonth() === we.getMonth();
+      const sameYear = ws.getFullYear() === we.getFullYear();
+      const opts: Intl.DateTimeFormatOptions = {
+        month: "short",
+        day: "numeric",
+      };
+      if (sameMonth && sameYear) {
+        return `${ws.toLocaleDateString([], { month: "short", day: "numeric" })} – ${we.getDate()}, ${we.getFullYear()}`;
+      }
+      return `${ws.toLocaleDateString([], opts)} – ${we.toLocaleDateString([], opts)}, ${we.getFullYear()}`;
+    }
+    return currentDate.toLocaleDateString([], {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      {/* Header: title + view switcher + Today */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Calendar</h1>
-        {!isCurrentMonth && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentDate(new Date())}
-          >
-            Today
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ViewSwitcher view={view} onChange={setView} />
+          {!isOnToday() && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentDate(new Date())}
+            >
+              Today
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* Navigation */}
+      <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigateMonth(-1)}
-          aria-label="Previous month"
+          onClick={() => navigate(-1)}
+          aria-label={`Previous ${view}`}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-lg font-semibold min-w-[180px] text-center">
-          {currentDate.toLocaleDateString("en-US", {
-            month: "long",
-            year: "numeric",
-          })}
+        <h2 className="flex-1 text-center text-lg font-semibold sm:flex-none sm:min-w-[240px]">
+          {renderTitle()}
         </h2>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigateMonth(1)}
-          aria-label="Next month"
+          onClick={() => navigate(1)}
+          aria-label={`Next ${view}`}
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
-      {isLoading ? (
-        <Skeleton className="h-[450px] w-full rounded-xl" />
-      ) : (
-        <div className="rounded-lg border overflow-hidden">
-          <div className="grid grid-cols-7">
-            {weekDays.map((d) => (
-              <div
-                key={d}
-                className="border-b bg-muted/50 px-2 py-2 text-center text-xs font-medium text-muted-foreground"
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7">
-            {days.map((day, i) => {
-              const isToday = isCurrentMonth && day === today.getDate();
-              const dayItems = day ? itemsByDay.get(day) ?? [] : [];
-
-              return (
-                <div
-                  key={i}
-                  className={`min-h-[70px] md:min-h-[100px] border-b border-r p-1 md:p-1.5 ${
-                    day ? "bg-background" : "bg-muted/20"
-                  }`}
-                >
-                  {day && (
-                    <>
-                      <span
-                        className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-                          isToday
-                            ? "bg-primary text-primary-foreground font-bold"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {day}
-                      </span>
-                      <div className="mt-1 space-y-0.5">
-                        {dayItems.slice(0, 3).map((dayItem) => (
-                          <DayPill key={`${dayItem.item.sourceType}-${dayItem.item.sourceId}-${day}`} dayItem={dayItem} />
-                        ))}
-                        {dayItems.length > 3 && (
-                          <span className="block px-1 text-[10px] text-muted-foreground">
-                            +{dayItems.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {items && items.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">
-            This month · {items.length}
-          </h3>
-          <div className="space-y-1">
-            {(items as CalendarItem[]).map((item) => (
-              <ListRow key={`${item.sourceType}-${item.sourceId}`} item={item} />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* View content with fade transition on switch */}
+      <div
+        key={view}
+        className={ready ? "page-transition" : ""}
+      >
+        {view === "month" && (
+          <MonthView currentDate={currentDate} onSelectDay={selectDay} />
+        )}
+        {view === "week" && (
+          <WeekView currentDate={currentDate} onSelectDay={selectDay} />
+        )}
+        {view === "day" && <DayView currentDate={currentDate} />}
+      </div>
     </div>
   );
 }
 
-function DayPill({ dayItem }: { dayItem: DayItem }) {
-  const { item, isStart, isEnd } = dayItem;
-  const isEvent = item.sourceType === "event";
-  const isMultiDay = isEvent && item.endDate && !(isStart && isEnd);
-  const meta = isEvent && item.category
-    ? EVENT_CATEGORIES[item.category as EventCategory]
-    : null;
-  const Icon = meta?.icon;
-  const color = item.color ?? meta?.defaultColor ?? "#888";
-
-  // Build continuation prefix/suffix for multi-day
-  const prefix = isMultiDay && !isStart ? "← " : "";
-  const suffix = isMultiDay && !isEnd ? " →" : "";
-
-  return (
-    <Link
-      href={getItemLink(item)}
-      className={`flex items-center gap-1 px-1 py-0.5 text-[11px] leading-tight truncate transition-opacity hover:opacity-75 ${
-        isEvent
-          ? `${isStart ? "rounded-l" : ""} ${isEnd ? "rounded-r" : ""} ${!isStart && !isEnd ? "" : ""} text-white font-medium`
-          : "rounded"
-      }`}
-      style={
-        isEvent
-          ? { backgroundColor: color }
-          : {
-              backgroundColor: color ? `${color}20` : undefined,
-              borderLeft: `2px solid ${color}`,
-            }
-      }
-      title={`${sourceLabels[item.sourceType]}: ${item.title}`}
-    >
-      {isEvent && Icon && isStart && (
-        <Icon className="h-2.5 w-2.5 shrink-0" />
-      )}
-      <span className={`truncate ${isEvent ? "italic" : ""}`}>
-        {prefix}
-        {item.title}
-        {suffix}
-      </span>
-    </Link>
-  );
-}
-
-function ListRow({ item }: { item: CalendarItem }) {
-  const isEvent = item.sourceType === "event";
-  const meta = isEvent && item.category
-    ? EVENT_CATEGORIES[item.category as EventCategory]
-    : null;
-  const Icon = meta?.icon;
-  const color = item.color ?? meta?.defaultColor ?? null;
+function ViewSwitcher({
+  view,
+  onChange,
+}: {
+  view: View;
+  onChange: (v: View) => void;
+}) {
+  const views: { value: View; label: string }[] = [
+    { value: "day", label: "Day" },
+    { value: "week", label: "Week" },
+    { value: "month", label: "Month" },
+  ];
 
   return (
-    <Link
-      href={getItemLink(item)}
-      className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm hover:bg-accent transition-colors"
-    >
-      {isEvent && Icon ? (
-        <div
-          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${meta!.gradient}`}
+    <div className="inline-flex rounded-xl bg-gradient-to-b from-muted/80 to-muted/50 ring-1 ring-border/40 shadow-sm p-1">
+      {views.map((v) => (
+        <button
+          key={v.value}
+          onClick={() => onChange(v.value)}
+          className={cn(
+            "px-3 py-1 text-[13px] font-medium rounded-lg transition-all duration-200",
+            view === v.value
+              ? "bg-gradient-to-b from-background to-background/90 text-foreground shadow-sm ring-1 ring-border/60"
+              : "text-foreground/55 hover:text-foreground",
+          )}
         >
-          <Icon className={`h-3 w-3 ${meta!.text}`} />
-        </div>
-      ) : (
-        <div
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: color ?? "#888" }}
-        />
-      )}
-      <span className="font-medium">{item.title}</span>
-      <Badge variant="outline" className="text-xs">
-        {sourceLabels[item.sourceType] ?? item.sourceType}
-      </Badge>
-      <span className="ml-auto text-xs text-muted-foreground">
-        {isEvent
-          ? formatEventTime(item.dueDate, item.endDate, item.allDay)
-          : new Date(item.dueDate).toLocaleDateString()}
-      </span>
-      <Badge variant="secondary" className="text-xs">
-        {statusLabels[item.status] ?? item.status}
-      </Badge>
-    </Link>
+          {v.label}
+        </button>
+      ))}
+    </div>
   );
 }
