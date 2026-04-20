@@ -114,12 +114,12 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
     today.getFullYear() === year && today.getMonth() === month;
 
   if (isLoading) {
-    return <Skeleton className="h-[450px] w-full rounded-xl" />;
+    return <Skeleton className="h-full min-h-[450px] w-full rounded-xl" />;
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden">
-      <div className="grid grid-cols-7">
+    <div className="flex h-full min-h-[500px] flex-col rounded-lg border overflow-hidden">
+      <div className="grid grid-cols-7 shrink-0">
         {weekDays.map((d, i) => (
           <div
             key={i}
@@ -130,7 +130,7 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7">
+      <div className="grid flex-1 grid-cols-7 auto-rows-fr">
         {days.map((day, i) => {
           const isToday = isCurrentMonth && day === today.getDate();
           const dayItems = day ? itemsByDay.get(day) ?? [] : [];
@@ -139,7 +139,7 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
             return (
               <div
                 key={i}
-                className="min-h-[70px] md:min-h-[100px] border-b border-r bg-muted/20"
+                className="min-h-[70px] md:min-h-[90px] border-b border-r bg-muted/20"
               />
             );
           }
@@ -150,7 +150,7 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
             <button
               key={i}
               onClick={() => onSelectDay(date)}
-              className="min-h-[70px] md:min-h-[100px] border-b border-r bg-background p-1 md:p-1.5 text-left transition-colors hover:bg-accent/30 focus:bg-accent/40 focus:outline-none"
+              className="flex min-h-[70px] md:min-h-[90px] flex-col border-b border-r bg-background p-1 md:p-1.5 text-left transition-colors hover:bg-accent/30 focus:bg-accent/40 focus:outline-none overflow-hidden"
               aria-label={`View events for ${date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}`}
             >
               <span

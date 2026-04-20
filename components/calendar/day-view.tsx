@@ -86,10 +86,10 @@ export function DayView({ currentDate }: DayViewProps) {
   const laidOut = layoutTimedEvents(timedItems, currentDate);
 
   return (
-    <div className="space-y-3">
+    <div className="flex h-full flex-col gap-3">
       {/* All-day row */}
       {allDayItems.length > 0 && (
-        <div className="rounded-xl border bg-card p-3 shadow-sm">
+        <div className="rounded-xl border bg-card p-3 shadow-sm shrink-0">
           <p className="mb-2 text-[10px] uppercase tracking-wide font-medium text-muted-foreground">
             All day · {allDayItems.length}
           </p>
@@ -106,7 +106,7 @@ export function DayView({ currentDate }: DayViewProps) {
       )}
 
       {/* Hourly timeline */}
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-y-auto rounded-xl border bg-card shadow-sm">
         <div className="flex" style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}>
           {/* Hour labels column */}
           <div className="relative w-14 shrink-0 border-r border-border/60">

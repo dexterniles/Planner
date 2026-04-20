@@ -36,16 +36,16 @@ export function WeekView({ currentDate, onSelectDay }: WeekViewProps) {
 
   if (isLoading) {
     return (
-      <div className="grid gap-3 md:grid-cols-7">
+      <div className="grid h-full gap-3 md:grid-cols-7">
         {days.map((_, i) => (
-          <Skeleton key={i} className="h-48 w-full" />
+          <Skeleton key={i} className="h-48 md:h-full w-full" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-2 md:grid-cols-7">
+    <div className="grid gap-2 md:grid-cols-7 md:h-full md:overflow-hidden">
       {days.map((day) => {
         const isToday = isSameDay(day, today);
         const dayItems = ((items ?? []) as CalendarItem[]).filter((item) =>
@@ -55,7 +55,7 @@ export function WeekView({ currentDate, onSelectDay }: WeekViewProps) {
         return (
           <div
             key={day.toISOString()}
-            className={`rounded-xl border bg-card p-3 transition-colors ${
+            className={`flex flex-col rounded-xl border bg-card p-3 transition-colors md:min-h-0 md:overflow-hidden ${
               isToday
                 ? "border-primary/50 ring-1 ring-primary/20 shadow-sm"
                 : "border-border/60"
@@ -63,7 +63,7 @@ export function WeekView({ currentDate, onSelectDay }: WeekViewProps) {
           >
             <button
               onClick={() => onSelectDay(day)}
-              className="mb-2 w-full text-left transition-colors"
+              className="mb-2 w-full shrink-0 text-left transition-colors"
               aria-label={`Switch to day view for ${day.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}`}
             >
               <div className="flex items-baseline justify-between gap-2">
@@ -89,7 +89,7 @@ export function WeekView({ currentDate, onSelectDay }: WeekViewProps) {
                 —
               </p>
             ) : (
-              <div className="space-y-1">
+              <div className="flex-1 space-y-1 md:overflow-y-auto md:min-h-0">
                 {dayItems.map((item) => (
                   <WeekItemCard
                     key={`${item.sourceType}-${item.sourceId}`}

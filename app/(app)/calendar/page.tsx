@@ -136,9 +136,9 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex h-full flex-col gap-4">
       {/* Header: title + view switcher + Today */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
         <h1 className="text-2xl font-bold">Calendar</h1>
         <div className="flex items-center gap-2">
           <ViewSwitcher view={view} onChange={setView} />
@@ -155,7 +155,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 shrink-0">
         <Button
           variant="ghost"
           size="icon"
@@ -177,10 +177,10 @@ export default function CalendarPage() {
         </Button>
       </div>
 
-      {/* View content with fade transition on switch */}
+      {/* View content fills remaining height; key forces remount for fade */}
       <div
         key={view}
-        className={ready ? "page-transition" : ""}
+        className={`flex-1 min-h-0 ${ready ? "page-transition" : ""}`}
       >
         {view === "month" && (
           <MonthView currentDate={currentDate} onSelectDay={selectDay} />
