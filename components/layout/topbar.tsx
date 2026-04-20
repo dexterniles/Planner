@@ -30,7 +30,7 @@ export function Topbar() {
         </SheetTrigger>
         <SheetContent side="left" className="w-64 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <Sidebar />
+          <Sidebar forceExpanded />
         </SheetContent>
       </Sheet>
       <div className="flex-1 flex justify-center">
