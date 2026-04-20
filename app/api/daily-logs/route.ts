@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { dailyLogs, SINGLE_USER_ID } from "@/lib/db/schema";
 import { upsertDailyLogSchema } from "@/lib/validations/daily-log";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     .select()
     .from(dailyLogs)
     .where(eq(dailyLogs.userId, SINGLE_USER_ID))
-    .orderBy(dailyLogs.logDate)
+    .orderBy(desc(dailyLogs.logDate))
     .limit(30);
 
   return NextResponse.json(result);

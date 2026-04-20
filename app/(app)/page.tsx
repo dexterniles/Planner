@@ -14,6 +14,11 @@ import {
   useTriageInboxItem,
 } from "@/lib/hooks/use-inbox";
 import { useAllItems } from "@/lib/hooks/use-all-items";
+import { StatsRow } from "@/components/dashboard/stats-row";
+import { TodaysFocus } from "@/components/dashboard/todays-focus";
+import { UpcomingMilestones } from "@/components/dashboard/upcoming-milestones";
+import { GradeSnapshot } from "@/components/dashboard/grade-snapshot";
+import { RecentDailyLogs } from "@/components/dashboard/recent-daily-logs";
 import { toast } from "sonner";
 
 interface InboxItem {
@@ -35,9 +40,7 @@ interface AllItem {
 }
 
 function getItemLink(item: AllItem): string {
-  if (item.type === "assignment") {
-    return `/academic/${item.parentId}`;
-  }
+  if (item.type === "assignment") return `/academic/${item.parentId}`;
   return `/projects/${item.parentId}`;
 }
 
@@ -61,7 +64,6 @@ export default function DashboardPage() {
     (item: InboxItem) => !item.triagedAt,
   );
 
-  // Upcoming items: due in the next 7 days, not done/cancelled/graded
   const now = new Date();
   const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const upcomingItems = (allItems ?? [])
@@ -73,7 +75,6 @@ export default function DashboardPage() {
     })
     .slice(0, 10);
 
-  // Overdue items
   const overdueItems = (allItems ?? [])
     .filter((item: AllItem) => {
       if (!item.dueDate) return false;
@@ -97,7 +98,10 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
-      {/* Quick capture */}
+      {/* Stats Row */}
+      <StatsRow />
+
+      {/* Quick Capture */}
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Inbox className="h-4 w-4 text-muted-foreground" />
@@ -161,8 +165,10 @@ export default function DashboardPage() {
         )}
       </Card>
 
+      {/* Today's Focus + Overdue */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Overdue */}
+        <TodaysFocus />
+
         {overdueItems.length > 0 && (
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -194,8 +200,10 @@ export default function DashboardPage() {
             </div>
           </Card>
         )}
+      </div>
 
-        {/* Upcoming */}
+      {/* Upcoming + Milestones */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
@@ -232,6 +240,14 @@ export default function DashboardPage() {
             </div>
           )}
         </Card>
+
+        <UpcomingMilestones />
+      </div>
+
+      {/* Grade Snapshot + Recent Daily Logs */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <GradeSnapshot />
+        <RecentDailyLogs />
       </div>
     </div>
   );
