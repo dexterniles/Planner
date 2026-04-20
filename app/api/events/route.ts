@@ -5,6 +5,7 @@ import type {
   EventCategory,
   EventStatus,
 } from "@/lib/validations/event";
+import { autoCompletePastEvents } from "@/lib/auto-complete-events";
 import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -15,6 +16,9 @@ export async function GET(request: Request) {
   const category = searchParams.get("category");
   const status = searchParams.get("status");
   const limit = parseInt(searchParams.get("limit") ?? "500", 10);
+
+  // Transition past events to 'completed' before returning
+  await autoCompletePastEvents();
 
   const conditions: SQL[] = [eq(events.userId, SINGLE_USER_ID)];
   if (from) conditions.push(gte(events.startsAt, new Date(from)));

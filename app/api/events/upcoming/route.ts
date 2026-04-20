@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { events, SINGLE_USER_ID } from "@/lib/db/schema";
+import { autoCompletePastEvents } from "@/lib/auto-complete-events";
 import { and, asc, eq, gte, ne, or, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -8,8 +9,11 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") ?? "10", 10);
   const now = new Date();
 
+  // Transition past events to 'completed' before returning
+  await autoCompletePastEvents();
+
   // Upcoming = starts_at >= now, OR (ends_at >= now if present — i.e. currently happening)
-  // Exclude cancelled events
+  // Exclude cancelled and completed events
   const result = await db
     .select()
     .from(events)

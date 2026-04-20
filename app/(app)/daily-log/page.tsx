@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import Link from "next/link";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +9,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useDailyLog, useUpsertDailyLog } from "@/lib/hooks/use-daily-log";
+import { useEventsByDate } from "@/lib/hooks/use-events";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  EVENT_CATEGORIES,
+  formatEventTime,
+} from "@/components/events/event-categories";
+import type { EventCategory, EventStatus } from "@/lib/validations/event";
 import { toast } from "sonner";
+
+interface DayEvent {
+  id: string;
+  title: string;
+  category: EventCategory;
+  startsAt: string;
+  endsAt: string | null;
+  allDay: boolean;
+  location: string | null;
+  status: EventStatus;
+}
 
 function formatDate(date: Date): string {
   return date.toISOString().split("T")[0];
@@ -34,6 +52,7 @@ export default function DailyLogPage() {
   const [isDirty, setIsDirty] = useState(false);
 
   const { data: log, isLoading } = useDailyLog(selectedDate);
+  const { data: dayEvents } = useEventsByDate(selectedDate);
   const upsertLog = useUpsertDailyLog();
   const lastSyncedRef = useRef<string | null>(null);
 
@@ -111,6 +130,38 @@ export default function DailyLogPage() {
           </Button>
         )}
       </div>
+
+      {dayEvents && dayEvents.length > 0 && (
+        <Card className="p-4">
+          <p className="mb-3 text-xs uppercase tracking-wide text-muted-foreground font-medium">
+            Events on this day
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(dayEvents as DayEvent[]).map((ev) => {
+              const meta =
+                EVENT_CATEGORIES[ev.category] ?? EVENT_CATEGORIES.other;
+              const Icon = meta.icon;
+              return (
+                <Link
+                  key={ev.id}
+                  href={`/events/${ev.id}`}
+                  className="flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-1.5 text-sm transition-colors hover:bg-accent"
+                >
+                  <div
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${meta.gradient}`}
+                  >
+                    <Icon className={`h-3 w-3 ${meta.text}`} />
+                  </div>
+                  <span className="font-medium">{ev.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatEventTime(ev.startsAt, ev.endsAt, ev.allDay)}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="grid gap-6 lg:grid-cols-[1fr_250px]">

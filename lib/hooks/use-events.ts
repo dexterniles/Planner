@@ -56,6 +56,18 @@ export function useUpcomingEvents(limit = 10) {
   });
 }
 
+export function useEventsByDate(date: string) {
+  return useQuery({
+    queryKey: ["events", "by-date", date],
+    queryFn: async () => {
+      const res = await fetch(`/api/events/by-date?date=${date}`);
+      if (!res.ok) throw new Error("Failed to fetch events for date");
+      return res.json();
+    },
+    enabled: !!date,
+  });
+}
+
 export function useCreateEvent() {
   const queryClient = useQueryClient();
   return useMutation({

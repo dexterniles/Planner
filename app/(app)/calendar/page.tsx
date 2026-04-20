@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -152,34 +152,32 @@ export default function CalendarPage() {
   const days = getMonthDays(year, month);
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  // Expand items into per-day entries (events may span multiple days)
-  const itemsByDay = useMemo(() => {
-    const map = new Map<number, DayItem[]>();
-    if (!items) return map;
-
+  // Expand items into per-day entries (events may span multiple days).
+  // React Compiler handles memoization automatically.
+  const itemsByDay = new Map<number, DayItem[]>();
+  if (items) {
     for (const item of items as CalendarItem[]) {
       if (item.sourceType === "event") {
         const occurrences = getEventDaysInMonth(item, year, month);
         for (const occ of occurrences) {
-          const existing = map.get(occ.day) ?? [];
+          const existing = itemsByDay.get(occ.day) ?? [];
           existing.push({
             item,
             isStart: occ.isStart,
             isEnd: occ.isEnd,
           });
-          map.set(occ.day, existing);
+          itemsByDay.set(occ.day, existing);
         }
       } else {
         const d = new Date(item.dueDate);
         if (d.getFullYear() === year && d.getMonth() === month) {
-          const existing = map.get(d.getDate()) ?? [];
+          const existing = itemsByDay.get(d.getDate()) ?? [];
           existing.push({ item, isStart: true, isEnd: true });
-          map.set(d.getDate(), existing);
+          itemsByDay.set(d.getDate(), existing);
         }
       }
     }
-    return map;
-  }, [items, year, month]);
+  }
 
   const navigateMonth = (delta: number) => {
     const next = new Date(year, month + delta, 1);
