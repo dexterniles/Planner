@@ -32,6 +32,16 @@ const sourceLabels: Record<string, string> = {
   milestone: "Milestone",
 };
 
+const statusLabels: Record<string, string> = {
+  not_started: "Not Started",
+  in_progress: "In Progress",
+  submitted: "Submitted",
+  graded: "Graded",
+  done: "Done",
+  cancelled: "Cancelled",
+  pending: "Pending",
+};
+
 function formatMonth(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -205,7 +215,7 @@ export default function CalendarPage() {
                   {new Date(item.dueDate).toLocaleDateString()}
                 </span>
                 <Badge variant="secondary" className="text-xs">
-                  {item.status}
+                  {statusLabels[item.status] ?? item.status}
                 </Badge>
               </Link>
             ))}
