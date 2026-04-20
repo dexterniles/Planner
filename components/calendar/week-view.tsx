@@ -132,31 +132,39 @@ function WeekItemCard({ item, day }: { item: CalendarItem; day: Date }) {
   return (
     <Link
       href={getItemLink(item)}
-      className="group block rounded-lg px-2 py-1.5 transition-colors hover:bg-accent/50"
-      style={{
-        borderLeft: `2px solid ${color}`,
-      }}
+      className="group block rounded-lg px-2 py-1.5 transition-colors hover:bg-accent/60"
       title={`${sourceLabels[item.sourceType]}: ${item.title}`}
     >
-      <div className="flex items-start gap-1.5">
-        {Icon && (
-          <Icon
-            className="mt-0.5 h-3 w-3 shrink-0"
-            style={{ color: meta?.defaultColor ?? undefined }}
+      <div className="flex items-start gap-2">
+        {/* Marker: icon badge for events, dot for other items */}
+        {isEvent && Icon ? (
+          <div
+            className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${color}35, ${color}12)`,
+            }}
+          >
+            <Icon className="h-3 w-3" style={{ color }} />
+          </div>
+        ) : (
+          <span
+            className="mt-[5px] h-2 w-2 shrink-0 rounded-full"
+            style={{ backgroundColor: color }}
+            aria-hidden="true"
           />
         )}
+
+        {/* Text */}
         <div className="min-w-0 flex-1">
-          <p
-            className={`text-[12px] leading-tight truncate ${
-              isEvent ? "italic" : ""
-            }`}
-          >
+          <p className="text-[13px] leading-snug font-medium text-foreground line-clamp-2">
             {showPrefix && "← "}
             {item.title}
             {showSuffix && " →"}
           </p>
           {timeLabel && (
-            <p className="text-[10px] text-muted-foreground">{timeLabel}</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+              {timeLabel}
+            </p>
           )}
         </div>
       </div>
