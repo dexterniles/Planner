@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -96,6 +97,26 @@ export function AssignmentDialog({
       notes: assignment?.notes ?? "",
     },
   });
+
+  useEffect(() => {
+    reset({
+      courseId,
+      title: assignment?.title ?? "",
+      description: assignment?.description ?? "",
+      dueDate: assignment?.dueDate
+        ? new Date(assignment.dueDate).toISOString().slice(0, 16)
+        : "",
+      categoryId: assignment?.categoryId ?? undefined,
+      status: assignment?.status ?? "not_started",
+      pointsEarned: assignment?.pointsEarned
+        ? Number(assignment.pointsEarned)
+        : undefined,
+      pointsPossible: assignment?.pointsPossible
+        ? Number(assignment.pointsPossible)
+        : undefined,
+      notes: assignment?.notes ?? "",
+    });
+  }, [assignment, open, courseId, reset]);
 
   const currentStatus = watch("status");
   const currentCategory = watch("categoryId");

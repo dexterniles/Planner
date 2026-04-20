@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -59,6 +60,15 @@ export function GradeCategoryDialog({
       dropLowestN: category?.dropLowestN ?? 0,
     },
   });
+
+  useEffect(() => {
+    reset({
+      courseId,
+      name: category?.name ?? "",
+      weight: category?.weight ? Number(category.weight) : 0,
+      dropLowestN: category?.dropLowestN ?? 0,
+    });
+  }, [category, open, courseId, reset]);
 
   const onSubmit = async (data: CreateGradeCategoryInput) => {
     try {

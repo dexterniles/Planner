@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -61,6 +62,15 @@ export function MilestoneDialog({
       targetDate: milestone?.targetDate ?? "",
     },
   });
+
+  useEffect(() => {
+    reset({
+      projectId,
+      title: milestone?.title ?? "",
+      description: milestone?.description ?? "",
+      targetDate: milestone?.targetDate ?? "",
+    });
+  }, [milestone, open, projectId, reset]);
 
   const onSubmit = async (data: CreateMilestoneInput) => {
     try {

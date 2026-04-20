@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -94,6 +95,21 @@ export function TaskDialog({
       notes: task?.notes ?? "",
     },
   });
+
+  useEffect(() => {
+    reset({
+      projectId,
+      title: task?.title ?? "",
+      description: task?.description ?? "",
+      dueDate: task?.dueDate
+        ? new Date(task.dueDate).toISOString().slice(0, 16)
+        : "",
+      status: task?.status ?? "not_started",
+      priority: task?.priority ?? "medium",
+      parentTaskId: task?.parentTaskId ?? parentTaskId ?? null,
+      notes: task?.notes ?? "",
+    });
+  }, [task, open, projectId, parentTaskId, reset]);
 
   const currentStatus = watch("status");
   const currentPriority = watch("priority");

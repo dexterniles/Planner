@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -77,6 +78,19 @@ export function CourseDialog({
       status: course?.status ?? "active",
     },
   });
+
+  useEffect(() => {
+    reset({
+      workspaceId,
+      name: course?.name ?? "",
+      code: course?.code ?? "",
+      instructor: course?.instructor ?? "",
+      semester: course?.semester ?? "",
+      credits: course?.credits ?? undefined,
+      color: course?.color ?? COURSE_COLORS[0],
+      status: course?.status ?? "active",
+    });
+  }, [course, open, workspaceId, reset]);
 
   const selectedColor = watch("color");
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -101,6 +102,20 @@ export function ProjectDialog({
       color: project?.color ?? PROJECT_COLORS[0],
     },
   });
+
+  useEffect(() => {
+    reset({
+      workspaceId,
+      name: project?.name ?? "",
+      description: project?.description ?? "",
+      goal: project?.goal ?? "",
+      status: project?.status ?? "planning",
+      priority: project?.priority ?? "medium",
+      startDate: project?.startDate ?? "",
+      targetDate: project?.targetDate ?? "",
+      color: project?.color ?? PROJECT_COLORS[0],
+    });
+  }, [project, open, workspaceId, reset]);
 
   const selectedColor = watch("color");
   const currentStatus = watch("status");
