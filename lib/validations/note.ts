@@ -9,6 +9,7 @@ export const createNoteSchema = z.object({
     "session",
     "daily_log",
     "standalone",
+    "event",
   ]),
   parentId: z.string().uuid().nullable().optional(),
   title: z.string().max(200).nullable().optional(),

@@ -27,7 +27,8 @@ export async function GET(request: Request) {
         | "task"
         | "session"
         | "daily_log"
-        | "standalone",
+        | "standalone"
+        | "event",
     ),
   ];
   if (parentId) conditions.push(eq(notes.parentId, parentId));

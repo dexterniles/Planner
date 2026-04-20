@@ -4,6 +4,7 @@ import {
   projects,
   assignments,
   tasks,
+  events,
   SINGLE_USER_ID,
 } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
@@ -17,85 +18,106 @@ export async function GET(request: Request) {
     return NextResponse.json([]);
   }
 
-  const [courseResults, projectResults, assignmentResults, taskResults] =
-    await Promise.all([
-      db
-        .select({
-          id: courses.id,
-          type: sql<string>`'course'`.as("type"),
-          title: courses.name,
-          subtitle: courses.code,
-          color: courses.color,
-          parentId: sql<string>`null`.as("parent_id"),
-        })
-        .from(courses)
-        .where(
-          eq(courses.userId, SINGLE_USER_ID),
-        )
-        .then((rows) =>
-          rows.filter(
-            (r) =>
-              r.title.toLowerCase().includes(q.toLowerCase()) ||
-              (r.subtitle && r.subtitle.toLowerCase().includes(q.toLowerCase())),
-          ),
+  const [
+    courseResults,
+    projectResults,
+    assignmentResults,
+    taskResults,
+    eventResults,
+  ] = await Promise.all([
+    db
+      .select({
+        id: courses.id,
+        type: sql<string>`'course'`.as("type"),
+        title: courses.name,
+        subtitle: courses.code,
+        color: courses.color,
+        parentId: sql<string>`null`.as("parent_id"),
+        category: sql<string | null>`null`.as("category"),
+      })
+      .from(courses)
+      .where(eq(courses.userId, SINGLE_USER_ID))
+      .then((rows) =>
+        rows.filter(
+          (r) =>
+            r.title.toLowerCase().includes(q.toLowerCase()) ||
+            (r.subtitle && r.subtitle.toLowerCase().includes(q.toLowerCase())),
         ),
-      db
-        .select({
-          id: projects.id,
-          type: sql<string>`'project'`.as("type"),
-          title: projects.name,
-          subtitle: projects.description,
-          color: projects.color,
-          parentId: sql<string>`null`.as("parent_id"),
-        })
-        .from(projects)
-        .where(eq(projects.userId, SINGLE_USER_ID))
-        .then((rows) =>
-          rows.filter((r) =>
-            r.title.toLowerCase().includes(q.toLowerCase()),
-          ),
+      ),
+    db
+      .select({
+        id: projects.id,
+        type: sql<string>`'project'`.as("type"),
+        title: projects.name,
+        subtitle: projects.description,
+        color: projects.color,
+        parentId: sql<string>`null`.as("parent_id"),
+        category: sql<string | null>`null`.as("category"),
+      })
+      .from(projects)
+      .where(eq(projects.userId, SINGLE_USER_ID))
+      .then((rows) =>
+        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
+      ),
+    db
+      .select({
+        id: assignments.id,
+        type: sql<string>`'assignment'`.as("type"),
+        title: assignments.title,
+        subtitle: courses.name,
+        color: courses.color,
+        parentId: assignments.courseId,
+        category: sql<string | null>`null`.as("category"),
+      })
+      .from(assignments)
+      .innerJoin(courses, eq(assignments.courseId, courses.id))
+      .where(eq(assignments.userId, SINGLE_USER_ID))
+      .then((rows) =>
+        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
+      ),
+    db
+      .select({
+        id: tasks.id,
+        type: sql<string>`'task'`.as("type"),
+        title: tasks.title,
+        subtitle: projects.name,
+        color: projects.color,
+        parentId: tasks.projectId,
+        category: sql<string | null>`null`.as("category"),
+      })
+      .from(tasks)
+      .innerJoin(projects, eq(tasks.projectId, projects.id))
+      .where(eq(tasks.userId, SINGLE_USER_ID))
+      .then((rows) =>
+        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
+      ),
+    db
+      .select({
+        id: events.id,
+        type: sql<string>`'event'`.as("type"),
+        title: events.title,
+        subtitle: events.location,
+        color: events.color,
+        parentId: events.id,
+        category: sql<string>`${events.category}::text`.as("category"),
+      })
+      .from(events)
+      .where(eq(events.userId, SINGLE_USER_ID))
+      .then((rows) =>
+        rows.filter(
+          (r) =>
+            r.title.toLowerCase().includes(q.toLowerCase()) ||
+            (r.subtitle && r.subtitle.toLowerCase().includes(q.toLowerCase())),
         ),
-      db
-        .select({
-          id: assignments.id,
-          type: sql<string>`'assignment'`.as("type"),
-          title: assignments.title,
-          subtitle: courses.name,
-          color: courses.color,
-          parentId: assignments.courseId,
-        })
-        .from(assignments)
-        .innerJoin(courses, eq(assignments.courseId, courses.id))
-        .where(eq(assignments.userId, SINGLE_USER_ID))
-        .then((rows) =>
-          rows.filter((r) =>
-            r.title.toLowerCase().includes(q.toLowerCase()),
-          ),
-        ),
-      db
-        .select({
-          id: tasks.id,
-          type: sql<string>`'task'`.as("type"),
-          title: tasks.title,
-          subtitle: projects.name,
-          color: projects.color,
-          parentId: tasks.projectId,
-        })
-        .from(tasks)
-        .innerJoin(projects, eq(tasks.projectId, projects.id))
-        .where(eq(tasks.userId, SINGLE_USER_ID))
-        .then((rows) =>
-          rows.filter((r) =>
-            r.title.toLowerCase().includes(q.toLowerCase()),
-          ),
-        ),
-    ]);
+      ),
+  ]);
 
   const results = [
     ...courseResults,
     ...projectResults,
     ...assignmentResults,
     ...taskResults,
+    ...eventResults,
   ].slice(0, 20);
 
   return NextResponse.json(results);

@@ -8,7 +8,10 @@ import {
   FolderKanban,
   FileText,
   ListChecks,
+  PartyPopper,
 } from "lucide-react";
+import { EVENT_CATEGORIES } from "@/components/events/event-categories";
+import type { EventCategory } from "@/lib/validations/event";
 
 interface SearchResult {
   id: string;
@@ -17,6 +20,7 @@ interface SearchResult {
   subtitle: string | null;
   color: string | null;
   parentId: string | null;
+  category: string | null;
 }
 
 const typeIcons: Record<string, typeof GraduationCap> = {
@@ -24,6 +28,7 @@ const typeIcons: Record<string, typeof GraduationCap> = {
   project: FolderKanban,
   assignment: FileText,
   task: ListChecks,
+  event: PartyPopper,
 };
 
 const typeLabels: Record<string, string> = {
@@ -31,7 +36,16 @@ const typeLabels: Record<string, string> = {
   project: "Project",
   assignment: "Assignment",
   task: "Task",
+  event: "Event",
 };
+
+function getResultIcon(result: SearchResult) {
+  if (result.type === "event" && result.category) {
+    const meta = EVENT_CATEGORIES[result.category as EventCategory];
+    if (meta) return meta.icon;
+  }
+  return typeIcons[result.type] ?? FileText;
+}
 
 function getResultLink(result: SearchResult): string {
   switch (result.type) {
@@ -43,6 +57,8 @@ function getResultLink(result: SearchResult): string {
       return `/academic/${result.parentId}`;
     case "task":
       return `/projects/${result.parentId}`;
+    case "event":
+      return `/events/${result.id}`;
     default:
       return "/";
   }
@@ -162,7 +178,7 @@ export function SearchPalette() {
           {results.length > 0 && (
             <div className="max-h-72 overflow-y-auto p-2">
               {results.map((result, i) => {
-                const Icon = typeIcons[result.type] ?? FileText;
+                const Icon = getResultIcon(result);
                 return (
                   <button
                     key={`${result.type}-${result.id}`}

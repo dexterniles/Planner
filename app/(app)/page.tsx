@@ -26,6 +26,7 @@ import { useAllItems } from "@/lib/hooks/use-all-items";
 import { StatsRow } from "@/components/dashboard/stats-row";
 import { TodaysFocus } from "@/components/dashboard/todays-focus";
 import { UpcomingMilestones } from "@/components/dashboard/upcoming-milestones";
+import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { GradeSnapshot } from "@/components/dashboard/grade-snapshot";
 import { RecentDailyLogs } from "@/components/dashboard/recent-daily-logs";
 import { toast } from "sonner";
@@ -231,7 +232,7 @@ export default function DashboardPage() {
         <TodaysFocus />
       </div>
 
-      {/* Upcoming + Milestones */}
+      {/* Upcoming (7 days) + Upcoming Events */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -270,14 +271,17 @@ export default function DashboardPage() {
           )}
         </Card>
 
-        <UpcomingMilestones />
+        <UpcomingEvents />
       </div>
 
-      {/* Grade Snapshot + Recent Daily Logs */}
+      {/* Milestones + Grade Snapshot */}
       <div className="grid gap-6 lg:grid-cols-2">
+        <UpcomingMilestones />
         <GradeSnapshot />
-        <RecentDailyLogs />
       </div>
+
+      {/* Recent Daily Logs */}
+      <RecentDailyLogs />
     </div>
   );
 }

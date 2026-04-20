@@ -5,9 +5,10 @@ import {
   milestones,
   courses,
   projects,
+  events,
   SINGLE_USER_ID,
 } from "@/lib/db/schema";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, sql, or, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -27,8 +28,7 @@ export async function GET(request: Request) {
   const startDate = new Date(year, mon - 1, 1);
   const endDate = new Date(year, mon, 1); // first of next month
 
-  // Run all three queries in parallel instead of through the UNION view
-  const [assignmentRows, taskRows, milestoneRows] = await Promise.all([
+  const [assignmentRows, taskRows, milestoneRows, eventRows] = await Promise.all([
     db
       .select({
         sourceType: sql<string>`'assignment'`.as("source_type"),
@@ -38,6 +38,9 @@ export async function GET(request: Request) {
         workspaceId: courses.workspaceId,
         title: assignments.title,
         dueDate: assignments.dueDate,
+        endDate: sql<string | null>`NULL`.as("end_date"),
+        allDay: sql<boolean>`false`.as("all_day"),
+        category: sql<string | null>`NULL`.as("category"),
         status: sql<string>`${assignments.status}::text`,
         color: courses.color,
       })
@@ -59,6 +62,9 @@ export async function GET(request: Request) {
         workspaceId: projects.workspaceId,
         title: tasks.title,
         dueDate: tasks.dueDate,
+        endDate: sql<string | null>`NULL`.as("end_date"),
+        allDay: sql<boolean>`false`.as("all_day"),
+        category: sql<string | null>`NULL`.as("category"),
         status: sql<string>`${tasks.status}::text`,
         color: projects.color,
       })
@@ -80,12 +86,58 @@ export async function GET(request: Request) {
         workspaceId: projects.workspaceId,
         title: milestones.title,
         dueDate: sql`${milestones.targetDate}::timestamptz`.as("due_date"),
+        endDate: sql<string | null>`NULL`.as("end_date"),
+        allDay: sql<boolean>`false`.as("all_day"),
+        category: sql<string | null>`NULL`.as("category"),
         status: sql<string>`CASE WHEN ${milestones.completedAt} IS NOT NULL THEN 'done' ELSE 'pending' END`,
         color: projects.color,
       })
       .from(milestones)
       .innerJoin(projects, eq(milestones.projectId, projects.id))
       .where(eq(projects.userId, SINGLE_USER_ID)),
+    // Events: include if they start in month, end in month, or span across it
+    db
+      .select({
+        sourceType: sql<string>`'event'`.as("source_type"),
+        sourceId: events.id,
+        parentId: events.id,
+        userId: events.userId,
+        workspaceId: sql<string | null>`NULL`.as("workspace_id"),
+        title: events.title,
+        dueDate: events.startsAt,
+        endDate: events.endsAt,
+        allDay: events.allDay,
+        category: sql<string>`${events.category}::text`,
+        status: sql<string>`${events.status}::text`,
+        color: events.color,
+      })
+      .from(events)
+      .where(
+        and(
+          eq(events.userId, SINGLE_USER_ID),
+          or(
+            // Starts in month
+            and(
+              gte(events.startsAt, startDate),
+              lte(events.startsAt, endDate),
+            ),
+            // Ends in month
+            and(
+              sql`${events.endsAt} IS NOT NULL`,
+              gte(events.endsAt, startDate),
+              lte(events.endsAt, endDate),
+            ),
+            // Spans across month (starts before, ends after)
+            and(
+              lte(events.startsAt, startDate),
+              or(
+                isNull(events.endsAt),
+                gte(events.endsAt, endDate),
+              ),
+            ),
+          ),
+        ),
+      ),
   ]);
 
   // Filter milestones in JS (date column is stored as text, not timestamp)
@@ -95,15 +147,18 @@ export async function GET(request: Request) {
     return d >= startDate && d < endDate;
   });
 
-  const allItems = [...assignmentRows, ...taskRows, ...filteredMilestones].sort(
-    (a, b) => {
-      if (!a.dueDate || !b.dueDate) return 0;
-      return (
-        new Date(a.dueDate as string).getTime() -
-        new Date(b.dueDate as string).getTime()
-      );
-    },
-  );
+  const allItems = [
+    ...assignmentRows,
+    ...taskRows,
+    ...filteredMilestones,
+    ...eventRows,
+  ].sort((a, b) => {
+    if (!a.dueDate || !b.dueDate) return 0;
+    return (
+      new Date(a.dueDate as string).getTime() -
+      new Date(b.dueDate as string).getTime()
+    );
+  });
 
   return NextResponse.json(allItems);
 }

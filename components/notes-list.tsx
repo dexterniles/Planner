@@ -24,7 +24,7 @@ import {
 import { toast } from "sonner";
 
 interface NotesListProps {
-  parentType: "course" | "project" | "assignment" | "task";
+  parentType: "course" | "project" | "assignment" | "task" | "event";
   parentId: string;
   /** Show session date field (useful for courses, to tag a note to a specific class) */
   showSessionDate?: boolean;
