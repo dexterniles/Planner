@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { recurrenceRules, assignments, tasks } from "@/lib/db/schema";
+import { recurrenceRules, assignments, tasks, events } from "@/lib/db/schema";
 import { createRecurrenceRuleSchema } from "@/lib/validations/recurrence";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -22,11 +22,16 @@ export async function POST(request: Request) {
       .update(assignments)
       .set({ recurrenceRuleId: rule.id })
       .where(eq(assignments.id, parsed.data.ownerId));
-  } else {
+  } else if (parsed.data.ownerType === "task") {
     await db
       .update(tasks)
       .set({ recurrenceRuleId: rule.id })
       .where(eq(tasks.id, parsed.data.ownerId));
+  } else {
+    await db
+      .update(events)
+      .set({ recurrenceRuleId: rule.id })
+      .where(eq(events.id, parsed.data.ownerId));
   }
 
   return NextResponse.json(rule, { status: 201 });

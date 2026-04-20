@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createRecurrenceRuleSchema = z.object({
-  ownerType: z.enum(["assignment", "task"]),
+  ownerType: z.enum(["assignment", "task", "event"]),
   ownerId: z.string().uuid(),
   frequency: z.enum(["daily", "weekly", "biweekly", "monthly", "custom"]),
   interval: z.number().int().min(1).optional(),

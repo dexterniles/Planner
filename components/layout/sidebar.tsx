@@ -8,6 +8,7 @@ import {
   List,
   GraduationCap,
   FolderKanban,
+  PartyPopper,
   BookOpen,
   Settings,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const navItems = [
   { label: "All Items", href: "/items", icon: List },
   { label: "Academic", href: "/academic", icon: GraduationCap },
   { label: "Projects", href: "/projects", icon: FolderKanban },
+  { label: "Events", href: "/events", icon: PartyPopper },
   { label: "Daily Log", href: "/daily-log", icon: BookOpen },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
