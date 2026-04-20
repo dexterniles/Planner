@@ -11,6 +11,7 @@ import { TaskList } from "@/components/projects/task-list";
 import { MilestoneList } from "@/components/projects/milestone-list";
 import { TimerStartButton } from "@/components/layout/timer";
 import { TimeLogHistory } from "@/components/time-log-history";
+import { NotesList } from "@/components/notes-list";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusLabels: Record<string, string> = {
@@ -119,6 +120,7 @@ export default function ProjectDetailPage({
         <TabsList>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="milestones">Milestones</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="time">Time Log</TabsTrigger>
         </TabsList>
 
@@ -128,6 +130,10 @@ export default function ProjectDetailPage({
 
         <TabsContent value="milestones" className="mt-4">
           <MilestoneList projectId={projectId} />
+        </TabsContent>
+
+        <TabsContent value="notes" className="mt-4">
+          <NotesList parentType="project" parentId={projectId} />
         </TabsContent>
 
         <TabsContent value="time" className="mt-4">

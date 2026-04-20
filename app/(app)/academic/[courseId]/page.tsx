@@ -10,8 +10,10 @@ import { useCourse } from "@/lib/hooks/use-courses";
 import { AssignmentList } from "@/components/academic/assignment-list";
 import { GradeCategoryList } from "@/components/academic/grade-category-list";
 import { GradeCalculator } from "@/components/academic/grade-calculator";
+import { GradeProjector } from "@/components/academic/grade-projector";
 import { TimerStartButton } from "@/components/layout/timer";
 import { TimeLogHistory } from "@/components/time-log-history";
+import { NotesList } from "@/components/notes-list";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusLabels: Record<string, string> = {
@@ -92,6 +94,8 @@ export default function CourseDetailPage({
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="categories">Grade Categories</TabsTrigger>
           <TabsTrigger value="grades">Grade Calculator</TabsTrigger>
+          <TabsTrigger value="projections">Projections</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="time">Time Log</TabsTrigger>
         </TabsList>
 
@@ -105,6 +109,14 @@ export default function CourseDetailPage({
 
         <TabsContent value="grades" className="mt-4">
           <GradeCalculator courseId={courseId} />
+        </TabsContent>
+
+        <TabsContent value="projections" className="mt-4">
+          <GradeProjector courseId={courseId} />
+        </TabsContent>
+
+        <TabsContent value="notes" className="mt-4">
+          <NotesList parentType="course" parentId={courseId} showSessionDate />
         </TabsContent>
 
         <TabsContent value="time" className="mt-4">

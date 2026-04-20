@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus, X, Check, Inbox, CalendarDays, ListChecks } from "lucide-react";
+import {
+  Plus,
+  X,
+  Check,
+  Inbox,
+  CalendarDays,
+  ListChecks,
+  CalendarClock,
+} from "lucide-react";
+import { parseDate } from "@/lib/parse-date";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -54,6 +63,10 @@ const statusLabels: Record<string, string> = {
 
 export default function DashboardPage() {
   const [newCapture, setNewCapture] = useState("");
+  const parsedCaptureDate = useMemo(
+    () => parseDate(newCapture),
+    [newCapture],
+  );
   const { data: inboxItems } = useInbox();
   const createInboxItem = useCreateInboxItem();
   const deleteInboxItem = useDeleteInboxItem();
@@ -162,14 +175,29 @@ export default function DashboardPage() {
             </Button>
           </div>
 
+          {parsedCaptureDate && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-primary">
+              <CalendarClock className="h-3 w-3" />
+              <span>Detected: {parsedCaptureDate.preview}</span>
+            </div>
+          )}
+
           {untriagedItems.length > 0 && (
             <div className="mt-3 space-y-1">
-              {untriagedItems.map((item: InboxItem) => (
+              {untriagedItems.map((item: InboxItem) => {
+                const itemDate = parseDate(item.content);
+                return (
                 <div
                   key={item.id}
                   className="group flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
                 >
                   <span className="flex-1">{item.content}</span>
+                  {itemDate && (
+                    <span className="flex items-center gap-1 text-xs text-primary whitespace-nowrap">
+                      <CalendarClock className="h-3 w-3" />
+                      {itemDate.preview}
+                    </span>
+                  )}
                   <span className="text-xs text-muted-foreground">
                     {new Date(item.capturedAt).toLocaleTimeString([], {
                       hour: "2-digit",
@@ -194,7 +222,8 @@ export default function DashboardPage() {
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Card>
