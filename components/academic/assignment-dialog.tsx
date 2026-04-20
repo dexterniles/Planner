@@ -199,7 +199,12 @@ export function AssignmentDialog({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(value) =>
+                      STATUS_OPTIONS.find((o) => o.value === value)?.label ??
+                      value
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {STATUS_OPTIONS.map((opt) => (
@@ -222,7 +227,15 @@ export function AssignmentDialog({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(value) => {
+                      if (value === "none" || !value) return "No category";
+                      const cat = categories?.find(
+                        (c: { id: string }) => c.id === value,
+                      );
+                      return cat ? `${cat.name} (${cat.weight}%)` : value;
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No category</SelectItem>
@@ -245,7 +258,12 @@ export function AssignmentDialog({
                 id="pointsPossible"
                 type="number"
                 step="0.01"
-                {...register("pointsPossible", { valueAsNumber: true })}
+                {...register("pointsPossible", {
+                  setValueAs: (v) =>
+                    v === "" || v == null || Number.isNaN(Number(v))
+                      ? null
+                      : Number(v),
+                })}
                 placeholder="100"
               />
             </div>
@@ -255,7 +273,12 @@ export function AssignmentDialog({
                 id="pointsEarned"
                 type="number"
                 step="0.01"
-                {...register("pointsEarned", { valueAsNumber: true })}
+                {...register("pointsEarned", {
+                  setValueAs: (v) =>
+                    v === "" || v == null || Number.isNaN(Number(v))
+                      ? null
+                      : Number(v),
+                })}
                 placeholder="—"
               />
             </div>

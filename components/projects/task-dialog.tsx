@@ -188,7 +188,12 @@ export function TaskDialog({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue />
+                  <SelectValue>
+                    {(value) =>
+                      STATUS_OPTIONS.find((o) => o.value === value)?.label ??
+                      value
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {STATUS_OPTIONS.map((opt) => (
@@ -210,7 +215,12 @@ export function TaskDialog({
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(value) =>
+                    PRIORITY_OPTIONS.find((o) => o.value === value)?.label ??
+                    value
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {PRIORITY_OPTIONS.map((opt) => (

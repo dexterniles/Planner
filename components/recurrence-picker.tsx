@@ -121,7 +121,11 @@ export function RecurrencePicker({
 
       <Select value={frequency} onValueChange={(val) => setFrequency(val ?? "weekly")}>
         <SelectTrigger className="w-full">
-          <SelectValue />
+          <SelectValue>
+            {(value) =>
+              FREQUENCY_OPTIONS.find((o) => o.value === value)?.label ?? value
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {FREQUENCY_OPTIONS.map((opt) => (

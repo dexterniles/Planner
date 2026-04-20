@@ -147,7 +147,12 @@ export function CourseDialog({
               <Input
                 id="credits"
                 type="number"
-                {...register("credits", { valueAsNumber: true })}
+                {...register("credits", {
+                  setValueAs: (v) =>
+                    v === "" || v == null || Number.isNaN(Number(v))
+                      ? null
+                      : Number(v),
+                })}
                 placeholder="3"
               />
             </div>
