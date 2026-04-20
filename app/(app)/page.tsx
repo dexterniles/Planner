@@ -101,105 +101,105 @@ export default function DashboardPage() {
       {/* Stats Row */}
       <StatsRow />
 
-      {/* Quick Capture */}
-      <Card className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Inbox className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-semibold">Quick Capture</h2>
-          {untriagedItems.length > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {untriagedItems.length}
-            </Badge>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            value={newCapture}
-            onChange={(e) => setNewCapture(e.target.value)}
-            placeholder="Capture a thought, idea, or todo..."
-            onKeyDown={(e) => e.key === "Enter" && handleCapture()}
-          />
-          <Button
-            onClick={handleCapture}
-            disabled={!newCapture.trim() || createInboxItem.isPending}
-            size="icon"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {untriagedItems.length > 0 && (
-          <div className="mt-3 space-y-1">
-            {untriagedItems.map((item: InboxItem) => (
-              <div
-                key={item.id}
-                className="group flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+      {/* Overdue (full-width alert when items exist) */}
+      {overdueItems.length > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <ListChecks className="h-4 w-4 text-red-500" />
+            <h2 className="font-semibold text-red-500">
+              Overdue ({overdueItems.length})
+            </h2>
+          </div>
+          <div className="space-y-1">
+            {overdueItems.map((item: AllItem) => (
+              <Link
+                key={`${item.type}-${item.id}`}
+                href={getItemLink(item)}
+                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
               >
-                <span className="flex-1">{item.content}</span>
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: item.parentColor ?? "#888" }}
+                />
+                <span className="flex-1 font-medium">{item.title}</span>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(item.capturedAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {item.parentName}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  title="Mark as triaged"
-                  onClick={() => triageInboxItem.mutate(item.id)}
-                >
-                  <Check className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  className="text-destructive"
-                  title="Dismiss"
-                  onClick={() => deleteInboxItem.mutate(item.id)}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
+                <span className="text-xs text-red-500">
+                  {new Date(item.dueDate!).toLocaleDateString()}
+                </span>
+              </Link>
             ))}
           </div>
-        )}
-      </Card>
+        </Card>
+      )}
 
-      {/* Today's Focus + Overdue */}
+      {/* Quick Capture + Today's Focus */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <TodaysFocus />
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Inbox className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-semibold">Quick Capture</h2>
+            {untriagedItems.length > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {untriagedItems.length}
+              </Badge>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={newCapture}
+              onChange={(e) => setNewCapture(e.target.value)}
+              placeholder="Capture a thought, idea, or todo..."
+              onKeyDown={(e) => e.key === "Enter" && handleCapture()}
+            />
+            <Button
+              onClick={handleCapture}
+              disabled={!newCapture.trim() || createInboxItem.isPending}
+              size="icon"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
 
-        {overdueItems.length > 0 && (
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ListChecks className="h-4 w-4 text-red-500" />
-              <h2 className="font-semibold text-red-500">
-                Overdue ({overdueItems.length})
-              </h2>
-            </div>
-            <div className="space-y-1">
-              {overdueItems.map((item: AllItem) => (
-                <Link
-                  key={`${item.type}-${item.id}`}
-                  href={getItemLink(item)}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
+          {untriagedItems.length > 0 && (
+            <div className="mt-3 space-y-1">
+              {untriagedItems.map((item: InboxItem) => (
+                <div
+                  key={item.id}
+                  className="group flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
                 >
-                  <div
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: item.parentColor ?? "#888" }}
-                  />
-                  <span className="flex-1 font-medium">{item.title}</span>
+                  <span className="flex-1">{item.content}</span>
                   <span className="text-xs text-muted-foreground">
-                    {item.parentName}
+                    {new Date(item.capturedAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
-                  <span className="text-xs text-red-500">
-                    {new Date(item.dueDate!).toLocaleDateString()}
-                  </span>
-                </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    title="Mark as triaged"
+                    onClick={() => triageInboxItem.mutate(item.id)}
+                  >
+                    <Check className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="text-destructive"
+                    title="Dismiss"
+                    onClick={() => deleteInboxItem.mutate(item.id)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
               ))}
             </div>
-          </Card>
-        )}
+          )}
+        </Card>
+
+        <TodaysFocus />
       </div>
 
       {/* Upcoming + Milestones */}
