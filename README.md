@@ -77,13 +77,13 @@ curl http://localhost:3000/api/health
 ```
 app/
   (app)/              ← Main app layout with sidebar + topbar
-    page.tsx           ← Dashboard (today view placeholder)
-    calendar/          ← Calendar placeholder
-    items/             ← All items placeholder
-    academic/          ← Academic placeholder
-    projects/          ← Projects placeholder
-    daily-log/         ← Daily log placeholder
-    settings/          ← Settings placeholder
+    page.tsx           ← Dashboard
+    calendar/          ← Unified calendar
+    academic/          ← Courses, assignments, grades
+    projects/          ← Projects, tasks, milestones
+    events/            ← Life events (dinners, concerts, etc.)
+    daily-log/         ← Journal with mood tracking
+    settings/          ← Tags + data export
   api/health/          ← DB connectivity check
   layout.tsx           ← Root layout with providers
 components/

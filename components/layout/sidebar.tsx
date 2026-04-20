@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Calendar,
-  List,
   GraduationCap,
   FolderKanban,
   PartyPopper,
@@ -17,7 +16,6 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
   { label: "Calendar", href: "/calendar", icon: Calendar },
-  { label: "All Items", href: "/items", icon: List },
   { label: "Academic", href: "/academic", icon: GraduationCap },
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Events", href: "/events", icon: PartyPopper },
