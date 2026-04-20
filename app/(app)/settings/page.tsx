@@ -103,7 +103,7 @@ export default function SettingsPage() {
           <div>
             <h2 className="text-lg font-semibold">Tags</h2>
             <p className="text-sm text-muted-foreground">
-              Manage tags for organizing your courses, projects, and items.
+              Labels for organizing items.
             </p>
           </div>
           <Button size="sm" onClick={() => openDialog()}>
@@ -161,9 +161,9 @@ export default function SettingsPage() {
 
       <div>
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Data Export</h2>
+          <h2 className="text-lg font-semibold">Export</h2>
           <p className="text-sm text-muted-foreground">
-            Download all your data as JSON (full backup) or CSV (items summary).
+            JSON is a full backup. CSV is an items summary.
           </p>
         </div>
         <div className="flex gap-3">

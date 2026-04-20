@@ -132,7 +132,7 @@ export default function DailyLogPage() {
                   setContent(e.target.value);
                   setIsDirty(true);
                 }}
-                placeholder="How was your day? What did you work on? What's on your mind?"
+                placeholder="What happened today?"
                 rows={16}
                 className="resize-y font-mono text-sm"
               />

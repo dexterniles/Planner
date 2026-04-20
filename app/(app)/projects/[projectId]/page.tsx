@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useProject } from "@/lib/hooks/use-projects";
 import { TaskList } from "@/components/projects/task-list";
 import { MilestoneList } from "@/components/projects/milestone-list";
+import { ProjectSnapshot } from "@/components/projects/project-snapshot";
 import { TimerStartButton } from "@/components/layout/timer";
 import { TimeLogHistory } from "@/components/time-log-history";
 import { NotesList } from "@/components/notes-list";
@@ -115,6 +116,8 @@ export default function ProjectDetailPage({
           </div>
         </div>
       </div>
+
+      <ProjectSnapshot projectId={projectId} />
 
       <Tabs defaultValue="tasks">
         <TabsList>

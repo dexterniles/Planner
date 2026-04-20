@@ -98,7 +98,7 @@ export default function ItemsPage() {
                 size="sm"
                 onClick={() => setTypeFilter(f)}
               >
-                {f === "all" ? "All Types" : f === "assignment" ? "Assignments" : "Tasks"}
+                {f === "all" ? "All" : f === "assignment" ? "Assignments" : "Tasks"}
               </Button>
             ))}
           </div>
@@ -193,7 +193,7 @@ export default function ItemsPage() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        {filtered.length} of {items?.length ?? 0} items shown
+        {filtered.length} of {items?.length ?? 0}
       </p>
     </div>
   );

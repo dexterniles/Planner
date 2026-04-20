@@ -11,6 +11,7 @@ import { AssignmentList } from "@/components/academic/assignment-list";
 import { GradeCategoryList } from "@/components/academic/grade-category-list";
 import { GradeCalculator } from "@/components/academic/grade-calculator";
 import { GradeProjector } from "@/components/academic/grade-projector";
+import { CourseSnapshot } from "@/components/academic/course-snapshot";
 import { TimerStartButton } from "@/components/layout/timer";
 import { TimeLogHistory } from "@/components/time-log-history";
 import { NotesList } from "@/components/notes-list";
@@ -88,6 +89,8 @@ export default function CourseDetailPage({
           </div>
         </div>
       </div>
+
+      <CourseSnapshot courseId={courseId} />
 
       <Tabs defaultValue="assignments">
         <TabsList>

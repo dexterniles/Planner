@@ -163,7 +163,7 @@ export default function DashboardPage() {
             <Input
               value={newCapture}
               onChange={(e) => setNewCapture(e.target.value)}
-              placeholder="Capture a thought, idea, or todo..."
+              placeholder="Capture anything..."
               onKeyDown={(e) => e.key === "Enter" && handleCapture()}
             />
             <Button

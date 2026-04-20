@@ -195,7 +195,7 @@ export default function CalendarPage() {
       {items && items.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">
-            This month ({items.length} items)
+            This month · {items.length}
           </h3>
           <div className="space-y-1">
             {items.map((item: CalendarItem) => (
