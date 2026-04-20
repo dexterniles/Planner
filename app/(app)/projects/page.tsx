@@ -7,6 +7,7 @@ import { useProjects } from "@/lib/hooks/use-projects";
 import { useWorkspaces } from "@/lib/hooks/use-workspaces";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ProjectDialog } from "@/components/projects/project-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Project = {
   id: string;
@@ -36,8 +37,14 @@ export default function ProjectsPage() {
   if (loadingWorkspaces || loadingProjects) {
     return (
       <div>
-        <h1 className="text-2xl font-bold">Projects</h1>
-        <p className="mt-4 text-muted-foreground">Loading...</p>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Projects</h1>
+        </div>
+        <div className="mt-6 grid gap-3">
+          <Skeleton className="h-[76px] w-full" />
+          <Skeleton className="h-[76px] w-full" />
+          <Skeleton className="h-[76px] w-full" />
+        </div>
       </div>
     );
   }

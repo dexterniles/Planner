@@ -7,6 +7,7 @@ import { useCourses } from "@/lib/hooks/use-courses";
 import { useWorkspaces } from "@/lib/hooks/use-workspaces";
 import { CourseCard } from "@/components/academic/course-card";
 import { CourseDialog } from "@/components/academic/course-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AcademicPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -24,8 +25,14 @@ export default function AcademicPage() {
   if (loadingWorkspaces || loadingCourses) {
     return (
       <div>
-        <h1 className="text-2xl font-bold">Academic</h1>
-        <p className="mt-4 text-muted-foreground">Loading...</p>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Academic</h1>
+        </div>
+        <div className="mt-6 grid gap-3">
+          <Skeleton className="h-[76px] w-full" />
+          <Skeleton className="h-[76px] w-full" />
+          <Skeleton className="h-[76px] w-full" />
+        </div>
       </div>
     );
   }

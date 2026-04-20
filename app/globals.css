@@ -39,33 +39,41 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+
+  /* Softer radius scale: 4 / 8 / 12 / 16 / 20 / 24 / 32 px */
+  --radius-sm: calc(var(--radius) * 0.33);
+  --radius-md: calc(var(--radius) * 0.67);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.33);
+  --radius-2xl: calc(var(--radius) * 1.67);
+  --radius-3xl: calc(var(--radius) * 2);
+  --radius-4xl: calc(var(--radius) * 2.67);
+
+  /* Elevation shadows */
+  --shadow-sm: var(--shadow-elev-sm);
+  --shadow-md: var(--shadow-elev-md);
+  --shadow-lg: var(--shadow-elev-lg);
+  --shadow-xl: var(--shadow-elev-xl);
 }
 
 /* ─── Light: clean off-white with neutral grays, soft blue accent ─────── */
 :root {
   --background: oklch(0.99 0.002 250);
-  --foreground: oklch(0.27 0.005 250);
+  --foreground: oklch(0.22 0.005 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.27 0.005 250);
+  --card-foreground: oklch(0.22 0.005 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.27 0.005 250);
+  --popover-foreground: oklch(0.22 0.005 250);
   --primary: oklch(0.55 0.15 250);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.955 0.003 250);
+  --secondary: oklch(0.96 0.003 250);
   --secondary-foreground: oklch(0.35 0.005 250);
-  --muted: oklch(0.96 0.003 250);
+  --muted: oklch(0.965 0.003 250);
   --muted-foreground: oklch(0.52 0.005 250);
-  --accent: oklch(0.95 0.01 250);
-  --accent-foreground: oklch(0.30 0.005 250);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.003 250);
+  --accent: oklch(0.955 0.008 250);
+  --accent-foreground: oklch(0.28 0.005 250);
+  --destructive: oklch(0.58 0.22 25);
+  --border: oklch(0.93 0.003 250 / 0.8);
   --input: oklch(0.92 0.003 250);
   --ring: oklch(0.55 0.15 250);
   --chart-1: oklch(0.55 0.15 250);
@@ -73,77 +81,160 @@
   --chart-3: oklch(0.65 0.15 50);
   --chart-4: oklch(0.55 0.20 330);
   --chart-5: oklch(0.60 0.12 200);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.965 0.003 250);
+
+  /* 12px base = rounded-lg on cards */
+  --radius: 0.75rem;
+
+  --sidebar: oklch(0.975 0.003 250);
   --sidebar-foreground: oklch(0.35 0.005 250);
   --sidebar-primary: oklch(0.55 0.15 250);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.93 0.008 250);
-  --sidebar-accent-foreground: oklch(0.27 0.005 250);
-  --sidebar-border: oklch(0.92 0.003 250);
+  --sidebar-accent: oklch(0.94 0.008 250);
+  --sidebar-accent-foreground: oklch(0.25 0.005 250);
+  --sidebar-border: oklch(0.93 0.003 250 / 0.8);
   --sidebar-ring: oklch(0.55 0.15 250);
+
+  /* Elevation — light mode: subtle cool shadows */
+  --shadow-elev-sm: 0 1px 2px 0 oklch(0.2 0.02 250 / 0.04);
+  --shadow-elev-md: 0 2px 4px -1px oklch(0.2 0.02 250 / 0.05), 0 4px 8px -2px oklch(0.2 0.02 250 / 0.04);
+  --shadow-elev-lg: 0 4px 12px -2px oklch(0.2 0.02 250 / 0.08), 0 8px 24px -4px oklch(0.2 0.02 250 / 0.06);
+  --shadow-elev-xl: 0 10px 32px -4px oklch(0.2 0.02 250 / 0.12), 0 16px 48px -8px oklch(0.2 0.02 250 / 0.08);
 }
 
 /* ─── Dark: warm charcoal with soft surfaces, blue accent ────────────── */
 .dark {
-  --background: oklch(0.185 0.005 250);
-  --foreground: oklch(0.84 0.005 80);
-  --card: oklch(0.22 0.006 250);
-  --card-foreground: oklch(0.84 0.005 80);
-  --popover: oklch(0.22 0.006 250);
-  --popover-foreground: oklch(0.84 0.005 80);
-  --primary: oklch(0.62 0.16 250);
-  --primary-foreground: oklch(0.98 0 0);
+  --background: oklch(0.18 0.005 250);
+  --foreground: oklch(0.86 0.005 80);
+  --card: oklch(0.215 0.006 250);
+  --card-foreground: oklch(0.86 0.005 80);
+  --popover: oklch(0.225 0.006 250);
+  --popover-foreground: oklch(0.86 0.005 80);
+  --primary: oklch(0.65 0.16 250);
+  --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.26 0.006 250);
-  --secondary-foreground: oklch(0.82 0.005 80);
-  --muted: oklch(0.26 0.006 250);
-  --muted-foreground: oklch(0.58 0.005 80);
+  --secondary-foreground: oklch(0.84 0.005 80);
+  --muted: oklch(0.255 0.006 250);
+  --muted-foreground: oklch(0.6 0.005 80);
   --accent: oklch(0.28 0.008 250);
-  --accent-foreground: oklch(0.84 0.005 80);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.30 0.006 250);
-  --input: oklch(0.30 0.006 250);
-  --ring: oklch(0.62 0.16 250);
-  --chart-1: oklch(0.62 0.16 250);
+  --accent-foreground: oklch(0.88 0.005 80);
+  --destructive: oklch(0.704 0.191 22);
+  --border: oklch(0.3 0.008 250 / 0.6);
+  --input: oklch(0.3 0.008 250);
+  --ring: oklch(0.65 0.16 250);
+  --chart-1: oklch(0.65 0.16 250);
   --chart-2: oklch(0.65 0.16 150);
   --chart-3: oklch(0.70 0.15 50);
   --chart-4: oklch(0.60 0.20 330);
   --chart-5: oklch(0.65 0.12 200);
-  --sidebar: oklch(0.20 0.006 250);
-  --sidebar-foreground: oklch(0.78 0.005 80);
-  --sidebar-primary: oklch(0.62 0.16 250);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar: oklch(0.2 0.006 250);
+  --sidebar-foreground: oklch(0.8 0.005 80);
+  --sidebar-primary: oklch(0.65 0.16 250);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.27 0.008 250);
-  --sidebar-accent-foreground: oklch(0.84 0.005 80);
-  --sidebar-border: oklch(0.30 0.006 250);
-  --sidebar-ring: oklch(0.62 0.16 250);
+  --sidebar-accent-foreground: oklch(0.88 0.005 80);
+  --sidebar-border: oklch(0.3 0.008 250 / 0.6);
+  --sidebar-ring: oklch(0.65 0.16 250);
+
+  /* Elevation — dark mode: deeper shadows */
+  --shadow-elev-sm: 0 1px 2px 0 oklch(0 0 0 / 0.3);
+  --shadow-elev-md: 0 2px 4px -1px oklch(0 0 0 / 0.35), 0 4px 8px -2px oklch(0 0 0 / 0.25);
+  --shadow-elev-lg: 0 4px 12px -2px oklch(0 0 0 / 0.45), 0 8px 24px -4px oklch(0 0 0 / 0.3);
+  --shadow-elev-xl: 0 10px 32px -4px oklch(0 0 0 / 0.55), 0 16px 48px -8px oklch(0 0 0 / 0.4);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
+  /* Better font rendering + Inter character variants */
   html {
     @apply font-sans;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
   }
 
   /* ─── Typography hierarchy ──────────────────────────────────────────── */
   h1 {
-    @apply text-2xl font-semibold tracking-tight;
+    @apply text-2xl font-semibold;
+    letter-spacing: -0.02em;
   }
   h2 {
-    @apply text-xl font-semibold tracking-tight;
+    @apply text-xl font-semibold;
+    letter-spacing: -0.015em;
   }
   h3 {
     @apply text-lg font-medium;
+    letter-spacing: -0.01em;
   }
   h4 {
     @apply text-base font-medium;
   }
   p {
-    @apply leading-relaxed;
+    line-height: 1.6;
   }
+
+  /* Tabular numbers for stats, scores, times */
+  .tabular-nums,
+  [data-nums] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ─── Motion tokens ─────────────────────────────────────────────────── */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 220ms;
+  --duration-slow: 350ms;
+}
+
+/* ─── Page transition ───────────────────────────────────────────────── */
+@keyframes page-mount {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: page-mount var(--duration-slow) var(--ease-out);
+}
+
+/* ─── Skeleton shimmer ──────────────────────────────────────────────── */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+  background: var(--muted);
+  border-radius: var(--radius-md);
+}
+
+/* ─── Smooth scroll + focus polish ──────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Smoother focus transitions globally */
+*:focus-visible {
+  transition: outline-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
 }

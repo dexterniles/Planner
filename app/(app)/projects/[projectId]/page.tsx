@@ -11,6 +11,7 @@ import { TaskList } from "@/components/projects/task-list";
 import { MilestoneList } from "@/components/projects/milestone-list";
 import { TimerStartButton } from "@/components/layout/timer";
 import { TimeLogHistory } from "@/components/time-log-history";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusLabels: Record<string, string> = {
   planning: "Planning",
@@ -43,8 +44,16 @@ export default function ProjectDetailPage({
 
   if (isLoading) {
     return (
-      <div>
-        <p className="text-muted-foreground">Loading project...</p>
+      <div className="space-y-6">
+        <div className="flex items-start gap-4">
+          <Skeleton className="h-8 w-8 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-7 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+        </div>
+        <Skeleton className="h-9 w-60 rounded-lg" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }

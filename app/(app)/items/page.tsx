@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAllItems } from "@/lib/hooks/use-all-items";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
 
 interface Item {
@@ -119,7 +120,12 @@ export default function ItemsPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Loading...</p>
+        <div className="space-y-2">
+          <Skeleton className="h-11 w-full rounded-lg" />
+          <Skeleton className="h-11 w-full rounded-lg" />
+          <Skeleton className="h-11 w-full rounded-lg" />
+          <Skeleton className="h-11 w-full rounded-lg" />
+        </div>
       ) : filtered.length === 0 ? (
         <p className="text-muted-foreground mt-8 text-center">
           {items?.length === 0

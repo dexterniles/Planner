@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCalendarItems } from "@/lib/hooks/use-calendar-items";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CalendarItem {
   sourceType: string;
@@ -122,7 +123,7 @@ export default function CalendarPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Loading...</p>
+        <Skeleton className="h-[450px] w-full rounded-xl" />
       ) : (
         <div className="rounded-lg border overflow-hidden">
           <div className="grid grid-cols-7">

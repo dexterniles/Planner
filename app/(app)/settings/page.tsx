@@ -16,6 +16,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from "@/lib/hooks/use-tags";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 const TAG_COLORS = [
@@ -112,7 +113,11 @@ export default function SettingsPage() {
         </div>
 
         {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-10 w-24 rounded-xl" />
+            <Skeleton className="h-10 w-28 rounded-xl" />
+            <Skeleton className="h-10 w-20 rounded-xl" />
+          </div>
         ) : tags?.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No tags yet. Create tags to categorize your items.

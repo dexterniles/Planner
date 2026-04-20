@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useDailyLog, useUpsertDailyLog } from "@/lib/hooks/use-daily-log";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 function formatDate(date: Date): string {
@@ -112,7 +113,13 @@ export default function DailyLogPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Loading...</p>
+        <div className="grid gap-6 lg:grid-cols-[1fr_250px]">
+          <Skeleton className="h-[360px] w-full rounded-lg" />
+          <div className="space-y-4">
+            <Skeleton className="h-[140px] w-full rounded-xl" />
+            <Skeleton className="h-[80px] w-full rounded-xl" />
+          </div>
+        </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1fr_250px]">
           <div className="space-y-4">

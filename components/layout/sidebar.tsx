@@ -27,9 +27,12 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r bg-sidebar">
+    <aside className="flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar">
       <div className="flex h-12 items-center border-b border-sidebar-border px-5">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-primary">
+        <Link
+          href="/"
+          className="text-lg font-semibold tracking-tight text-primary transition-opacity hover:opacity-80"
+        >
           Planner
         </Link>
       </div>
@@ -44,13 +47,26 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
+                "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150 ease-out",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <span
+                className={cn(
+                  "absolute left-0 top-1/2 h-5 w-[3px] -translate-x-[11px] -translate-y-1/2 rounded-r-full bg-primary transition-all duration-200 ease-out",
+                  isActive
+                    ? "opacity-100 scale-y-100"
+                    : "opacity-0 scale-y-0",
+                )}
+              />
+              <item.icon
+                className={cn(
+                  "h-4 w-4 transition-colors",
+                  isActive ? "text-primary" : "",
+                )}
+              />
               {item.label}
             </Link>
           );

@@ -12,6 +12,7 @@ import { GradeCategoryList } from "@/components/academic/grade-category-list";
 import { GradeCalculator } from "@/components/academic/grade-calculator";
 import { TimerStartButton } from "@/components/layout/timer";
 import { TimeLogHistory } from "@/components/time-log-history";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusLabels: Record<string, string> = {
   active: "Active",
@@ -30,8 +31,16 @@ export default function CourseDetailPage({
 
   if (isLoading) {
     return (
-      <div>
-        <p className="text-muted-foreground">Loading course...</p>
+      <div className="space-y-6">
+        <div className="flex items-start gap-4">
+          <Skeleton className="h-8 w-8 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-7 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+        </div>
+        <Skeleton className="h-9 w-80 rounded-lg" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
