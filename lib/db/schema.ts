@@ -67,6 +67,7 @@ export const noteParentTypeEnum = pgEnum("note_parent_type", [
   "session",
   "daily_log",
   "standalone",
+  "event",
 ]);
 
 export const resourceParentTypeEnum = pgEnum("resource_parent_type", [
@@ -85,6 +86,24 @@ export const resourceTypeEnum = pgEnum("resource_type", [
 export const recurrenceOwnerTypeEnum = pgEnum("recurrence_owner_type", [
   "assignment",
   "task",
+  "event",
+]);
+
+export const eventCategoryEnum = pgEnum("event_category", [
+  "dinner",
+  "concert",
+  "travel",
+  "hangout",
+  "appointment",
+  "social",
+  "other",
+]);
+
+export const eventStatusEnum = pgEnum("event_status", [
+  "confirmed",
+  "tentative",
+  "cancelled",
+  "completed",
 ]);
 
 export const recurrenceFrequencyEnum = pgEnum("recurrence_frequency", [
@@ -269,6 +288,36 @@ export const milestones = pgTable("milestones", {
   completedAt: timestamp("completed_at", { withTimezone: true }),
   ...timestamps,
 });
+
+export const events = pgTable(
+  "events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    category: eventCategoryEnum("category").default("other").notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    allDay: boolean("all_day").default(false).notNull(),
+    location: text("location"),
+    url: text("url"),
+    attendees: text("attendees"),
+    status: eventStatusEnum("status").default("confirmed").notNull(),
+    color: text("color"),
+    recurrenceRuleId: uuid("recurrence_rule_id").references(
+      () => recurrenceRules.id,
+      { onDelete: "set null" },
+    ),
+    ...timestamps,
+  },
+  (table) => [
+    index("events_user_id_idx").on(table.userId),
+    index("events_starts_at_idx").on(table.startsAt),
+    index("events_category_idx").on(table.category),
+    index("events_status_idx").on(table.status),
+  ],
+);
 
 export const notes = pgTable(
   "notes",
