@@ -101,18 +101,20 @@ export function ProjectCard({ project, onEdit }: ProjectCardProps) {
             variant="ghost"
             size="icon-sm"
             onClick={onEdit}
+            aria-label={`Edit ${project.name}`}
             className="opacity-0 group-hover:opacity-100 transition-opacity"
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
             onClick={handleDelete}
             disabled={deleteProject.isPending}
+            aria-label={`Delete ${project.name}`}
             className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
       </div>

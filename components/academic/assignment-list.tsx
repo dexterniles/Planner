@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Repeat } from "lucide-react";
+import { Plus, Pencil, Trash2, Repeat, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -88,9 +88,14 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
       </div>
 
       {assignments?.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No assignments yet. Add one to get started.
-        </p>
+        <div className="flex flex-col items-center py-10 text-center">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/15 to-blue-500/5">
+            <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Nothing due yet. Add homework, papers, or exams to track them.
+          </p>
+        </div>
       ) : (
         <div className="rounded-lg border overflow-x-auto">
           <Table>

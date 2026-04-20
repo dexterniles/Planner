@@ -1,7 +1,14 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import { Plus, Pencil, Trash2, ChevronRight, Repeat } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronRight,
+  Repeat,
+  ListChecks,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -92,14 +99,24 @@ export function TaskList({ projectId }: TaskListProps) {
     }
   }
 
-  const renderTaskRow = (task: Task, isSubtask = false) => (
-    <TableRow key={task.id}>
+  const renderTaskRow = (task: Task, isSubtask = false) => {
+    const isDone = task.status === "done";
+    const isCancelled = task.status === "cancelled";
+    return (
+    <TableRow
+      key={task.id}
+      className={`transition-opacity duration-200 ${isDone || isCancelled ? "opacity-60" : ""}`}
+    >
       <TableCell className="font-medium">
         <div className="flex items-center gap-1">
           {isSubtask && (
             <ChevronRight className="h-3 w-3 text-muted-foreground" />
           )}
-          <span className={isSubtask ? "pl-2" : ""}>{task.title}</span>
+          <span
+            className={`transition-all duration-300 ${isSubtask ? "pl-2" : ""} ${isDone ? "line-through text-muted-foreground" : ""}`}
+          >
+            {task.title}
+          </span>
           {task.recurrenceRuleId && (
             <Repeat className="h-3 w-3 text-primary" />
           )}
@@ -156,7 +173,8 @@ export function TaskList({ projectId }: TaskListProps) {
         </div>
       </TableCell>
     </TableRow>
-  );
+    );
+  };
 
   return (
     <div>
@@ -176,9 +194,14 @@ export function TaskList({ projectId }: TaskListProps) {
       </div>
 
       {topLevelTasks.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No tasks yet. Add one to get started.
-        </p>
+        <div className="flex flex-col items-center py-10 text-center">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/15 to-violet-500/5">
+            <ListChecks className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Break it down. Add a task or two to get started.
+          </p>
+        </div>
       ) : (
         <div className="rounded-lg border overflow-x-auto">
           <Table>

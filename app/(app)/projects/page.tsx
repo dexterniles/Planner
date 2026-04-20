@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProjects } from "@/lib/hooks/use-projects";
 import { useWorkspaces } from "@/lib/hooks/use-workspaces";
@@ -76,11 +76,17 @@ export default function ProjectsPage() {
       </div>
 
       {projects?.length === 0 ? (
-        <div className="mt-12 text-center">
-          <p className="text-muted-foreground">No projects yet.</p>
+        <div className="mt-16 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/15 to-violet-500/5">
+            <FolderKanban className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+          </div>
+          <h3 className="text-base font-medium">Build something great</h3>
+          <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+            Track side projects, hardware builds, or anything with tasks and
+            milestones you want to ship.
+          </p>
           <Button
-            variant="outline"
-            className="mt-4"
+            className="mt-5"
             onClick={() => {
               setEditingProject(null);
               setDialogOpen(true);

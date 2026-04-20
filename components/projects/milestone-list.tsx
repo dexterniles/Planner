@@ -79,9 +79,14 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
       </div>
 
       {milestones?.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No milestones yet. Add milestones to track key deliverables.
-        </p>
+        <div className="flex flex-col items-center py-10 text-center">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/15 to-amber-500/5">
+            <Flag className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Set key milestones to mark progress on the big stuff.
+          </p>
+        </div>
       ) : (
         <div className="grid gap-3">
           {milestones?.map((ms: Milestone) => (
@@ -92,19 +97,26 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
               <div className="flex items-start gap-3">
                 <button
                   onClick={() => handleToggleComplete(ms)}
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                  className={`group/check relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ${
                     ms.completedAt
-                      ? "border-green-500 bg-green-500 text-white"
-                      : "border-muted-foreground hover:border-green-500"
+                      ? "border-emerald-500 bg-gradient-to-br from-emerald-400 to-emerald-500 text-white"
+                      : "border-muted-foreground/60 hover:border-emerald-500 hover:scale-110"
                   }`}
+                  aria-label={
+                    ms.completedAt
+                      ? "Mark milestone as incomplete"
+                      : "Mark milestone as complete"
+                  }
                 >
-                  {ms.completedAt && <Check className="h-3 w-3" />}
+                  {ms.completedAt && (
+                    <Check key={ms.completedAt} className="h-3 w-3 check-burst" strokeWidth={3} />
+                  )}
                 </button>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Flag className="h-4 w-4 text-muted-foreground" />
                     <h4
-                      className={`font-medium ${ms.completedAt ? "line-through" : ""}`}
+                      className={`font-medium transition-all duration-300 ${ms.completedAt ? "line-through text-muted-foreground" : ""}`}
                     >
                       {ms.title}
                     </h4>

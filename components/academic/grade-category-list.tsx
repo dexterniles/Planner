@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -79,9 +79,15 @@ export function GradeCategoryList({ courseId }: GradeCategoryListProps) {
       </div>
 
       {categories?.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No grade categories yet. Add categories to track weighted grades.
-        </p>
+        <div className="flex flex-col items-center py-10 text-center">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/15 to-emerald-500/5">
+            <PieChart className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Set categories like Homework (30%) and Exams (40%) to calculate
+            weighted grades.
+          </p>
+        </div>
       ) : (
         <div className="rounded-lg border overflow-x-auto">
           <Table>

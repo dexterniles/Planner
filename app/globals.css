@@ -212,6 +212,42 @@
   animation: page-mount var(--duration-slow) var(--ease-out);
 }
 
+/* ─── Check burst (milestone/task completion) ──────────────────────── */
+@keyframes check-burst {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.check-burst {
+  animation: check-burst 300ms var(--ease-out);
+}
+
+/* ─── Completion ring pulse ─────────────────────────────────────────── */
+@keyframes complete-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--color-primary);
+    opacity: 0.8;
+  }
+  100% {
+    box-shadow: 0 0 0 8px transparent;
+    opacity: 0;
+  }
+}
+
+.complete-ring {
+  animation: complete-ring 500ms var(--ease-out);
+}
+
 /* ─── Skeleton shimmer ──────────────────────────────────────────────── */
 @keyframes skeleton-pulse {
   0%, 100% {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCourses } from "@/lib/hooks/use-courses";
 import { useWorkspaces } from "@/lib/hooks/use-workspaces";
@@ -59,11 +59,17 @@ export default function AcademicPage() {
       </div>
 
       {courses?.length === 0 ? (
-        <div className="mt-12 text-center">
-          <p className="text-muted-foreground">No courses yet.</p>
+        <div className="mt-16 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/15 to-blue-500/5">
+            <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h3 className="text-base font-medium">Start your semester</h3>
+          <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+            Add your classes to track assignments, calculate grades, and never
+            miss a deadline.
+          </p>
           <Button
-            variant="outline"
-            className="mt-4"
+            className="mt-5"
             onClick={() => { setEditingCourse(null); setDialogOpen(true); }}
           >
             <Plus className="mr-1.5 h-4 w-4" />

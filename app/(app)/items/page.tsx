@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { useAllItems } from "@/lib/hooks/use-all-items";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search } from "lucide-react";
+import { Search, List } from "lucide-react";
 
 interface Item {
   id: string;
@@ -127,11 +127,16 @@ export default function ItemsPage() {
           <Skeleton className="h-11 w-full rounded-lg" />
         </div>
       ) : filtered.length === 0 ? (
-        <p className="text-muted-foreground mt-8 text-center">
-          {items?.length === 0
-            ? "No items yet. Create assignments or tasks to see them here."
-            : "No items match your filters."}
-        </p>
+        <div className="flex flex-col items-center py-12 text-center">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5">
+            <List className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            {items?.length === 0
+              ? "Assignments and tasks from your courses and projects show up here."
+              : "No items match your filters. Try clearing some."}
+          </p>
+        </div>
       ) : (
         <div className="rounded-lg border overflow-x-auto">
           <Table>

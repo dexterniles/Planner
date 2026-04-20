@@ -55,7 +55,7 @@ export function Sidebar() {
             >
               <span
                 className={cn(
-                  "absolute left-0 top-1/2 h-5 w-[3px] -translate-x-[11px] -translate-y-1/2 rounded-r-full bg-primary transition-all duration-200 ease-out",
+                  "absolute left-0 top-1/2 h-5 w-[3px] -translate-x-[11px] -translate-y-1/2 rounded-r-full bg-gradient-to-b from-primary to-primary/70 transition-all duration-200 ease-out",
                   isActive
                     ? "opacity-100 scale-y-100"
                     : "opacity-0 scale-y-0",
