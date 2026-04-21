@@ -21,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Topbar />
           <main
             id="main-content"
-            className="flex-1 overflow-y-auto p-4 md:p-6"
+            className="flex-1 overflow-y-auto px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+2rem)] md:px-6 md:pt-6 md:pb-10"
             tabIndex={-1}
           >
             <PageTransition>{children}</PageTransition>

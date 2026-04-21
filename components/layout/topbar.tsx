@@ -37,7 +37,7 @@ export function Topbar() {
           <SheetContent
             side="left"
             showCloseButton={false}
-            className="w-64 p-0 safe-top safe-bottom"
+            className="p-0 safe-top safe-bottom"
           >
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <Sidebar forceExpanded onClose={() => setMenuOpen(false)} />

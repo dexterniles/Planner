@@ -53,7 +53,7 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
         "flex h-full flex-col border-r border-sidebar-border bg-sidebar",
         // Smooth width transition — suppressed until hydration reconciles
         ready ? "transition-[width] duration-300 ease-out" : "",
-        isCollapsed ? "w-[60px]" : "w-64",
+        isCollapsed ? "w-[60px]" : forceExpanded ? "w-full" : "w-64",
       )}
     >
       {/* Header */}
