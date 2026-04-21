@@ -87,6 +87,19 @@ export const recurrenceOwnerTypeEnum = pgEnum("recurrence_owner_type", [
   "assignment",
   "task",
   "event",
+  "bill",
+]);
+
+export const billStatusEnum = pgEnum("bill_status", [
+  "unpaid",
+  "paid",
+  "skipped",
+]);
+
+export const payFrequencyEnum = pgEnum("pay_frequency", [
+  "weekly",
+  "biweekly",
+  "monthly",
 ]);
 
 export const eventCategoryEnum = pgEnum("event_category", [
@@ -316,6 +329,70 @@ export const events = pgTable(
     index("events_starts_at_idx").on(table.startsAt),
     index("events_category_idx").on(table.category),
     index("events_status_idx").on(table.status),
+  ],
+);
+
+export const billCategories = pgTable(
+  "bill_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    color: text("color"),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("bill_categories_user_id_idx").on(table.userId),
+    uniqueIndex("bill_categories_user_id_name_idx").on(
+      table.userId,
+      table.name,
+    ),
+  ],
+);
+
+export const bills = pgTable(
+  "bills",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    categoryId: uuid("category_id").references(() => billCategories.id, {
+      onDelete: "set null",
+    }),
+    dueDate: date("due_date").notNull(),
+    status: billStatusEnum("status").default("unpaid").notNull(),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }),
+    notes: text("notes"),
+    color: text("color"),
+    recurrenceRuleId: uuid("recurrence_rule_id").references(
+      () => recurrenceRules.id,
+      { onDelete: "set null" },
+    ),
+    ...timestamps,
+  },
+  (table) => [
+    index("bills_user_id_idx").on(table.userId),
+    index("bills_due_date_idx").on(table.dueDate),
+    index("bills_status_idx").on(table.status),
+    index("bills_category_id_idx").on(table.categoryId),
+  ],
+);
+
+export const paySchedule = pgTable(
+  "pay_schedule",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    frequency: payFrequencyEnum("frequency").notNull(),
+    referenceDate: date("reference_date").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("pay_schedule_user_id_idx").on(table.userId),
   ],
 );
 

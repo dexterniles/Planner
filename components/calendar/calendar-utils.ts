@@ -1,7 +1,7 @@
 import type { EventCategory } from "@/lib/validations/event";
 
 export interface CalendarItem {
-  sourceType: "assignment" | "task" | "milestone" | "event";
+  sourceType: "assignment" | "task" | "milestone" | "event" | "bill";
   sourceId: string;
   parentId: string;
   userId: string;
@@ -13,11 +13,14 @@ export interface CalendarItem {
   category: string | null;
   status: string;
   color: string | null;
+  /** Only present on bill items */
+  amount?: string | null;
 }
 
 export function getItemLink(item: CalendarItem): string {
   if (item.sourceType === "assignment") return `/academic/${item.parentId}`;
   if (item.sourceType === "event") return `/events/${item.sourceId}`;
+  if (item.sourceType === "bill") return `/bills`;
   return `/projects/${item.parentId}`;
 }
 
@@ -26,6 +29,7 @@ export const sourceLabels: Record<string, string> = {
   task: "Task",
   milestone: "Milestone",
   event: "Event",
+  bill: "Bill",
 };
 
 export const statusLabels: Record<string, string> = {

@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from "@/lib/hooks/use-tags";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PayScheduleSettings } from "@/components/bills/pay-schedule-settings";
+import { BillCategoriesSettings } from "@/components/bills/bill-categories-settings";
 import { toast } from "sonner";
 
 const TAG_COLORS = [
@@ -156,6 +158,14 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      <Separator />
+
+      <PayScheduleSettings />
+
+      <Separator />
+
+      <BillCategoriesSettings />
 
       <Separator />
 

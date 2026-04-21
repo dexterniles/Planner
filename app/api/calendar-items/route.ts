@@ -6,6 +6,8 @@ import {
   courses,
   projects,
   events,
+  bills,
+  billCategories,
   SINGLE_USER_ID,
 } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, or, isNull, isNotNull } from "drizzle-orm";
@@ -36,7 +38,11 @@ export async function GET(request: Request) {
     );
   }
 
-  const [assignmentRows, taskRows, milestoneRows, eventRows] = await Promise.all([
+  // Convert range to YYYY-MM-DD for bill (date) column comparisons
+  const startStr = startDate.toISOString().slice(0, 10);
+  const endStr = endDate.toISOString().slice(0, 10);
+
+  const [assignmentRows, taskRows, milestoneRows, eventRows, billRows] = await Promise.all([
     db
       .select({
         sourceType: sql<string>`'assignment'`.as("source_type"),
@@ -139,6 +145,32 @@ export async function GET(request: Request) {
           ),
         ),
       ),
+    // Bills with due_date in range
+    db
+      .select({
+        sourceType: sql<string>`'bill'`.as("source_type"),
+        sourceId: bills.id,
+        parentId: bills.id,
+        userId: bills.userId,
+        workspaceId: sql<string | null>`NULL`.as("workspace_id"),
+        title: bills.name,
+        dueDate: sql<string>`${bills.dueDate}::text`.as("due_date"),
+        endDate: sql<string | null>`NULL`.as("end_date"),
+        allDay: sql<boolean>`true`.as("all_day"),
+        category: billCategories.name,
+        status: sql<string>`${bills.status}::text`,
+        color: billCategories.color,
+        amount: bills.amount,
+      })
+      .from(bills)
+      .leftJoin(billCategories, eq(bills.categoryId, billCategories.id))
+      .where(
+        and(
+          eq(bills.userId, SINGLE_USER_ID),
+          gte(bills.dueDate, startStr),
+          lte(bills.dueDate, endStr),
+        ),
+      ),
   ]);
 
   const filteredMilestones = milestoneRows.filter((m) => {
@@ -148,10 +180,11 @@ export async function GET(request: Request) {
   });
 
   const allItems = [
-    ...assignmentRows,
-    ...taskRows,
-    ...filteredMilestones,
-    ...eventRows,
+    ...(assignmentRows as Record<string, unknown>[]),
+    ...(taskRows as Record<string, unknown>[]),
+    ...(filteredMilestones as Record<string, unknown>[]),
+    ...(eventRows as Record<string, unknown>[]),
+    ...(billRows as Record<string, unknown>[]),
   ].sort((a, b) => {
     if (!a.dueDate || !b.dueDate) return 0;
     return (

@@ -25,7 +25,7 @@ const FREQUENCY_OPTIONS = [
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 interface RecurrencePickerProps {
-  ownerType: "assignment" | "task" | "event";
+  ownerType: "assignment" | "task" | "event" | "bill";
   ownerId: string;
   recurrenceRuleId: string | null;
 }

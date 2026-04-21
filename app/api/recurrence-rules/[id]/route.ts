@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { recurrenceRules, assignments, tasks, events } from "@/lib/db/schema";
+import { recurrenceRules, assignments, tasks, events, bills } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function DELETE(_request: Request, { params }: Params) {
   const { id } = await params;
 
-  // Unlink from any assignments/tasks/events first
+  // Unlink from any assignments/tasks/events/bills first
   await db
     .update(assignments)
     .set({ recurrenceRuleId: null })
@@ -21,6 +21,10 @@ export async function DELETE(_request: Request, { params }: Params) {
     .update(events)
     .set({ recurrenceRuleId: null })
     .where(eq(events.recurrenceRuleId, id));
+  await db
+    .update(bills)
+    .set({ recurrenceRuleId: null })
+    .where(eq(bills.recurrenceRuleId, id));
 
   const [deleted] = await db
     .delete(recurrenceRules)

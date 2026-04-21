@@ -15,6 +15,13 @@
       "when": 1776713996643,
       "tag": "0001_left_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776737645062,
+      "tag": "0002_cold_outlaw_kid",
+      "breakpoints": true
     }
   ]
 }

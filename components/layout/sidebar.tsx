@@ -8,6 +8,7 @@ import {
   GraduationCap,
   FolderKanban,
   PartyPopper,
+  Wallet,
   BookOpen,
   Settings,
   PanelLeftClose,
@@ -22,6 +23,7 @@ const navItems = [
   { label: "Academic", href: "/academic", icon: GraduationCap },
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Events", href: "/events", icon: PartyPopper },
+  { label: "Bills", href: "/bills", icon: Wallet },
   { label: "Daily Log", href: "/daily-log", icon: BookOpen },
   { label: "Settings", href: "/settings", icon: Settings },
 ];

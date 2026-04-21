@@ -5,6 +5,8 @@ import {
   assignments,
   tasks,
   events,
+  bills,
+  billCategories,
   SINGLE_USER_ID,
 } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
@@ -24,6 +26,7 @@ export async function GET(request: Request) {
     assignmentResults,
     taskResults,
     eventResults,
+    billResults,
   ] = await Promise.all([
     db
       .select({
@@ -110,6 +113,22 @@ export async function GET(request: Request) {
             (r.subtitle && r.subtitle.toLowerCase().includes(q.toLowerCase())),
         ),
       ),
+    db
+      .select({
+        id: bills.id,
+        type: sql<string>`'bill'`.as("type"),
+        title: bills.name,
+        subtitle: billCategories.name,
+        color: billCategories.color,
+        parentId: bills.id,
+        category: sql<string | null>`null`.as("category"),
+      })
+      .from(bills)
+      .leftJoin(billCategories, eq(bills.categoryId, billCategories.id))
+      .where(eq(bills.userId, SINGLE_USER_ID))
+      .then((rows) =>
+        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
+      ),
   ]);
 
   const results = [
@@ -118,6 +137,7 @@ export async function GET(request: Request) {
     ...assignmentResults,
     ...taskResults,
     ...eventResults,
+    ...billResults,
   ].slice(0, 20);
 
   return NextResponse.json(results);

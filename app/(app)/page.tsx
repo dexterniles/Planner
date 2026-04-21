@@ -27,6 +27,7 @@ import { StatsRow } from "@/components/dashboard/stats-row";
 import { TodaysFocus } from "@/components/dashboard/todays-focus";
 import { UpcomingMilestones } from "@/components/dashboard/upcoming-milestones";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
+import { BillsThisPeriod } from "@/components/dashboard/bills-this-period";
 import { GradeSnapshot } from "@/components/dashboard/grade-snapshot";
 import { RecentDailyLogs } from "@/components/dashboard/recent-daily-logs";
 import { toast } from "sonner";
@@ -274,14 +275,17 @@ export default function DashboardPage() {
         <UpcomingEvents />
       </div>
 
-      {/* Milestones + Grade Snapshot */}
+      {/* Bills + Milestones */}
       <div className="grid gap-6 lg:grid-cols-2">
+        <BillsThisPeriod />
         <UpcomingMilestones />
-        <GradeSnapshot />
       </div>
 
-      {/* Recent Daily Logs */}
-      <RecentDailyLogs />
+      {/* Grade Snapshot + Recent Daily Logs */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <GradeSnapshot />
+        <RecentDailyLogs />
+      </div>
     </div>
   );
 }

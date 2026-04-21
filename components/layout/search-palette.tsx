@@ -9,6 +9,7 @@ import {
   FileText,
   ListChecks,
   PartyPopper,
+  Wallet,
 } from "lucide-react";
 import { EVENT_CATEGORIES } from "@/components/events/event-categories";
 import type { EventCategory } from "@/lib/validations/event";
@@ -29,6 +30,7 @@ const typeIcons: Record<string, typeof GraduationCap> = {
   assignment: FileText,
   task: ListChecks,
   event: PartyPopper,
+  bill: Wallet,
 };
 
 const typeLabels: Record<string, string> = {
@@ -37,6 +39,7 @@ const typeLabels: Record<string, string> = {
   assignment: "Assignment",
   task: "Task",
   event: "Event",
+  bill: "Bill",
 };
 
 function getResultIcon(result: SearchResult) {
@@ -59,6 +62,8 @@ function getResultLink(result: SearchResult): string {
       return `/projects/${result.parentId}`;
     case "event":
       return `/events/${result.id}`;
+    case "bill":
+      return `/bills`;
     default:
       return "/";
   }
