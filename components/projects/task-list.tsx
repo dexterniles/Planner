@@ -176,6 +176,84 @@ export function TaskList({ projectId }: TaskListProps) {
     );
   };
 
+  const renderTaskCard = (task: Task, isSubtask = false) => {
+    const isDone = task.status === "done";
+    const isCancelled = task.status === "cancelled";
+    const faded = isDone || isCancelled;
+    return (
+      <div
+        key={task.id}
+        className={`rounded-lg border bg-card p-3 transition-opacity ${faded ? "opacity-60" : ""} ${isSubtask ? "ml-5 border-l-2 border-l-muted-foreground/30" : ""}`}
+      >
+        <div className="flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              {isSubtask && (
+                <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+              )}
+              <span
+                className={`text-sm font-medium ${isDone ? "line-through text-muted-foreground" : ""}`}
+              >
+                {task.title}
+              </span>
+              {task.recurrenceRuleId && (
+                <Repeat className="h-3 w-3 shrink-0 text-primary" />
+              )}
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              <Badge variant={statusVariants[task.status] ?? "outline"} className="text-[10px]">
+                {statusLabels[task.status] ?? task.status}
+              </Badge>
+              <span className={`font-medium ${priorityColors[task.priority]}`}>
+                {priorityLabels[task.priority]}
+              </span>
+              {task.dueDate && (
+                <span className="text-muted-foreground">
+                  Due {new Date(task.dueDate).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-0.5">
+            {!isSubtask && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Add subtask"
+                onClick={() => {
+                  setEditingTask(null);
+                  setSubtaskParentId(task.id);
+                  setDialogOpen(true);
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => {
+                setEditingTask(task);
+                setSubtaskParentId(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="text-destructive"
+              onClick={() => handleDelete(task.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -203,29 +281,41 @@ export function TaskList({ projectId }: TaskListProps) {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-28" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topLevelTasks.map((task: Task) => (
-                <Fragment key={task.id}>
-                  {renderTaskRow(task)}
-                  {(subtaskMap.get(task.id) ?? []).map((sub: Task) =>
-                    renderTaskRow(sub, true),
-                  )}
-                </Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <>
+          <div className="hidden md:block rounded-lg border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Due</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-28" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topLevelTasks.map((task: Task) => (
+                  <Fragment key={task.id}>
+                    {renderTaskRow(task)}
+                    {(subtaskMap.get(task.id) ?? []).map((sub: Task) =>
+                      renderTaskRow(sub, true),
+                    )}
+                  </Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="md:hidden space-y-2">
+            {topLevelTasks.map((task: Task) => (
+              <Fragment key={task.id}>
+                {renderTaskCard(task)}
+                {(subtaskMap.get(task.id) ?? []).map((sub: Task) =>
+                  renderTaskCard(sub, true),
+                )}
+              </Fragment>
+            ))}
+          </div>
+        </>
       )}
 
       <TaskDialog

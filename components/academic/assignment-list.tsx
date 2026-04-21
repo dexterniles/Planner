@@ -97,51 +97,126 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Score</TableHead>
-                <TableHead className="w-20" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {assignments?.map((a: Assignment) => (
-                <TableRow key={a.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-1.5">
-                      {a.title}
-                      {a.recurrenceRuleId && (
-                        <Repeat className="h-3 w-3 text-primary" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {a.categoryId ? (categoryMap.get(a.categoryId) ?? "—") : "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {a.dueDate
-                      ? new Date(a.dueDate).toLocaleDateString()
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariants[a.status] ?? "outline"}>
-                      {statusLabels[a.status] ?? a.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {a.pointsEarned != null && a.pointsPossible != null
-                      ? `${a.pointsEarned}/${a.pointsPossible}`
-                      : a.pointsPossible != null
-                        ? `—/${a.pointsPossible}`
+        <>
+          <div className="hidden md:block rounded-lg border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Due</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Score</TableHead>
+                  <TableHead className="w-20" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {assignments?.map((a: Assignment) => (
+                  <TableRow key={a.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-1.5">
+                        {a.title}
+                        {a.recurrenceRuleId && (
+                          <Repeat className="h-3 w-3 text-primary" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {a.categoryId ? (categoryMap.get(a.categoryId) ?? "—") : "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {a.dueDate
+                        ? new Date(a.dueDate).toLocaleDateString()
                         : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariants[a.status] ?? "outline"}>
+                        {statusLabels[a.status] ?? a.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {a.pointsEarned != null && a.pointsPossible != null
+                        ? `${a.pointsEarned}/${a.pointsPossible}`
+                        : a.pointsPossible != null
+                          ? `—/${a.pointsPossible}`
+                          : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => {
+                            setEditingAssignment(a);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          onClick={() => handleDelete(a.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="md:hidden space-y-2">
+            {assignments?.map((a: Assignment) => {
+              const categoryName = a.categoryId
+                ? categoryMap.get(a.categoryId)
+                : null;
+              const score =
+                a.pointsEarned != null && a.pointsPossible != null
+                  ? `${a.pointsEarned}/${a.pointsPossible}`
+                  : a.pointsPossible != null
+                    ? `—/${a.pointsPossible}`
+                    : null;
+              return (
+                <div
+                  key={a.id}
+                  className="rounded-lg border bg-card p-3"
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium">{a.title}</span>
+                        {a.recurrenceRuleId && (
+                          <Repeat className="h-3 w-3 shrink-0 text-primary" />
+                        )}
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                        <Badge
+                          variant={statusVariants[a.status] ?? "outline"}
+                          className="text-[10px]"
+                        >
+                          {statusLabels[a.status] ?? a.status}
+                        </Badge>
+                        {categoryName && (
+                          <span className="text-muted-foreground">
+                            {categoryName}
+                          </span>
+                        )}
+                        {a.dueDate && (
+                          <span className="text-muted-foreground">
+                            Due {new Date(a.dueDate).toLocaleDateString()}
+                          </span>
+                        )}
+                        {score && (
+                          <span className="font-medium tabular-nums">
+                            {score}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-0.5">
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -161,12 +236,12 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       <AssignmentDialog

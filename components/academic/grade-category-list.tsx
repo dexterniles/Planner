@@ -89,51 +89,95 @@ export function GradeCategoryList({ courseId }: GradeCategoryListProps) {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Weight</TableHead>
-                <TableHead className="text-right">Drop Lowest</TableHead>
-                <TableHead className="w-20" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories?.map((cat: Category) => (
-                <TableRow key={cat.id}>
-                  <TableCell className="font-medium">{cat.name}</TableCell>
-                  <TableCell className="text-right">{cat.weight}%</TableCell>
-                  <TableCell className="text-right">
-                    {cat.dropLowestN}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => {
-                          setEditingCategory(cat);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        className="text-destructive"
-                        onClick={() => handleDelete(cat.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <>
+          <div className="hidden md:block rounded-lg border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Weight</TableHead>
+                  <TableHead className="text-right">Drop Lowest</TableHead>
+                  <TableHead className="w-20" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {categories?.map((cat: Category) => (
+                  <TableRow key={cat.id}>
+                    <TableCell className="font-medium">{cat.name}</TableCell>
+                    <TableCell className="text-right">{cat.weight}%</TableCell>
+                    <TableCell className="text-right">
+                      {cat.dropLowestN}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => {
+                            setEditingCategory(cat);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          onClick={() => handleDelete(cat.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="md:hidden space-y-2">
+            {categories?.map((cat: Category) => (
+              <div
+                key={cat.id}
+                className="rounded-lg border bg-card p-3"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="flex-1 text-sm font-medium truncate">
+                    {cat.name}
+                  </span>
+                  <span className="text-sm font-semibold tabular-nums">
+                    {cat.weight}%
+                  </span>
+                  <div className="flex shrink-0 gap-0.5">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => {
+                        setEditingCategory(cat);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-destructive"
+                      onClick={() => handleDelete(cat.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                {cat.dropLowestN > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Drop lowest: {cat.dropLowestN}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <GradeCategoryDialog
