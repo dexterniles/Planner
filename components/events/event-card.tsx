@@ -161,7 +161,7 @@ export function EventCard({ event, onEdit }: EventCardProps) {
         </div>
 
         {/* Hover actions */}
-        <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1 shrink-0 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="icon-sm"

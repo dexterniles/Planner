@@ -133,14 +133,14 @@ export default function DashboardPage() {
                 className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
               >
                 <div
-                  className="h-2 w-2 rounded-full"
+                  className="h-2 w-2 rounded-full shrink-0"
                   style={{ backgroundColor: item.parentColor ?? "#888" }}
                 />
-                <span className="flex-1 font-medium">{item.title}</span>
-                <span className="text-xs text-muted-foreground">
+                <span className="flex-1 font-medium truncate">{item.title}</span>
+                <span className="hidden md:inline text-xs text-muted-foreground">
                   {item.parentName}
                 </span>
-                <span className="text-xs text-red-500">
+                <span className="text-xs text-red-500 whitespace-nowrap">
                   {new Date(item.dueDate!).toLocaleDateString()}
                 </span>
               </Link>
@@ -253,17 +253,17 @@ export default function DashboardPage() {
                   className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
                 >
                   <div
-                    className="h-2 w-2 rounded-full"
+                    className="h-2 w-2 rounded-full shrink-0"
                     style={{ backgroundColor: item.parentColor ?? "#888" }}
                   />
-                  <span className="flex-1 font-medium">{item.title}</span>
-                  <Badge variant="outline" className="text-xs capitalize">
+                  <span className="flex-1 font-medium truncate">{item.title}</span>
+                  <Badge variant="outline" className="hidden md:inline-flex text-xs capitalize">
                     {item.type}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {new Date(item.dueDate!).toLocaleDateString()}
                   </span>
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="hidden md:inline-flex text-xs">
                     {statusLabels[item.status] ?? item.status}
                   </Badge>
                 </Link>

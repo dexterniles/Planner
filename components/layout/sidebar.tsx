@@ -13,6 +13,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
@@ -34,9 +35,14 @@ interface SidebarProps {
    * of the collapsed context. Desktop uses the context for collapse state.
    */
   forceExpanded?: boolean;
+  /**
+   * When provided (mobile sheet), shows an integrated X close button in the
+   * header and auto-closes on nav item click.
+   */
+  onClose?: () => void;
 }
 
-export function Sidebar({ forceExpanded = false }: SidebarProps) {
+export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { collapsed, toggle, ready } = useSidebar();
   const isCollapsed = forceExpanded ? false : collapsed;
@@ -55,10 +61,12 @@ export function Sidebar({ forceExpanded = false }: SidebarProps) {
         className={cn(
           "flex h-12 items-center border-b border-sidebar-border",
           isCollapsed ? "justify-center px-0" : "px-5",
+          onClose && !isCollapsed ? "justify-between" : "",
         )}
       >
         <Link
           href="/"
+          onClick={onClose}
           className="flex items-center gap-2 text-lg font-semibold tracking-tight text-primary transition-opacity hover:opacity-80"
           aria-label="Planner — go to dashboard"
         >
@@ -70,6 +78,16 @@ export function Sidebar({ forceExpanded = false }: SidebarProps) {
             <span>Planner</span>
           )}
         </Link>
+        {onClose && !isCollapsed && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close menu"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -88,6 +106,7 @@ export function Sidebar({ forceExpanded = false }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               aria-label={isCollapsed ? item.label : undefined}
               title={isCollapsed ? item.label : undefined}
               className={cn(

@@ -173,7 +173,7 @@ export function BillsThisPeriod() {
                     size="icon-xs"
                     onClick={() => markPaid(bill.id, bill.name)}
                     disabled={updateBill.isPending}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-emerald-600 dark:text-emerald-400"
+                    className="md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity text-emerald-600 dark:text-emerald-400"
                     aria-label={`Mark ${bill.name} paid`}
                     title="Mark paid"
                   >

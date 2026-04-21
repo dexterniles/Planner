@@ -191,7 +191,7 @@ export function BillCategoriesSettings() {
                 {categoryInitial(cat.name)}
               </span>
               <span className="text-sm font-medium">{cat.name}</span>
-              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-0.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
                   size="icon-xs"

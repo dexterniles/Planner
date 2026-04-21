@@ -116,7 +116,7 @@ export function TimeLogHistory({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                className="text-destructive md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
                 onClick={() => handleDelete(log.id)}
               >
                 <Trash2 className="h-3.5 w-3.5" />

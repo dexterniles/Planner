@@ -136,7 +136,7 @@ export default function SettingsPage() {
                   style={{ backgroundColor: tag.color ?? "#6B7280" }}
                 />
                 <span className="text-sm font-medium">{tag.name}</span>
-                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-0.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                   <Button
                     variant="ghost"
                     size="icon-xs"
