@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { events, SINGLE_USER_ID } from "@/lib/db/schema";
 import { autoCompletePastEvents } from "@/lib/auto-complete-events";
-import { and, asc, eq, gte, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNotNull, ne, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         ne(events.status, "cancelled"),
         or(
           gte(events.startsAt, now),
-          sql`${events.endsAt} IS NOT NULL AND ${events.endsAt} >= ${now}`,
+          and(isNotNull(events.endsAt), gte(events.endsAt, now)),
         ),
       ),
     )

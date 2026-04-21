@@ -8,7 +8,7 @@ import {
   events,
   SINGLE_USER_ID,
 } from "@/lib/db/schema";
-import { eq, and, gte, lte, sql, or, isNull } from "drizzle-orm";
+import { eq, and, gte, lte, sql, or, isNull, isNotNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -128,7 +128,7 @@ export async function GET(request: Request) {
               lte(events.startsAt, endDate),
             ),
             and(
-              sql`${events.endsAt} IS NOT NULL`,
+              isNotNull(events.endsAt),
               gte(events.endsAt, startDate),
               lte(events.endsAt, endDate),
             ),
