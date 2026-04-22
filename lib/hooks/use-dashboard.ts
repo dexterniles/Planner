@@ -35,13 +35,3 @@ export function useUpcomingMilestones(limit = 3) {
   });
 }
 
-export function useRecentDailyLogs() {
-  return useQuery({
-    queryKey: ["daily-logs", "recent"],
-    queryFn: async () => {
-      const res = await fetch("/api/daily-logs");
-      if (!res.ok) throw new Error("Failed to fetch daily logs");
-      return res.json();
-    },
-  });
-}

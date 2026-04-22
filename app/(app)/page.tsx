@@ -6,7 +6,7 @@ import {
   Plus,
   X,
   Check,
-  Inbox,
+  Bell,
   CalendarDays,
   ListChecks,
   CalendarClock,
@@ -28,7 +28,6 @@ import { UpcomingMilestones } from "@/components/dashboard/upcoming-milestones";
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { BillsThisPeriod } from "@/components/dashboard/bills-this-period";
 import { GradeSnapshot } from "@/components/dashboard/grade-snapshot";
-import { RecentDailyLogs } from "@/components/dashboard/recent-daily-logs";
 import { PageHeader } from "@/components/layout/page-header";
 import { toast } from "sonner";
 
@@ -150,7 +149,7 @@ export default function DashboardPage() {
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-baseline gap-2">
               <h2 className="font-serif text-[18px] font-medium leading-none tracking-tight">
-                Inbox
+                Reminders
               </h2>
               {untriagedItems.length > 0 && (
                 <span className="font-mono text-[12px] text-muted-foreground">
@@ -158,7 +157,7 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
-            <Inbox className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+            <Bell className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
           </div>
           <div className="flex gap-2">
             <Input
@@ -298,11 +297,8 @@ export default function DashboardPage() {
         <UpcomingMilestones />
       </div>
 
-      {/* Grade Snapshot + Recent Daily Logs */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <GradeSnapshot />
-        <RecentDailyLogs />
-      </div>
+      {/* Grade Snapshot */}
+      <GradeSnapshot />
       </div>
     </div>
   );
