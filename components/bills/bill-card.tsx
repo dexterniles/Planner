@@ -9,7 +9,6 @@ import {
   useUpdateBill,
 } from "@/lib/hooks/use-bills";
 import {
-  categoryInitial,
   defaultCategoryColor,
   formatCurrency,
   formatDueShort,
@@ -103,10 +102,9 @@ export function BillCard({
         selected && "ring-2 ring-primary/50 border-primary/40",
         paid && "opacity-60",
         skipped && "opacity-50",
-        overdue && !selected && "border-red-500/40",
+        overdue && !selected && "border-destructive/40",
       )}
     >
-      {/* Selection checkbox */}
       {selectionMode && (
         <input
           type="checkbox"
@@ -117,20 +115,19 @@ export function BillCard({
         />
       )}
 
-      {/* Category avatar */}
+      {/* Category color pip */}
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white"
+        className="h-2 w-2 shrink-0 rounded-full"
         style={{ backgroundColor: categoryColor }}
-      >
-        {category ? categoryInitial(category.name) : "$"}
-      </div>
+        aria-hidden="true"
+      />
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <h3
             className={cn(
-              "font-semibold leading-tight truncate",
+              "text-[14px] font-medium leading-tight truncate",
               paid && "line-through",
             )}
           >
@@ -142,7 +139,7 @@ export function BillCard({
           {overdue && (
             <Badge
               variant="destructive"
-              className="text-[10px] uppercase tracking-wide"
+              className="text-[10px] uppercase tracking-[0.08em]"
             >
               Overdue
             </Badge>
@@ -150,7 +147,7 @@ export function BillCard({
           {paid && (
             <Badge
               variant="secondary"
-              className="text-[10px] uppercase tracking-wide"
+              className="text-[10px] uppercase tracking-[0.08em]"
             >
               Paid
             </Badge>
@@ -158,28 +155,31 @@ export function BillCard({
           {skipped && (
             <Badge
               variant="outline"
-              className="text-[10px] uppercase tracking-wide"
+              className="text-[10px] uppercase tracking-[0.08em]"
             >
               Skipped
             </Badge>
           )}
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11.5px] text-muted-foreground">
           {category && <span>{category.name}</span>}
-          <span
-            className={cn(
-              "tabular-nums",
-              overdue && "text-red-600 dark:text-red-400 font-medium",
-            )}
-          >
-            {formatDueShort(bill.dueDate)}
-          </span>
+          {category && bill.recurrenceRuleId && <span>· recurring</span>}
         </div>
       </div>
 
+      {/* Due date */}
+      <span
+        className={cn(
+          "hidden sm:inline text-[12px] tabular-nums whitespace-nowrap shrink-0",
+          overdue ? "font-medium text-destructive" : "text-muted-foreground",
+        )}
+      >
+        {formatDueShort(bill.dueDate)}
+      </span>
+
       {/* Amount */}
       <div className="text-right shrink-0">
-        <p className="text-base font-semibold tabular-nums">
+        <p className="font-serif text-[18px] font-medium leading-none tabular-nums tracking-tight">
           {formatCurrency(bill.amount)}
         </p>
       </div>
@@ -192,7 +192,7 @@ export function BillCard({
             size="icon-sm"
             onClick={markPaid}
             disabled={updateBill.isPending}
-            className="text-emerald-600 dark:text-emerald-400"
+            className="text-chart-2"
             aria-label={`Mark ${bill.name} as paid`}
             title="Mark as paid"
           >

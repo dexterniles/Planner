@@ -15,7 +15,6 @@ import { parseDate } from "@/lib/parse-date";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   useInbox,
   useCreateInboxItem,
@@ -30,6 +29,7 @@ import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { BillsThisPeriod } from "@/components/dashboard/bills-this-period";
 import { GradeSnapshot } from "@/components/dashboard/grade-snapshot";
 import { RecentDailyLogs } from "@/components/dashboard/recent-daily-logs";
+import { PageHeader } from "@/components/layout/page-header";
 import { toast } from "sonner";
 
 interface InboxItem {
@@ -54,14 +54,6 @@ function getItemLink(item: AllItem): string {
   if (item.type === "assignment") return `/academic/${item.parentId}`;
   return `/projects/${item.parentId}`;
 }
-
-const statusLabels: Record<string, string> = {
-  not_started: "Not Started",
-  in_progress: "In Progress",
-  submitted: "Submitted",
-  graded: "Graded",
-  done: "Done",
-};
 
 export default function DashboardPage() {
   const [newCapture, setNewCapture] = useState("");
@@ -110,27 +102,28 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div>
+      <PageHeader title="Dashboard" />
 
+      <div className="space-y-6">
       {/* Stats Row */}
       <StatsRow />
 
       {/* Overdue (full-width alert when items exist) */}
       {overdueItems.length > 0 && (
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <ListChecks className="h-4 w-4 text-red-500" />
-            <h2 className="font-semibold text-red-500">
-              Overdue ({overdueItems.length})
-            </h2>
+        <Card className="p-5 border-destructive/40 bg-destructive/5">
+          <div className="mb-3 flex items-center gap-2">
+            <ListChecks className="h-4 w-4 text-destructive" />
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-destructive">
+              Overdue · {overdueItems.length}
+            </p>
           </div>
           <div className="space-y-1">
             {overdueItems.map((item: AllItem) => (
               <Link
                 key={`${item.type}-${item.id}`}
                 href={getItemLink(item)}
-                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
+                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent/60 transition-colors"
               >
                 <div
                   className="h-2 w-2 rounded-full shrink-0"
@@ -140,7 +133,7 @@ export default function DashboardPage() {
                 <span className="hidden md:inline text-xs text-muted-foreground">
                   {item.parentName}
                 </span>
-                <span className="text-xs text-red-500 whitespace-nowrap">
+                <span className="text-xs text-destructive whitespace-nowrap">
                   {new Date(item.dueDate!).toLocaleDateString()}
                 </span>
               </Link>
@@ -149,29 +142,36 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Quick Capture + Today's Focus */}
+      {/* Today's Focus + Quick Capture */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Inbox className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-semibold">Quick Capture</h2>
-            {untriagedItems.length > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {untriagedItems.length}
-              </Badge>
-            )}
+        <TodaysFocus />
+
+        <Card className="p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-baseline gap-2">
+              <h2 className="font-serif text-[18px] font-medium leading-none tracking-tight">
+                Inbox
+              </h2>
+              {untriagedItems.length > 0 && (
+                <span className="font-mono text-[12px] text-muted-foreground">
+                  {untriagedItems.length}
+                </span>
+              )}
+            </div>
+            <Inbox className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
           </div>
           <div className="flex gap-2">
             <Input
               value={newCapture}
               onChange={(e) => setNewCapture(e.target.value)}
-              placeholder="Capture anything..."
+              placeholder="Capture anything…"
               onKeyDown={(e) => e.key === "Enter" && handleCapture()}
             />
             <Button
               onClick={handleCapture}
               disabled={!newCapture.trim() || createInboxItem.isPending}
               size="icon"
+              variant="outline"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -229,45 +229,62 @@ export default function DashboardPage() {
             </div>
           )}
         </Card>
-
-        <TodaysFocus />
       </div>
 
       {/* Upcoming (7 days) + Upcoming Events */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-semibold">Upcoming (7 days)</h2>
+        <Card className="p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-baseline gap-2">
+              <h2 className="font-serif text-[18px] font-medium leading-none tracking-tight">
+                This week
+              </h2>
+              {upcomingItems.length > 0 && (
+                <span className="font-mono text-[12px] text-muted-foreground">
+                  {upcomingItems.length}
+                </span>
+              )}
+            </div>
+            <CalendarDays className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
           </div>
           {upcomingItems.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Nothing due in the next 7 days.
             </p>
           ) : (
-            <div className="space-y-1">
-              {upcomingItems.map((item: AllItem) => (
-                <Link
-                  key={`${item.type}-${item.id}`}
-                  href={getItemLink(item)}
-                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
-                >
-                  <div
-                    className="h-2 w-2 rounded-full shrink-0"
-                    style={{ backgroundColor: item.parentColor ?? "#888" }}
-                  />
-                  <span className="flex-1 font-medium truncate">{item.title}</span>
-                  <Badge variant="outline" className="hidden md:inline-flex text-xs capitalize">
-                    {item.type}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {new Date(item.dueDate!).toLocaleDateString()}
-                  </span>
-                  <Badge variant="secondary" className="hidden md:inline-flex text-xs">
-                    {statusLabels[item.status] ?? item.status}
-                  </Badge>
-                </Link>
-              ))}
+            <div>
+              {upcomingItems.map((item: AllItem, idx: number) => {
+                const due = new Date(item.dueDate!);
+                const dayLbl = due.toLocaleDateString("en-US", { weekday: "short" });
+                return (
+                  <Link
+                    key={`${item.type}-${item.id}`}
+                    href={getItemLink(item)}
+                    className={`flex items-center gap-3 rounded-md px-2 py-2 text-sm hover:bg-accent/60 transition-colors ${idx > 0 ? "border-t border-border/60" : ""}`}
+                  >
+                    <div className="w-9 shrink-0 text-right">
+                      <div className="font-serif text-[18px] leading-none tabular-nums">
+                        {due.getDate()}
+                      </div>
+                      <div className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+                        {dayLbl}
+                      </div>
+                    </div>
+                    <span
+                      className="h-6 w-px shrink-0 bg-border"
+                      aria-hidden="true"
+                    />
+                    <span className="flex-1 font-medium truncate">{item.title}</span>
+                    <span className="hidden md:inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border bg-card px-2 py-0.5 text-[11.5px] text-muted-foreground">
+                      <span
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: item.parentColor ?? "#888" }}
+                      />
+                      {item.parentName}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </Card>
@@ -285,6 +302,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <GradeSnapshot />
         <RecentDailyLogs />
+      </div>
       </div>
     </div>
   );

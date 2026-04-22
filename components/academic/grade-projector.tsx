@@ -45,10 +45,10 @@ function computeCategoryPercent(
 }
 
 function gradeColor(grade: number): string {
-  if (grade >= 90) return "text-emerald-600 dark:text-emerald-400";
-  if (grade >= 80) return "text-blue-600 dark:text-blue-400";
-  if (grade >= 70) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (grade >= 90) return "text-chart-2";
+  if (grade >= 80) return "text-chart-4";
+  if (grade >= 70) return "text-chart-3";
+  return "text-destructive";
 }
 
 export function GradeProjector({ courseId }: GradeProjectorProps) {
@@ -337,11 +337,11 @@ export function GradeProjector({ courseId }: GradeProjectorProps) {
                 Required avg on remaining
               </p>
               {targetNeeded.impossible ? (
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">
+                <p className="text-sm font-medium text-destructive">
                   Not reachable
                 </p>
               ) : targetNeeded.needed < 0 ? (
-                <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                <p className="text-sm font-medium text-chart-2">
                   Already secured
                 </p>
               ) : (

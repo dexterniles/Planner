@@ -138,8 +138,10 @@ export default function CalendarPage() {
   return (
     <div className="flex h-full flex-col gap-4">
       {/* Header: title + view switcher + Today */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
-        <h1 className="text-2xl font-bold">Calendar</h1>
+      <div className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between shrink-0">
+        <h1 className="font-serif text-[26px] md:text-[34px] font-medium leading-tight tracking-tight">
+          Calendar
+        </h1>
         <div className="flex items-center gap-2">
           <ViewSwitcher view={view} onChange={setView} />
           {!isOnToday() && (
@@ -164,7 +166,7 @@ export default function CalendarPage() {
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="flex-1 text-center text-lg font-semibold sm:flex-none sm:min-w-[240px]">
+        <h2 className="flex-1 text-center font-serif text-[22px] font-medium tracking-tight sm:flex-none sm:min-w-[260px]">
           {renderTitle()}
         </h2>
         <Button
@@ -208,16 +210,16 @@ function ViewSwitcher({
   ];
 
   return (
-    <div className="inline-flex rounded-xl bg-gradient-to-b from-muted/80 to-muted/50 ring-1 ring-border/40 shadow-sm p-1">
+    <div className="inline-flex rounded-md bg-card border border-border p-[3px] shadow-sm gap-[2px]">
       {views.map((v) => (
         <button
           key={v.value}
           onClick={() => onChange(v.value)}
           className={cn(
-            "px-3 py-1 text-[13px] font-medium rounded-lg transition-all duration-200",
+            "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors duration-150",
             view === v.value
-              ? "bg-gradient-to-b from-background to-background/90 text-foreground shadow-sm ring-1 ring-border/60"
-              : "text-foreground/55 hover:text-foreground",
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           {v.label}

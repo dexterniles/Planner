@@ -118,19 +118,22 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
   }
 
   return (
-    <div className="flex h-full min-h-[500px] flex-col rounded-lg border overflow-hidden">
-      <div className="grid grid-cols-7 shrink-0">
+    <div className="flex h-full min-h-[500px] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-md">
+      {/* Weekday strip — caps labels on muted background */}
+      <div className="grid grid-cols-7 shrink-0 border-b border-border bg-muted/40">
         {weekDays.map((d, i) => (
           <div
             key={i}
-            className="border-b bg-muted/50 px-1 md:px-2 py-2 text-center text-xs font-medium text-muted-foreground"
+            className="px-2 py-2 text-center text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
           >
             <span className="hidden sm:inline">{d}</span>
             <span className="sm:hidden">{weekDaysShort[i]}</span>
           </div>
         ))}
       </div>
-      <div className="grid flex-1 grid-cols-7 auto-rows-fr">
+
+      {/* Day grid with hairline rules via 1px gap on bg-border */}
+      <div className="grid flex-1 grid-cols-7 auto-rows-fr gap-px bg-border">
         {days.map((day, i) => {
           const isToday = isCurrentMonth && day === today.getDate();
           const dayItems = day ? itemsByDay.get(day) ?? [] : [];
@@ -139,7 +142,7 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
             return (
               <div
                 key={i}
-                className="min-h-[70px] md:min-h-[90px] border-b border-r bg-muted/20"
+                className="min-h-[70px] md:min-h-[90px] bg-muted/30"
               />
             );
           }
@@ -150,32 +153,36 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
             <button
               key={i}
               onClick={() => onSelectDay(date)}
-              className="flex min-h-[70px] md:min-h-[90px] flex-col border-b border-r bg-background p-1 md:p-1.5 text-left transition-colors hover:bg-accent/30 focus:bg-accent/40 focus:outline-none overflow-hidden"
+              className="flex min-h-[70px] md:min-h-[90px] flex-col bg-card p-1 md:p-1.5 text-left transition-colors hover:bg-muted/40 focus:bg-muted/50 focus:outline-none overflow-hidden"
               aria-label={`View events for ${date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}`}
             >
-              <span
-                className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-                  isToday
-                    ? "bg-primary text-primary-foreground font-bold"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {day}
-              </span>
+              <div className="flex items-start justify-between">
+                {isToday ? (
+                  <span
+                    className="inline-flex h-[22px] w-[22px] -my-0.5 items-center justify-center rounded-full bg-foreground text-[12px] font-semibold text-background tabular-nums"
+                  >
+                    {day}
+                  </span>
+                ) : (
+                  <span className="font-serif text-[15px] md:text-[16px] leading-none tabular-nums text-muted-foreground">
+                    {day}
+                  </span>
+                )}
+                {dayItems.length > 3 && (
+                  <span className="hidden md:inline font-mono text-[9.5px] text-muted-foreground">
+                    +{dayItems.length - 3}
+                  </span>
+                )}
+              </div>
 
-              {/* Desktop: full pills */}
-              <div className="mt-1 hidden md:block space-y-0.5">
+              {/* Desktop: event chips */}
+              <div className="mt-1 hidden md:block space-y-[3px]">
                 {dayItems.slice(0, 3).map((dayItem) => (
                   <DayPill
                     key={`${dayItem.item.sourceType}-${dayItem.item.sourceId}-${day}`}
                     dayItem={dayItem}
                   />
                 ))}
-                {dayItems.length > 3 && (
-                  <span className="block px-1 text-[10px] text-muted-foreground">
-                    +{dayItems.length - 3} more
-                  </span>
-                )}
               </div>
 
               {/* Mobile: color dots only */}
@@ -217,7 +224,6 @@ function DayPill({ dayItem }: { dayItem: DayItem }) {
     isEvent && item.category
       ? EVENT_CATEGORIES[item.category as EventCategory]
       : null;
-  const Icon = meta?.icon;
   const color = item.color ?? meta?.defaultColor ?? "#888";
 
   const prefix = isMultiDay && !isStart ? "← " : "";
@@ -227,24 +233,13 @@ function DayPill({ dayItem }: { dayItem: DayItem }) {
     <Link
       href={getItemLink(item)}
       onClick={(e) => e.stopPropagation()}
-      className={`flex items-center gap-1 px-1 py-0.5 text-[11px] leading-tight truncate transition-opacity hover:opacity-75 ${
-        isEvent
-          ? `${isStart ? "rounded-l" : ""} ${isEnd ? "rounded-r" : ""} text-white font-medium`
-          : "rounded"
-      }`}
-      style={
-        isEvent
-          ? { backgroundColor: color }
-          : {
-              backgroundColor: color ? `${color}20` : undefined,
-              borderLeft: `2px solid ${color}`,
-            }
-      }
+      className="flex items-center gap-1 truncate rounded-sm px-1.5 py-[1px] text-[10.5px] leading-[1.4] text-foreground/80 transition-opacity hover:opacity-80"
+      style={{
+        backgroundColor: `${color}18`,
+        borderLeft: `2px solid ${color}`,
+      }}
       title={`${sourceLabels[item.sourceType]}: ${item.title}`}
     >
-      {isEvent && Icon && isStart && (
-        <Icon className="h-2.5 w-2.5 shrink-0" />
-      )}
       <span className={`truncate ${isEvent ? "italic" : ""}`}>
         {prefix}
         {item.title}

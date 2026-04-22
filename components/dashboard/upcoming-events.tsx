@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, PartyPopper } from "lucide-react";
+import { PartyPopper } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUpcomingEvents } from "@/lib/hooks/use-events";
-import {
-  EVENT_CATEGORIES,
-  formatEventWhen,
-} from "@/components/events/event-categories";
+import { formatEventWhen } from "@/components/events/event-categories";
 import type { EventCategory, EventStatus } from "@/lib/validations/event";
 
 interface EventRow {
@@ -25,70 +22,80 @@ interface EventRow {
 
 export function UpcomingEvents() {
   const { data: events } = useUpcomingEvents(5);
+  const rows = (events ?? []) as EventRow[];
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <PartyPopper className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-semibold">Upcoming Events</h2>
+    <Card className="p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-baseline gap-2">
+          <h2 className="font-serif text-[18px] font-medium leading-none tracking-tight">
+            Coming up
+          </h2>
+          {rows.length > 0 && (
+            <span className="font-mono text-[12px] text-muted-foreground">
+              {rows.length}
+            </span>
+          )}
         </div>
-        <Link
-          href="/events"
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          View all
-        </Link>
+        <div className="flex items-center gap-3">
+          <PartyPopper className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+          <Link
+            href="/events"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            All events
+          </Link>
+        </div>
       </div>
 
-      {!events || events.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No plans on the horizon. Add one when something comes up.
         </p>
       ) : (
-        <div className="space-y-1">
-          {(events as EventRow[]).map((ev) => {
-            const meta = EVENT_CATEGORIES[ev.category] ?? EVENT_CATEGORIES.other;
-            const Icon = meta.icon;
+        <div>
+          {rows.map((ev, idx) => {
             const isTentative = ev.status === "tentative";
-
+            const start = new Date(ev.startsAt);
             return (
               <Link
                 key={ev.id}
                 href={`/events/${ev.id}`}
-                className={`flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent ${
-                  isTentative ? "opacity-75" : ""
-                }`}
+                className={`flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent/60 ${
+                  idx > 0 ? "border-t border-border/60" : ""
+                } ${isTentative ? "opacity-75" : ""}`}
               >
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${meta.gradient}`}
-                >
-                  <Icon className={`h-3.5 w-3.5 ${meta.text}`} />
+                <div className="w-11 shrink-0 text-center">
+                  <div className="font-serif text-[20px] leading-none tabular-nums">
+                    {start.getDate()}
+                  </div>
+                  <div className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+                    {start.toLocaleDateString("en-US", { month: "short" })}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
+                <span
+                  className="h-7 w-px shrink-0 bg-border"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium truncate">{ev.title}</p>
+                    <p className="truncate text-sm font-medium">{ev.title}</p>
                     {isTentative && (
                       <Badge
                         variant="outline"
-                        className="text-[9px] uppercase tracking-wide py-0 h-4"
+                        className="h-4 py-0 text-[9px] uppercase tracking-wide"
                       >
                         Tentative
                       </Badge>
                     )}
                   </div>
-                  {ev.location && (
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground truncate">
-                      <MapPin className="h-3 w-3 shrink-0" />
-                      {ev.location}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground truncate">
+                    {ev.allDay && !ev.endsAt
+                      ? formatEventWhen(ev.startsAt).split(" ")[0]
+                      : formatEventWhen(ev.startsAt)}
+                    {ev.location ? ` · ${ev.location}` : ""}
+                  </p>
                 </div>
-                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {ev.allDay && !ev.endsAt
-                    ? formatEventWhen(ev.startsAt).split(" ")[0]
-                    : formatEventWhen(ev.startsAt)}
-                </span>
               </Link>
             );
           })}

@@ -14,62 +14,68 @@ interface CourseGrade {
   weightGraded: number;
 }
 
-function gradeColor(grade: number): string {
-  if (grade >= 90) return "text-emerald-600 dark:text-emerald-400";
-  if (grade >= 80) return "text-blue-600 dark:text-blue-400";
-  if (grade >= 70) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
-}
-
 export function GradeSnapshot() {
   const { data: grades } = useDashboardGrades();
+  const rows = (grades ?? []) as CourseGrade[];
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-        <h2 className="font-semibold">Grade Snapshot</h2>
+    <Card className="p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-serif text-[18px] font-medium leading-none tracking-tight">
+          Grade snapshot
+        </h2>
+        <div className="flex items-center gap-3">
+          <TrendingUp className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+          <Link
+            href="/academic"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Academic
+          </Link>
+        </div>
       </div>
-      {!grades || grades.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No active courses yet.
-        </p>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No active courses yet.</p>
       ) : (
-        <div className="space-y-2">
-          {grades.map((g: CourseGrade) => (
-            <Link
-              key={g.courseId}
-              href={`/academic/${g.courseId}`}
-              className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-accent transition-colors"
-            >
-              <div
-                className="h-2 w-2 rounded-full shrink-0"
-                style={{ backgroundColor: g.color ?? "#888" }}
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{g.name}</p>
-                {g.code && (
-                  <p className="text-xs text-muted-foreground truncate">
-                    {g.code}
-                  </p>
-                )}
-              </div>
-              {g.grade != null ? (
-                <div className="text-right">
-                  <p
-                    className={`text-base font-semibold tabular-nums ${gradeColor(g.grade)}`}
-                  >
-                    {g.grade.toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {g.weightGraded}% graded
-                  </p>
+        <div className="space-y-3.5">
+          {rows.map((g) => {
+            const hasGrade = g.grade != null;
+            const pct = Math.max(0, Math.min(100, g.grade ?? 0));
+            return (
+              <Link
+                key={g.courseId}
+                href={`/academic/${g.courseId}`}
+                className="block rounded-md px-1 py-1 transition-colors hover:bg-accent/40"
+              >
+                <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
+                  <div className="min-w-0 flex-1 truncate">
+                    {g.code && (
+                      <span className="mr-1.5 font-mono text-[11px] text-muted-foreground">
+                        {g.code}
+                      </span>
+                    )}
+                    <span className="font-medium">{g.name}</span>
+                  </div>
+                  {hasGrade ? (
+                    <span className="font-serif text-[16px] tabular-nums">
+                      {g.grade!.toFixed(1)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </div>
-              ) : (
-                <span className="text-xs text-muted-foreground">No grades</span>
-              )}
-            </Link>
-          ))}
+                <div className="h-1.5 overflow-hidden rounded-full bg-muted/60">
+                  <div
+                    className="h-full rounded-full transition-[width] duration-500"
+                    style={{
+                      width: hasGrade ? `${pct}%` : "0%",
+                      backgroundColor: g.color ?? "var(--primary)",
+                    }}
+                  />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </Card>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { GraduationCap, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,33 +42,43 @@ export function CourseCard({ course, onEdit }: CourseCardProps) {
     }
   };
 
+  const accent = course.color ?? "#8B5CF6";
+
   return (
-    <Card className="group relative overflow-hidden">
+    <Card hover className="group relative overflow-hidden p-0">
       <div
         className="absolute inset-y-0 left-0 w-1"
-        style={{ backgroundColor: course.color ?? "#3B82F6" }}
+        style={{ backgroundColor: accent }}
+        aria-hidden="true"
       />
-      <div className="flex items-start justify-between p-4 pl-5">
+      <div className="flex items-center gap-5 p-5 pl-6">
         <Link
           href={`/academic/${course.id}`}
-          className="flex-1 space-y-1 hover:opacity-80"
+          className="flex-1 min-w-0 space-y-1"
         >
-          <div className="flex items-center gap-2">
-            <GraduationCap
-              className="h-4 w-4"
-              style={{ color: course.color ?? "#3B82F6" }}
-            />
-            <h3 className="font-semibold leading-none">{course.name}</h3>
+          <div className="flex items-baseline gap-2.5 flex-wrap">
+            {course.code && (
+              <span className="font-mono text-[11.5px] text-muted-foreground">
+                {course.code}
+              </span>
+            )}
+            <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">
+              {course.name}
+            </h3>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {course.code && <span>{course.code}</span>}
-            {course.instructor && <span>· {course.instructor}</span>}
-            {course.semester && <span>· {course.semester}</span>}
-            {course.credits != null && <span>· {course.credits} cr</span>}
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12.5px] text-muted-foreground">
+            {course.instructor && <span>{course.instructor}</span>}
+            {course.instructor && course.semester && <span>·</span>}
+            {course.semester && <span>{course.semester}</span>}
+            {(course.instructor || course.semester) &&
+              course.credits != null && <span>·</span>}
+            {course.credits != null && <span>{course.credits} credits</span>}
           </div>
         </Link>
-        <div className="flex items-center gap-1">
-          <Badge variant="secondary">{statusLabels[course.status] ?? course.status}</Badge>
+        <div className="flex items-center gap-1 shrink-0">
+          <Badge variant="outline" className="text-[10.5px]">
+            {statusLabels[course.status] ?? course.status}
+          </Badge>
           <Button
             variant="ghost"
             size="icon-sm"

@@ -62,9 +62,9 @@ const priorityLabels: Record<string, string> = {
 
 const priorityColors: Record<string, string> = {
   low: "text-muted-foreground",
-  medium: "text-blue-500",
-  high: "text-orange-500",
-  urgent: "text-red-500",
+  medium: "text-chart-4",
+  high: "text-chart-3",
+  urgent: "text-destructive",
 };
 
 export function TaskList({ projectId }: TaskListProps) {
@@ -257,7 +257,7 @@ export function TaskList({ projectId }: TaskListProps) {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Tasks</h3>
+        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Tasks</h3>
         <Button
           size="sm"
           onClick={() => {
@@ -273,8 +273,8 @@ export function TaskList({ projectId }: TaskListProps) {
 
       {topLevelTasks.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/15 to-violet-500/5">
-            <ListChecks className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <ListChecks className="h-4 w-4 text-primary" strokeWidth={1.75} />
           </div>
           <p className="text-sm text-muted-foreground">
             Break it down. Add a task or two to get started.

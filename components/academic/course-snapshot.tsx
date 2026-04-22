@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { Clock, FileText, GraduationCap, Target } from "lucide-react";
 import { useAssignments } from "@/lib/hooks/use-assignments";
 import { useGradeCategories } from "@/lib/hooks/use-grade-categories";
 import { useTimeLogs } from "@/lib/hooks/use-time-logs";
@@ -30,10 +29,10 @@ interface TimeLog {
 }
 
 function gradeColor(grade: number): string {
-  if (grade >= 90) return "text-emerald-600 dark:text-emerald-400";
-  if (grade >= 80) return "text-blue-600 dark:text-blue-400";
-  if (grade >= 70) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (grade >= 90) return "text-chart-2";
+  if (grade >= 80) return "text-chart-4";
+  if (grade >= 70) return "text-chart-3";
+  return "text-destructive";
 }
 
 function computeCategoryPercent(
@@ -116,76 +115,43 @@ export function CourseSnapshot({ courseId }: CourseSnapshotProps) {
   ).length ?? 0;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-      <SnapshotPill
-        icon={GraduationCap}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <SnapshotStat
         label="Grade"
-        value={
-          grade != null ? (
-            <span className={gradeColor(grade)}>{grade.toFixed(1)}%</span>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )
-        }
-        tone="blue"
+        value={grade != null ? `${grade.toFixed(1)}%` : "—"}
+        valueClass={grade != null ? gradeColor(grade) : "text-muted-foreground"}
       />
-      <SnapshotPill
-        icon={FileText}
-        label="Due this week"
-        value={upcomingCount.toString()}
-        tone="amber"
-      />
-      <SnapshotPill
-        icon={Target}
-        label="Ungraded"
-        value={ungraded.toString()}
-        tone="violet"
-      />
-      <SnapshotPill
-        icon={Clock}
-        label={gradedWeight > 0 ? `Graded (${gradedWeight}%)` : "Hours logged"}
+      <SnapshotStat label="Due this week" value={upcomingCount.toString()} />
+      <SnapshotStat label="Ungraded" value={ungraded.toString()} />
+      <SnapshotStat
+        label={gradedWeight > 0 ? "Graded" : "Hours logged"}
         value={
           gradedWeight > 0 && grade != null
             ? `${gradedWeight}%`
             : `${hoursLogged}h`
         }
-        tone="emerald"
       />
     </div>
   );
 }
 
-interface SnapshotPillProps {
-  icon: React.ComponentType<{ className?: string }>;
+interface SnapshotStatProps {
   label: string;
   value: React.ReactNode;
-  tone: "blue" | "violet" | "emerald" | "amber" | "red";
+  valueClass?: string;
 }
 
-const toneStyles: Record<SnapshotPillProps["tone"], string> = {
-  blue: "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-400",
-  violet:
-    "from-violet-500/15 to-violet-500/5 text-violet-600 dark:text-violet-400",
-  emerald:
-    "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400",
-  amber: "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400",
-  red: "from-red-500/15 to-red-500/5 text-red-600 dark:text-red-400",
-};
-
-function SnapshotPill({ icon: Icon, label, value, tone }: SnapshotPillProps) {
+function SnapshotStat({ label, value, valueClass }: SnapshotStatProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-2.5 shadow-sm">
-      <div
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${toneStyles[tone]}`}
+    <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+      <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-serif text-[20px] sm:text-[22px] font-medium leading-none tabular-nums truncate ${valueClass ?? ""}`}
       >
-        <Icon className="h-3.5 w-3.5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
-          {label}
-        </p>
-        <p className="text-sm font-semibold tabular-nums truncate">{value}</p>
-      </div>
+        {value}
+      </p>
     </div>
   );
 }

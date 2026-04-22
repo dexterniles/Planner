@@ -56,12 +56,12 @@ export function GradeCategoryList({ courseId }: GradeCategoryListProps) {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Grade Categories</h3>
+          <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Grade Categories</h3>
           {categories && categories.length > 0 && (
             <p className="text-sm text-muted-foreground">
               Total weight: {totalWeight}%
               {totalWeight !== 100 && (
-                <span className="ml-1 text-amber-500">(should be 100%)</span>
+                <span className="ml-1 text-chart-3">(should be 100%)</span>
               )}
             </p>
           )}
@@ -80,8 +80,8 @@ export function GradeCategoryList({ courseId }: GradeCategoryListProps) {
 
       {categories?.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/15 to-emerald-500/5">
-            <PieChart className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <PieChart className="h-4 w-4 text-primary" strokeWidth={1.75} />
           </div>
           <p className="text-sm text-muted-foreground max-w-xs">
             Set categories like Homework (30%) and Exams (40%) to calculate

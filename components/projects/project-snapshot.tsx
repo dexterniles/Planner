@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { CheckCircle2, Clock, Flag, ListChecks } from "lucide-react";
 import { useTasks } from "@/lib/hooks/use-tasks";
 import { useMilestones } from "@/lib/hooks/use-milestones";
 import { useTimeLogs } from "@/lib/hooks/use-time-logs";
@@ -76,27 +75,21 @@ export function ProjectSnapshot({ projectId }: ProjectSnapshotProps) {
   }, [timeLogs]);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-      <SnapshotPill
-        icon={CheckCircle2}
-        label="Progress"
-        value={total > 0 ? `${percent}%` : "—"}
-        tone="emerald"
-      />
-      <SnapshotPill
-        icon={ListChecks}
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <SnapshotStat label="Progress" value={total > 0 ? `${percent}%` : "—"} />
+      <SnapshotStat
         label="Tasks"
-        value={total > 0 ? `${done} / ${total}` : "0"}
-        tone="violet"
+        value={total > 0 ? `${done}/${total}` : "0"}
       />
-      <SnapshotPill
-        icon={Flag}
+      <SnapshotStat
         label="Next milestone"
         value={
           nextMilestone ? (
-            <span className="flex items-center gap-1.5">
-              <span className="truncate">{nextMilestone.title}</span>
-              <span className="text-[10px] text-muted-foreground shrink-0">
+            <span className="flex items-baseline gap-2">
+              <span className="truncate text-[14px] font-medium">
+                {nextMilestone.title}
+              </span>
+              <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                 {formatDaysUntil(nextMilestone.targetDate)}
               </span>
             </span>
@@ -104,49 +97,36 @@ export function ProjectSnapshot({ projectId }: ProjectSnapshotProps) {
             <span className="text-muted-foreground">—</span>
           )
         }
-        tone="amber"
+        serif={false}
       />
-      <SnapshotPill
-        icon={Clock}
-        label="Hours logged"
-        value={`${hoursLogged}h`}
-        tone="blue"
-      />
+      <SnapshotStat label="Hours logged" value={`${hoursLogged}h`} />
     </div>
   );
 }
 
-interface SnapshotPillProps {
-  icon: React.ComponentType<{ className?: string }>;
+interface SnapshotStatProps {
   label: string;
   value: React.ReactNode;
-  tone: "blue" | "violet" | "emerald" | "amber" | "red";
+  valueClass?: string;
+  serif?: boolean;
 }
 
-const toneStyles: Record<SnapshotPillProps["tone"], string> = {
-  blue: "from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-400",
-  violet:
-    "from-violet-500/15 to-violet-500/5 text-violet-600 dark:text-violet-400",
-  emerald:
-    "from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400",
-  amber: "from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400",
-  red: "from-red-500/15 to-red-500/5 text-red-600 dark:text-red-400",
-};
-
-function SnapshotPill({ icon: Icon, label, value, tone }: SnapshotPillProps) {
+function SnapshotStat({
+  label,
+  value,
+  valueClass,
+  serif = true,
+}: SnapshotStatProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-2.5 shadow-sm">
-      <div
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${toneStyles[tone]}`}
+    <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+      <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={`mt-1 ${serif ? "font-serif text-[20px] sm:text-[22px] font-medium leading-none" : "text-[14px] sm:text-[15px] leading-tight"} tabular-nums truncate ${valueClass ?? ""}`}
       >
-        <Icon className="h-3.5 w-3.5" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
-          {label}
-        </p>
-        <p className="text-sm font-semibold tabular-nums truncate">{value}</p>
-      </div>
+        {value}
+      </p>
     </div>
   );
 }

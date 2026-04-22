@@ -8,6 +8,7 @@ import { useWorkspaces } from "@/lib/hooks/use-workspaces";
 import { CourseCard } from "@/components/academic/course-card";
 import { CourseDialog } from "@/components/academic/course-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default function AcademicPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -25,10 +26,8 @@ export default function AcademicPage() {
   if (loadingWorkspaces || loadingCourses) {
     return (
       <div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Academic</h1>
-        </div>
-        <div className="mt-6 grid gap-3">
+        <PageHeader title="Academic" />
+        <div className="grid gap-3">
           <Skeleton className="h-[76px] w-full" />
           <Skeleton className="h-[76px] w-full" />
           <Skeleton className="h-[76px] w-full" />
@@ -40,8 +39,8 @@ export default function AcademicPage() {
   if (!academicWorkspace) {
     return (
       <div>
-        <h1 className="text-2xl font-bold">Academic</h1>
-        <p className="mt-4 text-muted-foreground">
+        <PageHeader title="Academic" />
+        <p className="text-muted-foreground">
           No academic workspace found. Please run the seed script.
         </p>
       </div>
@@ -50,18 +49,20 @@ export default function AcademicPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Academic</h1>
-        <Button onClick={() => { setEditingCourse(null); setDialogOpen(true); }}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          New Course
-        </Button>
-      </div>
+      <PageHeader
+        title="Academic"
+        actions={
+          <Button onClick={() => { setEditingCourse(null); setDialogOpen(true); }}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            New Course
+          </Button>
+        }
+      />
 
       {courses?.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/15 to-blue-500/5">
-            <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <div className="mt-10 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+            <GraduationCap className="h-6 w-6 text-primary" strokeWidth={1.75} />
           </div>
           <h3 className="text-base font-medium">Start your semester</h3>
           <p className="mt-1 text-sm text-muted-foreground max-w-sm">
@@ -77,7 +78,7 @@ export default function AcademicPage() {
           </Button>
         </div>
       ) : (
-        <div className="mt-6 grid gap-3">
+        <div className="grid gap-3">
           {courses?.map((course: Record<string, unknown>) => (
             <CourseCard
               key={course.id as string}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FolderKanban, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,17 +31,17 @@ const statusLabels: Record<string, string> = {
 };
 
 const priorityLabels: Record<string, string> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-  urgent: "Urgent",
+  low: "low",
+  medium: "med",
+  high: "high",
+  urgent: "urgent",
 };
 
 const priorityColors: Record<string, string> = {
   low: "text-muted-foreground",
-  medium: "text-blue-500",
-  high: "text-orange-500",
-  urgent: "text-red-500",
+  medium: "text-chart-4",
+  high: "text-chart-3",
+  urgent: "text-destructive",
 };
 
 export function ProjectCard({ project, onEdit }: ProjectCardProps) {
@@ -57,44 +57,52 @@ export function ProjectCard({ project, onEdit }: ProjectCardProps) {
     }
   };
 
+  const accent = project.color ?? "#8B5CF6";
+
   return (
-    <Card className="group relative overflow-hidden">
+    <Card hover className="group relative overflow-hidden p-0">
       <div
         className="absolute inset-y-0 left-0 w-1"
-        style={{ backgroundColor: project.color ?? "#8B5CF6" }}
+        style={{ backgroundColor: accent }}
+        aria-hidden="true"
       />
-      <div className="flex items-start justify-between p-4 pl-5">
+      <div className="flex items-start gap-4 p-5 pl-6">
         <Link
           href={`/projects/${project.id}`}
-          className="flex-1 space-y-1 hover:opacity-80"
+          className="flex-1 min-w-0 space-y-1.5"
         >
-          <div className="flex items-center gap-2">
-            <FolderKanban
-              className="h-4 w-4"
-              style={{ color: project.color ?? "#8B5CF6" }}
-            />
-            <h3 className="font-semibold leading-none">{project.name}</h3>
-          </div>
+          <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">
+            {project.name}
+          </h3>
           {project.description && (
-            <p className="text-sm text-muted-foreground line-clamp-1">
+            <p className="text-[13px] text-muted-foreground line-clamp-1">
               {project.description}
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {project.targetDate && (
-              <span>
-                Target: {new Date(project.targetDate).toLocaleDateString()}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+            <span>
+              <span
+                className={`mr-1 font-medium ${priorityColors[project.priority] ?? ""}`}
+              >
+                {priorityLabels[project.priority] ?? project.priority}
               </span>
+              priority
+            </span>
+            {project.targetDate && (
+              <>
+                <span>·</span>
+                <span>
+                  due{" "}
+                  <span className="text-foreground/80 tabular-nums">
+                    {new Date(project.targetDate).toLocaleDateString()}
+                  </span>
+                </span>
+              </>
             )}
           </div>
         </Link>
-        <div className="flex items-center gap-1">
-          <span
-            className={`text-xs font-medium ${priorityColors[project.priority] ?? ""}`}
-          >
-            {priorityLabels[project.priority] ?? project.priority}
-          </span>
-          <Badge variant="secondary">
+        <div className="flex items-center gap-1 shrink-0">
+          <Badge variant="outline" className="text-[10.5px] capitalize">
             {statusLabels[project.status] ?? project.status}
           </Badge>
           <Button

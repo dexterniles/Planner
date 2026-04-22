@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, Check, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   useMilestones,
   useUpdateMilestone,
@@ -26,8 +25,9 @@ interface Milestone {
 
 export function MilestoneList({ projectId }: MilestoneListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingMilestone, setEditingMilestone] =
-    useState<Milestone | null>(null);
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(
+    null,
+  );
   const { data: milestones, isLoading } = useMilestones(projectId);
   const updateMilestone = useUpdateMilestone();
   const deleteMilestone = useDeleteMilestone();
@@ -62,10 +62,14 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
 
   if (isLoading) return <p className="text-muted-foreground">Loading...</p>;
 
+  const rows = (milestones ?? []) as Milestone[];
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Milestones</h3>
+        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">
+          Milestones
+        </h3>
         <Button
           size="sm"
           onClick={() => {
@@ -78,93 +82,108 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
         </Button>
       </div>
 
-      {milestones?.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/15 to-amber-500/5">
-            <Flag className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <Flag className="h-4 w-4 text-primary" strokeWidth={1.75} />
           </div>
           <p className="text-sm text-muted-foreground">
             Set key milestones to mark progress on the big stuff.
           </p>
         </div>
       ) : (
-        <div className="grid gap-3">
-          {milestones?.map((ms: Milestone) => (
-            <Card
-              key={ms.id}
-              className={`group p-4 ${ms.completedAt ? "opacity-60" : ""}`}
-            >
-              <div className="flex items-start gap-3">
+        <ol className="relative space-y-5 pl-7">
+          {/* Vertical line */}
+          <span
+            aria-hidden="true"
+            className="absolute left-[9px] top-2 bottom-2 w-px bg-border"
+          />
+          {rows.map((ms) => {
+            const done = !!ms.completedAt;
+            return (
+              <li key={ms.id} className="group relative">
+                {/* Timeline dot */}
                 <button
                   onClick={() => handleToggleComplete(ms)}
-                  className={`group/check relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ${
-                    ms.completedAt
-                      ? "border-emerald-500 bg-gradient-to-br from-emerald-400 to-emerald-500 text-white"
-                      : "border-muted-foreground/60 hover:border-emerald-500 hover:scale-110"
-                  }`}
                   aria-label={
-                    ms.completedAt
+                    done
                       ? "Mark milestone as incomplete"
                       : "Mark milestone as complete"
                   }
+                  className={`absolute -left-7 top-0.5 flex h-[19px] w-[19px] items-center justify-center rounded-full border-2 transition-all ring-4 ring-background ${
+                    done
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-muted-foreground/40 bg-card hover:border-primary hover:scale-110"
+                  }`}
                 >
-                  {ms.completedAt && (
-                    <Check key={ms.completedAt} className="h-3 w-3 check-burst" strokeWidth={3} />
+                  {done && (
+                    <Check
+                      key={ms.completedAt}
+                      className="h-3 w-3 check-burst"
+                      strokeWidth={3}
+                    />
                   )}
                 </button>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Flag className="h-4 w-4 text-muted-foreground" />
+
+                <div
+                  className={`flex items-start gap-3 transition-opacity ${done ? "opacity-60" : ""}`}
+                >
+                  <div className="min-w-0 flex-1">
                     <h4
-                      className={`font-medium transition-all duration-300 ${ms.completedAt ? "line-through text-muted-foreground" : ""}`}
+                      className={`font-serif text-[16px] font-medium leading-tight tracking-tight ${done ? "line-through" : ""}`}
                     >
                       {ms.title}
                     </h4>
+                    {ms.description && (
+                      <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+                        {ms.description}
+                      </p>
+                    )}
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[11px] text-muted-foreground">
+                      {ms.targetDate && (
+                        <span>
+                          target{" "}
+                          <span className="tabular-nums">
+                            {new Date(ms.targetDate).toLocaleDateString()}
+                          </span>
+                        </span>
+                      )}
+                      {done && ms.completedAt && (
+                        <span>
+                          done{" "}
+                          <span className="tabular-nums">
+                            {new Date(ms.completedAt).toLocaleDateString()}
+                          </span>
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {ms.description && (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {ms.description}
-                    </p>
-                  )}
-                  <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
-                    {ms.targetDate && (
-                      <span>
-                        Target:{" "}
-                        {new Date(ms.targetDate).toLocaleDateString()}
-                      </span>
-                    )}
-                    {ms.completedAt && (
-                      <span>
-                        Completed:{" "}
-                        {new Date(ms.completedAt).toLocaleDateString()}
-                      </span>
-                    )}
+
+                  <div className="flex shrink-0 gap-0.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => {
+                        setEditingMilestone(ms);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-destructive"
+                      onClick={() => handleDelete(ms.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => {
-                      setEditingMilestone(ms);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-destructive"
-                    onClick={() => handleDelete(ms.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </li>
+            );
+          })}
+        </ol>
       )}
 
       <MilestoneDialog

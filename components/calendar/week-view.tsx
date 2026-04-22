@@ -55,28 +55,22 @@ export function WeekView({ currentDate, onSelectDay }: WeekViewProps) {
         return (
           <div
             key={day.toISOString()}
-            className={`flex flex-col rounded-xl border bg-card p-3 transition-colors md:min-h-0 md:overflow-hidden ${
-              isToday
-                ? "border-primary/50 ring-1 ring-primary/20 shadow-sm"
-                : "border-border/60"
+            className={`flex flex-col rounded-xl border bg-card p-3 shadow-md transition-colors md:min-h-0 md:overflow-hidden ${
+              isToday ? "border-primary/40 ring-1 ring-primary/15" : "border-border/60"
             }`}
           >
             <button
               onClick={() => onSelectDay(day)}
-              className="mb-2 w-full shrink-0 text-left transition-colors"
+              className="mb-3 w-full shrink-0 border-b border-border/60 pb-2 text-left transition-colors"
               aria-label={`Switch to day view for ${day.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}`}
             >
               <div className="flex items-baseline justify-between gap-2">
-                <span
-                  className={`text-xs font-medium uppercase tracking-wide ${
-                    isToday ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
+                <span className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
                   {day.toLocaleDateString([], { weekday: "short" })}
                 </span>
                 <span
-                  className={`text-lg font-semibold tabular-nums ${
-                    isToday ? "text-primary" : ""
+                  className={`font-serif text-[22px] leading-none tabular-nums ${
+                    isToday ? "text-primary" : "text-foreground"
                   }`}
                 >
                   {day.getDate()}
@@ -85,9 +79,7 @@ export function WeekView({ currentDate, onSelectDay }: WeekViewProps) {
             </button>
 
             {dayItems.length === 0 ? (
-              <p className="py-2 text-center text-[11px] text-muted-foreground">
-                —
-              </p>
+              <p className="py-1 text-[11px] text-muted-foreground">—</p>
             ) : (
               <div className="flex-1 space-y-1 md:overflow-y-auto md:min-h-0">
                 {dayItems.map((item) => (
@@ -112,10 +104,8 @@ function WeekItemCard({ item, day }: { item: CalendarItem; day: Date }) {
     isEvent && item.category
       ? EVENT_CATEGORIES[item.category as EventCategory]
       : null;
-  const Icon = meta?.icon;
   const color = item.color ?? meta?.defaultColor ?? "#888";
 
-  // For multi-day events, show continuation arrows
   const start = new Date(item.dueDate);
   const end = item.endDate ? new Date(item.endDate) : null;
   const isStart = !end || isSameDay(start, day);
@@ -123,7 +113,6 @@ function WeekItemCard({ item, day }: { item: CalendarItem; day: Date }) {
   const showPrefix = isEvent && !isStart;
   const showSuffix = isEvent && !isEnd;
 
-  // Time label for timed events
   const timeLabel =
     isEvent && !item.allDay && isStart
       ? start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
@@ -132,42 +121,23 @@ function WeekItemCard({ item, day }: { item: CalendarItem; day: Date }) {
   return (
     <Link
       href={getItemLink(item)}
-      className="group block rounded-lg px-2 py-1.5 transition-colors hover:bg-accent/60"
+      className="group block rounded-sm py-[3px] pl-2 pr-2 transition-colors hover:bg-accent/50"
+      style={{
+        borderLeft: `2px solid ${color}`,
+        backgroundColor: `${color}12`,
+      }}
       title={`${sourceLabels[item.sourceType]}: ${item.title}`}
     >
-      <div className="flex items-start gap-2">
-        {/* Marker: icon badge for events, dot for other items */}
-        {isEvent && Icon ? (
-          <div
-            className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
-            style={{
-              backgroundImage: `linear-gradient(135deg, ${color}35, ${color}12)`,
-            }}
-          >
-            <Icon className="h-3 w-3" style={{ color }} />
-          </div>
-        ) : (
-          <span
-            className="mt-[5px] h-2 w-2 shrink-0 rounded-full"
-            style={{ backgroundColor: color }}
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Text */}
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] leading-snug font-medium text-foreground line-clamp-2">
-            {showPrefix && "← "}
-            {item.title}
-            {showSuffix && " →"}
-          </p>
-          {timeLabel && (
-            <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
-              {timeLabel}
-            </p>
-          )}
-        </div>
-      </div>
+      <p className={`text-[12px] leading-snug font-medium text-foreground line-clamp-2 ${isEvent ? "italic" : ""}`}>
+        {showPrefix && "← "}
+        {item.title}
+        {showSuffix && " →"}
+      </p>
+      {timeLabel && (
+        <p className="mt-0.5 font-mono text-[10.5px] text-muted-foreground tabular-nums">
+          {timeLabel}
+        </p>
+      )}
     </Link>
   );
 }

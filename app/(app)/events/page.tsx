@@ -13,6 +13,7 @@ import {
 } from "@/components/events/event-categories";
 import type { EventCategory } from "@/lib/validations/event";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/layout/page-header";
 
 type TimeFilter = "upcoming" | "past" | "all";
 
@@ -64,28 +65,31 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Events</h1>
-        <Button onClick={openCreate}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          New Event
-        </Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Events"
+        actions={
+          <Button onClick={openCreate}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            New Event
+          </Button>
+        }
+      />
 
+      <div className="space-y-5">
       {/* Filters */}
       <div className="space-y-3">
         {/* Time filter segmented control */}
-        <div className="inline-flex rounded-xl bg-gradient-to-b from-muted/80 to-muted/50 ring-1 ring-border/40 shadow-sm p-1">
+        <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
           {(["upcoming", "past", "all"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTimeFilter(t)}
               className={cn(
-                "px-3 py-1 text-[13px] font-medium capitalize rounded-lg transition-all duration-200",
+                "px-3 py-1 text-[12.5px] font-medium capitalize rounded-[5px] transition-colors duration-150",
                 timeFilter === t
-                  ? "bg-gradient-to-b from-background to-background/90 text-foreground shadow-sm ring-1 ring-border/60"
-                  : "text-foreground/55 hover:text-foreground",
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t}
@@ -156,6 +160,7 @@ export default function EventsPage() {
         onOpenChange={setDialogOpen}
         event={editing ?? undefined}
       />
+      </div>
     </div>
   );
 }

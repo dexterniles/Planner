@@ -2,13 +2,10 @@
 
 import { useMemo, useState } from "react";
 import {
-  AlertCircle,
   Check,
   ChevronLeft,
   ChevronRight,
   Plus,
-  Receipt,
-  TrendingDown,
   Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +25,7 @@ import {
   toISODate,
 } from "@/components/bills/bill-utils";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/layout/page-header";
 import type { PayFrequency } from "@/lib/validations/bill";
 
 type Tab = "all" | "period";
@@ -196,69 +194,53 @@ export default function BillsPage() {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Bills</h1>
-        <Button onClick={openCreate}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          New Bill
-        </Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Bills"
+        actions={
+          <Button onClick={openCreate}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            New Bill
+          </Button>
+        }
+      />
 
+      <div className="space-y-5">
       {/* Stats row */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatCard
-          icon={Receipt}
           label="Due this month"
           value={formatCurrency(stats.dueThisMonth)}
-          iconBg="from-blue-500/20 to-blue-500/5"
-          iconColor="text-blue-600 dark:text-blue-400"
         />
         <StatCard
-          icon={Check}
           label="Paid this month"
           value={formatCurrency(stats.paidThisMonth)}
-          iconBg="from-emerald-500/20 to-emerald-500/5"
-          iconColor="text-emerald-600 dark:text-emerald-400"
         />
         <StatCard
-          icon={AlertCircle}
           label="Overdue"
           value={String(stats.overdueCount)}
-          iconBg={
-            stats.overdueCount > 0
-              ? "from-red-500/20 to-red-500/5"
-              : "from-muted to-muted"
-          }
-          iconColor={
-            stats.overdueCount > 0
-              ? "text-red-600 dark:text-red-400"
-              : "text-muted-foreground"
-          }
+          tone={stats.overdueCount > 0 ? "danger" : "muted"}
         />
         <StatCard
-          icon={TrendingDown}
           label="Min. needed (2 periods)"
           value={
             stats.minimumNeeded != null
               ? formatCurrency(stats.minimumNeeded)
-              : "Set pay schedule"
+              : "Set schedule"
           }
-          iconBg="from-violet-500/20 to-violet-500/5"
-          iconColor="text-violet-600 dark:text-violet-400"
         />
       </div>
 
       {/* Tabs: All bills vs Pay period */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex rounded-xl bg-gradient-to-b from-muted/80 to-muted/50 ring-1 ring-border/40 shadow-sm p-1">
+        <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
           <button
             onClick={() => setTab("all")}
             className={cn(
-              "px-3 py-1 text-[13px] font-medium rounded-lg transition-all duration-200",
+              "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors duration-150",
               tab === "all"
-                ? "bg-gradient-to-b from-background to-background/90 text-foreground shadow-sm ring-1 ring-border/60"
-                : "text-foreground/55 hover:text-foreground",
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             All bills
@@ -267,10 +249,10 @@ export default function BillsPage() {
             onClick={() => setTab("period")}
             disabled={!paySchedule}
             className={cn(
-              "px-3 py-1 text-[13px] font-medium rounded-lg transition-all duration-200 disabled:opacity-50",
+              "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors duration-150 disabled:opacity-50",
               tab === "period"
-                ? "bg-gradient-to-b from-background to-background/90 text-foreground shadow-sm ring-1 ring-border/60"
-                : "text-foreground/55 hover:text-foreground",
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
             title={
               !paySchedule
@@ -475,42 +457,34 @@ export default function BillsPage() {
         onOpenChange={setDialogOpen}
         bill={editing ?? undefined}
       />
+      </div>
     </div>
   );
 }
 
 function StatCard({
-  icon: Icon,
   label,
   value,
-  iconBg,
-  iconColor,
+  tone = "default",
 }: {
-  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
-  iconBg: string;
-  iconColor: string;
+  tone?: "default" | "danger" | "muted";
 }) {
   return (
-    <Card className="p-4">
-      <div className="flex items-center gap-3">
-        <div
-          className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br",
-            iconBg,
-            iconColor,
-          )}
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground truncate">{label}</p>
-          <p className="text-lg font-semibold tabular-nums truncate">
-            {value}
-          </p>
-        </div>
-      </div>
+    <Card className="p-4 sm:p-5">
+      <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-1 font-serif text-[20px] sm:text-[24px] font-medium leading-none tabular-nums truncate",
+          tone === "danger" && "text-destructive",
+          tone === "muted" && "text-muted-foreground",
+        )}
+      >
+        {value}
+      </p>
     </Card>
   );
 }
@@ -525,8 +499,8 @@ function EmptyState({
   if (!hasBills) {
     return (
       <div className="mt-12 flex flex-col items-center text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/15 to-emerald-500/5">
-          <Wallet className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+          <Wallet className="h-6 w-6 text-primary" strokeWidth={1.75} />
         </div>
         <h3 className="text-base font-medium">Track what you owe</h3>
         <p className="mt-1 text-sm text-muted-foreground max-w-sm">

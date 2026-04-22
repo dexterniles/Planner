@@ -82,14 +82,17 @@ export function ActiveTimer() {
     : formatDuration(elapsed);
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5">
+    <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-2.5 pr-3 shadow-sm">
         {isPomodoro ? (
-          <Timer className="h-3.5 w-3.5 text-primary animate-pulse" />
+          <Timer className="h-3 w-3 text-primary animate-pulse" strokeWidth={2} />
         ) : (
-          <Clock className="h-3.5 w-3.5 text-primary" />
+          <span
+            className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary ring-[3px] ring-primary/20 animate-pulse"
+            aria-hidden="true"
+          />
         )}
-        <span className="text-sm font-mono font-medium tabular-nums">
+        <span className="font-mono text-[12px] font-medium tabular-nums text-muted-foreground">
           {displayTime}
         </span>
       </div>

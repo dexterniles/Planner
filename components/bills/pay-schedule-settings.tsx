@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,16 +69,11 @@ export function PayScheduleSettings() {
 
   return (
     <div>
-      <div className="mb-4 flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400">
-          <Wallet className="h-4 w-4" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold">Pay Schedule</h2>
-          <p className="text-sm text-muted-foreground">
-            Tell us when you get paid so bills can be grouped per paycheck.
-          </p>
-        </div>
+      <div className="mb-4">
+        <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Pay Schedule</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Tell us when you get paid so bills can be grouped per paycheck.
+        </p>
       </div>
 
       {isLoading ? (

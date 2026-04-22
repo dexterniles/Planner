@@ -8,6 +8,7 @@ import { useWorkspaces } from "@/lib/hooks/use-workspaces";
 import { ProjectCard } from "@/components/projects/project-card";
 import { ProjectDialog } from "@/components/projects/project-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/layout/page-header";
 
 type Project = {
   id: string;
@@ -37,10 +38,8 @@ export default function ProjectsPage() {
   if (loadingWorkspaces || loadingProjects) {
     return (
       <div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Projects</h1>
-        </div>
-        <div className="mt-6 grid gap-3">
+        <PageHeader title="Projects" />
+        <div className="grid gap-3">
           <Skeleton className="h-[76px] w-full" />
           <Skeleton className="h-[76px] w-full" />
           <Skeleton className="h-[76px] w-full" />
@@ -52,8 +51,8 @@ export default function ProjectsPage() {
   if (!projectsWorkspace) {
     return (
       <div>
-        <h1 className="text-2xl font-bold">Projects</h1>
-        <p className="mt-4 text-muted-foreground">
+        <PageHeader title="Projects" />
+        <p className="text-muted-foreground">
           No projects workspace found. Please run the seed script.
         </p>
       </div>
@@ -62,23 +61,25 @@ export default function ProjectsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Projects</h1>
-        <Button
-          onClick={() => {
-            setEditingProject(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-1.5 h-4 w-4" />
-          New Project
-        </Button>
-      </div>
+      <PageHeader
+        title="Projects"
+        actions={
+          <Button
+            onClick={() => {
+              setEditingProject(null);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus className="mr-1.5 h-4 w-4" />
+            New Project
+          </Button>
+        }
+      />
 
       {projects?.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/15 to-violet-500/5">
-            <FolderKanban className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+        <div className="mt-10 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+            <FolderKanban className="h-6 w-6 text-primary" strokeWidth={1.75} />
           </div>
           <h3 className="text-base font-medium">Build something great</h3>
           <p className="mt-1 text-sm text-muted-foreground max-w-sm">
@@ -97,7 +98,7 @@ export default function ProjectsPage() {
           </Button>
         </div>
       ) : (
-        <div className="mt-6 grid gap-3">
+        <div className="grid gap-3">
           {projects?.map((project: Project) => (
             <ProjectCard
               key={project.id}

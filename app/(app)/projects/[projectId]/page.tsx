@@ -31,9 +31,9 @@ const priorityLabels: Record<string, string> = {
 
 const priorityColors: Record<string, string> = {
   low: "text-muted-foreground",
-  medium: "text-blue-500",
-  high: "text-orange-500",
-  urgent: "text-red-500",
+  medium: "text-chart-4",
+  high: "text-chart-3",
+  urgent: "text-destructive",
 };
 
 export default function ProjectDetailPage({
@@ -74,49 +74,78 @@ export default function ProjectDetailPage({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start gap-4">
-        <Link href="/projects">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2 md:gap-3">
-            <div
-              className="h-3 w-3 rounded-full shrink-0"
+    <div>
+      <Link
+        href="/projects"
+        className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.75} />
+        Projects
+      </Link>
+
+      <div className="mb-7 flex flex-col gap-3 border-b border-border pb-5 md:flex-row md:items-end md:justify-between md:gap-6">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className="h-3 w-3 shrink-0 rounded-full"
               style={{ backgroundColor: project.color ?? "#8B5CF6" }}
+              aria-hidden="true"
             />
-            <h1 className="text-xl md:text-2xl font-bold">{project.name}</h1>
-            <Badge variant="secondary">
+            <h1 className="font-serif text-[26px] md:text-[34px] font-medium leading-tight tracking-tight">
+              {project.name}
+            </h1>
+            <Badge variant="outline" className="text-[10.5px]">
               {statusLabels[project.status] ?? project.status}
             </Badge>
-            <TimerStartButton loggableType="project" loggableId={projectId} />
-            <span
-              className={`text-sm font-medium ${priorityColors[project.priority] ?? ""}`}
-            >
-              {priorityLabels[project.priority] ?? project.priority}
+          </div>
+          {project.description && (
+            <p className="mt-2.5 text-[13px] text-muted-foreground">
+              {project.description}
+            </p>
+          )}
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-muted-foreground">
+            <span>
+              <span
+                className={`font-medium ${priorityColors[project.priority] ?? ""}`}
+              >
+                {priorityLabels[project.priority] ?? project.priority}
+              </span>{" "}
+              priority
             </span>
-          </div>
-          <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
-            {project.description && <span>{project.description}</span>}
-          </div>
-          <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
             {project.startDate && (
-              <span>
-                Started: {new Date(project.startDate).toLocaleDateString()}
-              </span>
+              <>
+                <span>·</span>
+                <span>
+                  started{" "}
+                  <span className="text-foreground/80 tabular-nums">
+                    {new Date(project.startDate).toLocaleDateString()}
+                  </span>
+                </span>
+              </>
             )}
             {project.targetDate && (
-              <span>
-                Target: {new Date(project.targetDate).toLocaleDateString()}
-              </span>
+              <>
+                <span>·</span>
+                <span>
+                  target{" "}
+                  <span className="text-foreground/80 tabular-nums">
+                    {new Date(project.targetDate).toLocaleDateString()}
+                  </span>
+                </span>
+              </>
             )}
-            {project.goal && <span>Goal: {project.goal}</span>}
+            {project.goal && (
+              <>
+                <span>·</span>
+                <span className="italic">{project.goal}</span>
+              </>
+            )}
           </div>
         </div>
+        <TimerStartButton loggableType="project" loggableId={projectId} />
       </div>
 
+      <div className="space-y-6">
       <ProjectSnapshot projectId={projectId} />
 
       <Tabs defaultValue="tasks">
@@ -143,6 +172,7 @@ export default function ProjectDetailPage({
           <TimeLogHistory loggableType="project" loggableId={projectId} />
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

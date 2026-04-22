@@ -5,8 +5,6 @@ import { Plus, Pencil, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +17,7 @@ import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from "@/lib/hooks/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { PayScheduleSettings } from "@/components/bills/pay-schedule-settings";
 import { BillCategoriesSettings } from "@/components/bills/bill-categories-settings";
+import { PageHeader } from "@/components/layout/page-header";
 import { toast } from "sonner";
 
 const TAG_COLORS = [
@@ -95,16 +94,16 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">Settings</h1>
+    <div className="max-w-3xl">
+      <PageHeader title="Settings" />
 
-      <Separator />
+      <div className="space-y-10">
 
-      <div>
-        <div className="flex items-center justify-between mb-4">
+      <section>
+        <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Tags</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Tags</h2>
+            <p className="mt-1 text-[13px] text-muted-foreground">
               Labels for organizing items.
             </p>
           </div>
@@ -127,15 +126,15 @@ export default function SettingsPage() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {tags?.map((tag: Tag) => (
-              <Card
+              <div
                 key={tag.id}
-                className="group flex items-center gap-2 px-3 py-2"
+                className="group flex items-center gap-2 rounded-full border border-border bg-card pl-2.5 pr-1.5 py-1 shadow-sm transition-colors"
               >
-                <div
-                  className="h-3 w-3 rounded-full"
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: tag.color ?? "#6B7280" }}
                 />
-                <span className="text-sm font-medium">{tag.name}</span>
+                <span className="text-[13px] font-medium">{tag.name}</span>
                 <div className="flex gap-0.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                   <Button
                     variant="ghost"
@@ -153,26 +152,24 @@ export default function SettingsPage() {
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      <Separator />
+      <section>
+        <PayScheduleSettings />
+      </section>
 
-      <PayScheduleSettings />
+      <section>
+        <BillCategoriesSettings />
+      </section>
 
-      <Separator />
-
-      <BillCategoriesSettings />
-
-      <Separator />
-
-      <div>
+      <section>
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Export</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Export</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
             JSON is a full backup. CSV is an items summary.
           </p>
         </div>
@@ -192,7 +189,7 @@ export default function SettingsPage() {
             Export CSV
           </Button>
         </div>
-      </div>
+      </section>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-sm">
@@ -252,6 +249,7 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

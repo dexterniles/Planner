@@ -74,7 +74,7 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Assignments</h3>
+        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Assignments</h3>
         <Button
           size="sm"
           onClick={() => {
@@ -89,8 +89,8 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
 
       {assignments?.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/15 to-blue-500/5">
-            <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+            <FileText className="h-4 w-4 text-primary" strokeWidth={1.75} />
           </div>
           <p className="text-sm text-muted-foreground">
             Nothing due yet. Add homework, papers, or exams to track them.

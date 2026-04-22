@@ -51,15 +51,14 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
     <aside
       className={cn(
         "flex h-full flex-col border-r border-sidebar-border bg-sidebar",
-        // Smooth width transition — suppressed until hydration reconciles
         ready ? "transition-[width] duration-300 ease-out" : "",
-        isCollapsed ? "w-[60px]" : forceExpanded ? "w-full" : "w-64",
+        isCollapsed ? "w-16" : forceExpanded ? "w-full" : "w-56",
       )}
     >
-      {/* Header */}
+      {/* Brand */}
       <div
         className={cn(
-          "flex h-12 items-center border-b border-sidebar-border",
+          "flex h-14 shrink-0 items-center border-b border-sidebar-border/60",
           isCollapsed ? "justify-center px-0" : "px-5",
           onClose && !isCollapsed ? "justify-between" : "",
         )}
@@ -67,15 +66,16 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
         <Link
           href="/"
           onClick={onClose}
-          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-primary transition-opacity hover:opacity-80"
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           aria-label="Planner — go to dashboard"
         >
-          {isCollapsed ? (
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 text-sm font-bold">
-              P
+          <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[5px] bg-primary text-[14px] font-medium italic text-primary-foreground font-serif">
+            P
+          </span>
+          {!isCollapsed && (
+            <span className="font-serif text-[18px] leading-none tracking-tight text-sidebar-foreground">
+              Planner
             </span>
-          ) : (
-            <span>Planner</span>
           )}
         </Link>
         {onClose && !isCollapsed && (
@@ -83,7 +83,7 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -93,81 +93,88 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
       {/* Nav */}
       <nav
         className={cn(
-          "flex-1 space-y-0.5 p-3",
-          isCollapsed ? "px-2" : "",
+          "flex-1 overflow-y-auto py-3.5",
+          isCollapsed ? "px-2" : "px-2.5",
         )}
       >
-        {navItems.map((item) => {
-          const isActive =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              aria-label={isCollapsed ? item.label : undefined}
-              title={isCollapsed ? item.label : undefined}
-              className={cn(
-                "group relative flex items-center rounded-lg text-[13px] font-medium transition-all duration-150 ease-out",
-                isCollapsed
-                  ? "h-10 justify-center"
-                  : "gap-3 px-3 py-2",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
-              )}
-            >
-              {/* Left accent bar — only in expanded state */}
-              {!isCollapsed && (
-                <span
-                  className={cn(
-                    "absolute left-0 top-1/2 h-5 w-[3px] -translate-x-[11px] -translate-y-1/2 rounded-r-full bg-gradient-to-b from-primary to-primary/70 transition-all duration-200 ease-out",
-                    isActive ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0",
-                  )}
-                />
-              )}
-
-              <item.icon
+        {!isCollapsed && (
+          <div className="px-3 pt-1 pb-2 text-[10.5px] font-medium uppercase tracking-[0.12em] text-sidebar-foreground/45">
+            Workspace
+          </div>
+        )}
+        <div className="space-y-0.5">
+          {navItems.map((item) => {
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                aria-label={isCollapsed ? item.label : undefined}
+                title={isCollapsed ? item.label : undefined}
                 className={cn(
-                  "h-4 w-4 shrink-0 transition-colors",
-                  isActive ? "text-primary" : "",
-                )}
-              />
-
-              {/* Label — animated out when collapsed */}
-              <span
-                className={cn(
-                  "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out",
+                  "group relative flex items-center rounded-md text-[13.5px] font-medium transition-colors duration-150 ease-out",
                   isCollapsed
-                    ? "max-w-0 opacity-0"
-                    : "max-w-[140px] opacity-100",
+                    ? "h-9 justify-center"
+                    : "gap-3 px-3 py-[7px]",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
                 )}
               >
-                {item.label}
-              </span>
+                {/* Left accent pip — expanded state only */}
+                {!isCollapsed && (
+                  <span
+                    className={cn(
+                      "absolute top-2 bottom-2 w-0.5 rounded-r bg-primary transition-opacity duration-150",
+                      isActive ? "opacity-100" : "opacity-0",
+                    )}
+                    style={{ left: "-10px" }}
+                  />
+                )}
 
-              {/* Custom tooltip for collapsed state */}
-              {isCollapsed && (
+                <item.icon
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-colors",
+                    isActive ? "opacity-100" : "opacity-80",
+                  )}
+                  strokeWidth={1.75}
+                />
+
                 <span
-                  role="tooltip"
-                  className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md border border-border/60 bg-popover/95 px-2 py-1 text-xs font-medium text-popover-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100 z-50"
+                  className={cn(
+                    "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out",
+                    isCollapsed
+                      ? "max-w-0 opacity-0"
+                      : "max-w-[140px] opacity-100",
+                  )}
                 >
                   {item.label}
                 </span>
-              )}
-            </Link>
-          );
-        })}
+
+                {isCollapsed && (
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded-md border border-border/60 bg-popover/95 px-2 py-1 text-xs font-medium text-popover-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100 group-focus:opacity-100 z-50"
+                  >
+                    {item.label}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
-      {/* Toggle — only visible on desktop (not in mobile sheet) */}
+      {/* Foot */}
       {!forceExpanded && (
         <div
           className={cn(
-            "border-t border-sidebar-border p-2",
-            isCollapsed ? "flex justify-center" : "",
+            "flex items-center gap-2 border-t border-sidebar-border/60 p-2.5",
+            isCollapsed ? "justify-center" : "",
           )}
         >
           <button
@@ -175,30 +182,19 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-expanded={!isCollapsed}
             title={`${isCollapsed ? "Expand" : "Collapse"} sidebar (⌘\\)`}
-            className={cn(
-              "group flex items-center gap-2 rounded-lg text-[12px] font-medium text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
-              isCollapsed ? "h-9 w-9 justify-center" : "w-full px-3 py-2",
-            )}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
           >
             {isCollapsed ? (
-              <PanelLeftOpen className="h-4 w-4 shrink-0" />
+              <PanelLeftOpen className="h-[15px] w-[15px]" strokeWidth={1.75} />
             ) : (
-              <PanelLeftClose className="h-4 w-4 shrink-0" />
-            )}
-            <span
-              className={cn(
-                "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-200 ease-out",
-                isCollapsed ? "max-w-0 opacity-0" : "max-w-[120px] opacity-100",
-              )}
-            >
-              Collapse
-            </span>
-            {!isCollapsed && (
-              <kbd className="ml-auto text-[10px] font-medium text-muted-foreground">
-                ⌘\
-              </kbd>
+              <PanelLeftClose className="h-[15px] w-[15px]" strokeWidth={1.75} />
             )}
           </button>
+          {!isCollapsed && (
+            <span className="ml-auto font-mono text-[10.5px] text-sidebar-foreground/40">
+              v0.4
+            </span>
+          )}
         </div>
       )}
     </aside>

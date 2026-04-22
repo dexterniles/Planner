@@ -80,83 +80,106 @@ export default function EventDetailPage({
   const accent = event.color ?? meta.defaultColor;
   const status = (event.status ?? "confirmed") as EventStatus;
 
+  const start = new Date(event.startsAt);
+  const dayNumber = start.getDate();
+  const monthLabel = start.toLocaleDateString("en-US", { month: "short" });
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start gap-4">
-        <Link href="/events">
-          <Button variant="ghost" size="icon" aria-label="Back to events">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+    <div>
+      <Link
+        href="/events"
+        className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.75} />
+        Events
+      </Link>
+
+      <div className="mb-7 border-b border-border pb-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
+            {/* Serif date block */}
             <div
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${meta.gradient}`}
+              className="flex shrink-0 flex-col items-center justify-center rounded-md border-l-2 bg-card px-3 py-1.5 text-center"
+              style={{ borderLeftColor: accent }}
             >
-              <Icon className={`h-4 w-4 ${meta.text}`} />
+              <div className="font-serif text-[28px] leading-none tabular-nums">
+                {dayNumber}
+              </div>
+              <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+                {monthLabel}
+              </div>
             </div>
-            <h1 className="text-xl md:text-2xl font-bold">{event.title}</h1>
-            <Badge variant={statusVariants[status] ?? "outline"}>
-              {STATUS_LABELS[status] ?? status}
-            </Badge>
-            {event.recurrenceRuleId && (
-              <Badge variant="outline" className="gap-1 text-xs">
-                <Repeat className="h-3 w-3" />
-                Recurring
-              </Badge>
-            )}
-            <div
-              className="h-3 w-3 rounded-full shrink-0"
-              style={{ backgroundColor: accent }}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditOpen(true)}
-              className="ml-auto"
-            >
-              <Pencil className="mr-1.5 h-3.5 w-3.5" />
-              Edit
-            </Button>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-3">
+                <div
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
+                  style={{ backgroundColor: `${accent}20` }}
+                >
+                  <Icon className="h-3 w-3" style={{ color: accent }} />
+                </div>
+                <h1 className="font-serif text-[24px] md:text-[30px] font-medium leading-tight tracking-tight">
+                  {event.title}
+                </h1>
+                <Badge variant={statusVariants[status] ?? "outline"} className="text-[10.5px]">
+                  {STATUS_LABELS[status] ?? status}
+                </Badge>
+                {event.recurrenceRuleId && (
+                  <Badge variant="outline" className="gap-1 text-[10.5px]">
+                    <Repeat className="h-3 w-3" />
+                    Recurring
+                  </Badge>
+                )}
+              </div>
+
+              {/* Quick info strip */}
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  {formatEventTime(event.startsAt, event.endsAt, event.allDay)}
+                </span>
+                {event.location && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    {event.location}
+                  </span>
+                )}
+                {event.attendees && (
+                  <span className="flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    {event.attendees}
+                  </span>
+                )}
+                {event.url && (
+                  <a
+                    href={event.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    Open link
+                  </a>
+                )}
+              </div>
+
+              {event.description && (
+                <p className="mt-3 font-serif text-[15px] leading-relaxed text-foreground/90">
+                  {event.description}
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Quick info strip */}
-          <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {formatEventTime(event.startsAt, event.endsAt, event.allDay)}
-            </span>
-            {event.location && (
-              <span className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
-                {event.location}
-              </span>
-            )}
-            {event.attendees && (
-              <span className="flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5" />
-                {event.attendees}
-              </span>
-            )}
-            {event.url && (
-              <a
-                href={event.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Open link
-              </a>
-            )}
-          </div>
-
-          {event.description && (
-            <p className="mt-3 text-sm leading-relaxed text-foreground/90">
-              {event.description}
-            </p>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditOpen(true)}
+            className="shrink-0 self-start"
+          >
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            Edit
+          </Button>
         </div>
       </div>
 

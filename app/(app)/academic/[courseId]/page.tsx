@@ -62,34 +62,58 @@ export default function CourseDetailPage({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start gap-4">
-        <Link href="/academic">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2 md:gap-3">
-            <div
-              className="h-3 w-3 rounded-full shrink-0"
+    <div>
+      <Link
+        href="/academic"
+        className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.75} />
+        Academic
+      </Link>
+
+      <div className="mb-7 flex flex-col gap-3 border-b border-border pb-5 md:flex-row md:items-end md:justify-between md:gap-6">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className="h-3 w-3 shrink-0 rounded-full"
               style={{ backgroundColor: course.color ?? "#3B82F6" }}
+              aria-hidden="true"
             />
-            <h1 className="text-xl md:text-2xl font-bold">{course.name}</h1>
-            <Badge variant="secondary">
+            <h1 className="font-serif text-[26px] md:text-[34px] font-medium leading-tight tracking-tight">
+              {course.name}
+            </h1>
+            <Badge variant="outline" className="text-[10.5px]">
               {statusLabels[course.status] ?? course.status}
             </Badge>
-            <TimerStartButton loggableType="course" loggableId={courseId} />
           </div>
-          <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
-            {course.code && <span>{course.code}</span>}
-            {course.instructor && <span>· {course.instructor}</span>}
-            {course.semester && <span>· {course.semester}</span>}
-            {course.credits != null && <span>· {course.credits} credits</span>}
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
+            {course.code && (
+              <span className="font-mono text-[12px]">{course.code}</span>
+            )}
+            {course.instructor && (
+              <>
+                {course.code && <span>·</span>}
+                <span>{course.instructor}</span>
+              </>
+            )}
+            {course.semester && (
+              <>
+                <span>·</span>
+                <span>{course.semester}</span>
+              </>
+            )}
+            {course.credits != null && (
+              <>
+                <span>·</span>
+                <span>{course.credits} credits</span>
+              </>
+            )}
           </div>
         </div>
+        <TimerStartButton loggableType="course" loggableId={courseId} />
       </div>
 
+      <div className="space-y-6">
       <CourseSnapshot courseId={courseId} />
 
       <Tabs defaultValue="assignments">
@@ -126,6 +150,7 @@ export default function CourseDetailPage({
           <TimeLogHistory loggableType="course" loggableId={courseId} />
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

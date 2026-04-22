@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Target } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useAllItems } from "@/lib/hooks/use-all-items";
 
 interface Item {
@@ -16,14 +14,6 @@ interface Item {
   parentName: string;
   parentColor: string | null;
 }
-
-const statusLabels: Record<string, string> = {
-  not_started: "Not Started",
-  in_progress: "In Progress",
-  submitted: "Submitted",
-  graded: "Graded",
-  done: "Done",
-};
 
 function isToday(dateStr: string | null): boolean {
   if (!dateStr) return false;
@@ -50,44 +40,50 @@ export function TodaysFocus() {
       !["done", "cancelled", "graded"].includes(item.status),
   );
 
+  const tagline =
+    todayItems.length === 0
+      ? "Nothing due today. Take a breath."
+      : todayItems.length === 1
+        ? "One thing, then rest."
+        : `${todayItems.length} things, then rest.`;
+
   return (
-    <Card className="p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Target className="h-4 w-4 text-muted-foreground" />
-        <h2 className="font-semibold">Today&apos;s Focus</h2>
+    <Card className="relative overflow-hidden p-5 sm:p-6">
+      {/* concentric circle accent — editorial flourish */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 rounded-full border border-primary/20 opacity-60"
+      />
+      <div className="relative">
+        <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-primary">
+          Today&apos;s focus
+        </p>
+        <h2 className="mt-1 font-serif text-[19px] sm:text-[22px] font-medium leading-tight tracking-tight">
+          {tagline}
+        </h2>
         {todayItems.length > 0 && (
-          <Badge variant="secondary" className="text-xs">
-            {todayItems.length}
-          </Badge>
+          <div className="mt-4 space-y-1">
+            {todayItems.map((item: Item) => (
+              <Link
+                key={`${item.type}-${item.id}`}
+                href={getItemLink(item)}
+                className="group/row flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent/60"
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.parentColor ?? "#888" }}
+                />
+                <span className="flex-1 font-medium truncate">
+                  {item.title}
+                </span>
+                <span className="hidden md:inline text-xs text-muted-foreground truncate max-w-[140px]">
+                  {item.parentName}
+                </span>
+              </Link>
+            ))}
+          </div>
         )}
       </div>
-      {todayItems.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Nothing due today. Take a breath.
-        </p>
-      ) : (
-        <div className="space-y-1">
-          {todayItems.map((item: Item) => (
-            <Link
-              key={`${item.type}-${item.id}`}
-              href={getItemLink(item)}
-              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
-            >
-              <div
-                className="h-2 w-2 rounded-full shrink-0"
-                style={{ backgroundColor: item.parentColor ?? "#888" }}
-              />
-              <span className="flex-1 font-medium truncate">{item.title}</span>
-              <Badge variant="outline" className="text-xs capitalize">
-                {item.type}
-              </Badge>
-              <Badge variant="secondary" className="text-xs">
-                {statusLabels[item.status] ?? item.status}
-              </Badge>
-            </Link>
-          ))}
-        </div>
-      )}
     </Card>
   );
 }

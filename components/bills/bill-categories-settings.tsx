@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, FolderTree, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -93,14 +93,11 @@ export function BillCategoriesSettings() {
 
   return (
     <div>
-      <div className="mb-4 flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/15 to-violet-500/5 text-violet-600 dark:text-violet-400">
-          <FolderTree className="h-4 w-4" />
-        </div>
+      <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex-1">
-          <h2 className="text-lg font-semibold">Bill Categories</h2>
-          <p className="text-sm text-muted-foreground">
-            Create your own — Housing, Subscriptions, Car... whatever fits your bills.
+          <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Bill Categories</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
+            Create your own — Housing, Subscriptions, Car… whatever fits your bills.
           </p>
         </div>
         {!composing && !editingId && (

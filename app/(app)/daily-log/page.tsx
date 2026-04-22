@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useDailyLog, useUpsertDailyLog } from "@/lib/hooks/use-daily-log";
 import { useEventsByDate } from "@/lib/hooks/use-events";
@@ -17,6 +16,7 @@ import {
 } from "@/components/events/event-categories";
 import type { EventCategory, EventStatus } from "@/lib/validations/event";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface DayEvent {
   id: string;
@@ -93,18 +93,21 @@ export default function DailyLogPage() {
   const isToday = selectedDate === formatDate(new Date());
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Daily Log</h1>
-        <Button
-          onClick={handleSave}
-          disabled={!isDirty || upsertLog.isPending}
-        >
-          <Save className="mr-1.5 h-4 w-4" />
-          {upsertLog.isPending ? "Saving..." : "Save"}
-        </Button>
-      </div>
+    <div>
+      <PageHeader
+        title="Daily Log"
+        actions={
+          <Button
+            onClick={handleSave}
+            disabled={!isDirty || upsertLog.isPending}
+          >
+            <Save className="mr-1.5 h-4 w-4" />
+            {upsertLog.isPending ? "Saving..." : "Save"}
+          </Button>
+        }
+      />
 
+      <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigateDay(-1)}>
           <ChevronLeft className="h-4 w-4" />
@@ -175,8 +178,13 @@ export default function DailyLogPage() {
         <div className="grid gap-6 lg:grid-cols-[1fr_250px]">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="log-content">Journal Entry</Label>
-              <Textarea
+              <Label
+                htmlFor="log-content"
+                className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
+              >
+                Journal entry
+              </Label>
+              <textarea
                 id="log-content"
                 value={content}
                 onChange={(e) => {
@@ -185,14 +193,20 @@ export default function DailyLogPage() {
                 }}
                 placeholder="What happened today?"
                 rows={16}
-                className="resize-y font-mono text-sm"
+                className="w-full resize-y rounded-md border border-border/60 bg-card font-serif text-[16px] leading-[28px] text-foreground shadow-sm outline-none transition-[border-color,box-shadow] duration-150 ease-out placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 min-h-[420px] px-5 py-[14px]"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--border) 27px, var(--border) 28px)",
+                }}
               />
             </div>
           </div>
 
           <div className="space-y-4">
             <Card className="p-4">
-              <Label className="mb-3 block">Mood</Label>
+              <Label className="mb-3 block text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                Mood
+              </Label>
               <div className="flex flex-wrap gap-2">
                 {MOOD_OPTIONS.map((m) => (
                   <button
@@ -202,10 +216,10 @@ export default function DailyLogPage() {
                       setMood(mood === m ? "" : m);
                       setIsDirty(true);
                     }}
-                    className={`rounded-full px-3 py-1 text-sm border transition-colors ${
+                    className={`rounded-full border px-3.5 py-1 font-serif text-[14px] transition-colors ${
                       mood === m
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-background border-border hover:bg-accent"
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border bg-card text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground"
                     }`}
                   >
                     {m}
@@ -244,6 +258,7 @@ export default function DailyLogPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

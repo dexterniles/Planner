@@ -197,7 +197,7 @@ export function NotesList({
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Notes</h3>
+        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Notes</h3>
         {!composing && !editingId && (
           <Button size="sm" onClick={startCompose}>
             <Plus className="mr-1.5 h-3.5 w-3.5" />

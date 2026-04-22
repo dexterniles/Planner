@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useRecentDailyLogs } from "@/lib/hooks/use-dashboard";
 
 interface DailyLog {
@@ -13,71 +12,95 @@ interface DailyLog {
   mood: string | null;
 }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + "T12:00:00");
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const days = Math.round((today.getTime() - target.getTime()) / 86400000);
-
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+function formatLongDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export function RecentDailyLogs() {
   const { data: logs } = useRecentDailyLogs();
-
-  const recentLogs = (logs ?? []).slice(0, 3);
+  const recent = (logs ?? []).slice(0, 3) as DailyLog[];
+  const latest = recent[0];
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-semibold">Recent Daily Logs</h2>
+    <Card className="p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-serif text-[18px] font-medium leading-none tracking-tight">
+          Recent log
+        </h2>
+        <div className="flex items-center gap-3">
+          <BookOpen className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+          <Link
+            href="/daily-log"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Open
+          </Link>
         </div>
-        <Link
-          href="/daily-log"
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          View all
-        </Link>
       </div>
-      {recentLogs.length === 0 ? (
+
+      {recent.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No entries yet.{" "}
-          <Link href="/daily-log" className="underline">
+          <Link href="/daily-log" className="underline underline-offset-2">
             Write one
           </Link>
           .
         </p>
       ) : (
-        <div className="space-y-2">
-          {recentLogs.map((log: DailyLog) => (
-            <Link
-              key={log.id}
-              href="/daily-log"
-              className="block rounded-md px-2 py-2 hover:bg-accent transition-colors"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-sm font-medium">
-                  {formatDate(log.logDate)}
+        <div className="space-y-4">
+          {/* Hero: latest entry as an editorial blockquote */}
+          {latest && (
+            <Link href="/daily-log" className="block group">
+              <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                {formatLongDate(latest.logDate)}
+              </p>
+              {latest.content ? (
+                <p className="mt-1 font-serif text-[16px] leading-[1.55] text-foreground line-clamp-3">
+                  &ldquo;{latest.content}&rdquo;
                 </p>
-                {log.mood && (
-                  <Badge variant="secondary" className="text-xs">
-                    {log.mood}
-                  </Badge>
-                )}
-              </div>
-              {log.content && (
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {log.content}
+              ) : (
+                <p className="mt-1 text-sm text-muted-foreground italic">
+                  (no note)
                 </p>
               )}
+              {latest.mood && (
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                    Mood
+                  </span>
+                  <span className="font-serif text-[15px]">{latest.mood}</span>
+                </div>
+              )}
             </Link>
-          ))}
+          )}
+
+          {/* Previous entries list */}
+          {recent.length > 1 && (
+            <div className="border-t border-border/60 pt-3">
+              {recent.slice(1).map((log) => (
+                <Link
+                  key={log.id}
+                  href="/daily-log"
+                  className="flex items-baseline gap-3 rounded-md px-1 py-1.5 text-sm transition-colors hover:bg-accent/40"
+                >
+                  <span className="shrink-0 font-mono text-[11px] text-muted-foreground w-20">
+                    {new Date(log.logDate + "T12:00:00").toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <span className="truncate text-muted-foreground">
+                    {log.content || "(no note)"}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </Card>

@@ -58,7 +58,7 @@ export function TimeLogHistory({
     <div>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Time Logged</h3>
+          <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Time Logged</h3>
           {completedLogs.length > 0 && (
             <p className="text-sm text-muted-foreground">
               Total: {formatDuration(totalSeconds)} across{" "}

@@ -5,11 +5,8 @@ import { Check, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useBills, useUpdateBill } from "@/lib/hooks/use-bills";
-import { useBillCategories } from "@/lib/hooks/use-bill-categories";
 import { usePaySchedule } from "@/lib/hooks/use-pay-schedule";
 import {
-  categoryInitial,
-  defaultCategoryColor,
   formatCurrency,
   formatDueShort,
   getPayPeriod,
@@ -21,25 +18,11 @@ import type { BillCardData } from "@/components/bills/bill-card";
 import { toast } from "sonner";
 import { useMemo } from "react";
 
-interface Category {
-  id: string;
-  name: string;
-  color: string | null;
-}
-
 export function BillsThisPeriod() {
   const { data: paySchedule } = usePaySchedule();
   const { data: allBills } = useBills({ limit: 500 });
-  const { data: categories } = useBillCategories();
   const updateBill = useUpdateBill();
 
-  const catMap = useMemo(() => {
-    const map = new Map<string, Category>();
-    for (const c of (categories ?? []) as Category[]) map.set(c.id, c);
-    return map;
-  }, [categories]);
-
-  // Compute range: pay period if schedule exists, else next 14 days
   const { start, end, label } = useMemo(() => {
     if (paySchedule) {
       const p = getPayPeriod(
@@ -85,38 +68,42 @@ export function BillsThisPeriod() {
   };
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Wallet className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-semibold">Bills</h2>
+    <Card className="p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-baseline gap-2">
+          <h2 className="font-serif text-[18px] font-medium leading-none tracking-tight">
+            Bills · this period
+          </h2>
         </div>
-        <Link
-          href="/bills"
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          View all
-        </Link>
+        <div className="flex items-center gap-3">
+          <Wallet className="h-4 w-4 text-muted-foreground" strokeWidth={1.75} />
+          <Link
+            href="/bills"
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            See all
+          </Link>
+        </div>
       </div>
 
-      {/* Summary */}
-      <div className="mb-3 flex items-baseline justify-between rounded-lg bg-muted/40 px-3 py-2">
+      {/* Summary strip */}
+      <div className="mb-3 flex items-end justify-between border-b border-border/60 pb-3">
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+          <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
             {label}
           </p>
-          <p className="text-xl font-semibold tabular-nums">
+          <p className="mt-1 font-serif text-[22px] sm:text-[26px] font-medium leading-none tabular-nums">
             {formatCurrency(totalDue)}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+          <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
             Unpaid
           </p>
-          <p className="text-sm font-semibold tabular-nums">
+          <p className="mt-1 font-mono text-[13px] tabular-nums">
             {unpaid.length}
             {overdueCount > 0 && (
-              <span className="ml-2 text-xs font-medium text-red-600 dark:text-red-400">
+              <span className="ml-1.5 text-destructive">
                 · {overdueCount} overdue
               </span>
             )}
@@ -131,41 +118,33 @@ export function BillsThisPeriod() {
             : "No bills in the next 2 weeks."}
         </p>
       ) : (
-        <div className="space-y-1">
-          {periodBills.slice(0, 5).map((bill) => {
-            const cat = bill.categoryId ? catMap.get(bill.categoryId) : null;
-            const color = cat?.color ?? defaultCategoryColor;
+        <div>
+          {periodBills.slice(0, 5).map((bill, idx) => {
             const overdue = isOverdue(bill.dueDate, bill.status);
             const paid = bill.status === "paid";
             return (
               <div
                 key={bill.id}
-                className={`group flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent ${
-                  paid ? "opacity-60" : ""
-                }`}
+                className={`group flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent/60 ${
+                  idx > 0 ? "border-t border-border/60" : ""
+                } ${paid ? "opacity-60" : ""}`}
               >
                 <span
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
-                  style={{ backgroundColor: color }}
-                >
-                  {cat ? categoryInitial(cat.name) : "$"}
-                </span>
-                <span
-                  className={`flex-1 text-sm font-medium truncate ${
-                    paid ? "line-through" : ""
-                  }`}
+                  className={`flex-1 truncate text-sm font-medium ${paid ? "line-through" : ""}`}
                 >
                   {bill.name}
                 </span>
-                <span className="text-sm font-semibold tabular-nums">
-                  {formatCurrency(bill.amount)}
-                </span>
                 <span
-                  className={`text-xs tabular-nums w-16 text-right ${
-                    overdue ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"
+                  className={`text-xs whitespace-nowrap tabular-nums ${
+                    overdue
+                      ? "font-medium text-destructive"
+                      : "text-muted-foreground"
                   }`}
                 >
                   {formatDueShort(bill.dueDate)}
+                </span>
+                <span className="font-serif text-[16px] tabular-nums">
+                  {formatCurrency(bill.amount)}
                 </span>
                 {!paid && (
                   <Button
@@ -173,7 +152,7 @@ export function BillsThisPeriod() {
                     size="icon-xs"
                     onClick={() => markPaid(bill.id, bill.name)}
                     disabled={updateBill.isPending}
-                    className="md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity text-emerald-600 dark:text-emerald-400"
+                    className="md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity text-chart-2"
                     aria-label={`Mark ${bill.name} paid`}
                     title="Mark paid"
                   >
@@ -186,7 +165,7 @@ export function BillsThisPeriod() {
           {periodBills.length > 5 && (
             <Link
               href="/bills"
-              className="block text-center text-xs text-muted-foreground hover:text-foreground pt-1"
+              className="block text-center pt-2 text-xs text-muted-foreground hover:text-foreground"
             >
               +{periodBills.length - 5} more
             </Link>

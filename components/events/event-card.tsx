@@ -70,33 +70,46 @@ export function EventCard({ event, onEdit }: EventCardProps) {
     }
   };
 
+  const start = new Date(event.startsAt);
+  const dayNumber = start.getDate();
+  const monthLabel = start.toLocaleDateString("en-US", { month: "short" });
+
   return (
     <div
-      className={`group relative overflow-hidden rounded-xl border bg-card shadow-sm transition-all ${
+      className={`group relative overflow-hidden rounded-xl border bg-card shadow-md transition-all hover:shadow-lg hover:-translate-y-px ${
         isTentative
           ? "border-dashed border-border/80 opacity-75"
           : "border-border/60"
       } ${isCancelled || isCompleted ? "opacity-60" : ""}`}
     >
-      {/* Left accent bar */}
       <div
         className="absolute inset-y-0 left-0 w-1"
         style={{ backgroundColor: accent }}
+        aria-hidden="true"
       />
 
-      <div className="flex items-start gap-3 p-4 pl-5">
-        {/* Category icon */}
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${meta.gradient}`}
-        >
-          <Icon className={`h-4 w-4 ${meta.text}`} />
+      <div className="flex items-start gap-4 p-5 pl-6">
+        {/* Serif date block */}
+        <div className="flex shrink-0 flex-col items-center justify-center border-r border-border/60 pr-4 text-center">
+          <div className="font-serif text-[28px] leading-none tabular-nums">
+            {dayNumber}
+          </div>
+          <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+            {monthLabel}
+          </div>
         </div>
 
         {/* Main content */}
-        <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
+            <div
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
+              style={{ backgroundColor: `${accent}20` }}
+            >
+              <Icon className="h-3 w-3" style={{ color: accent }} />
+            </div>
             <h3
-              className={`font-semibold leading-tight ${isCompleted ? "line-through" : ""}`}
+              className={`font-serif text-[17px] font-medium leading-tight tracking-tight ${isCompleted ? "line-through" : ""}`}
             >
               {event.title}
             </h3>
@@ -104,23 +117,23 @@ export function EventCard({ event, onEdit }: EventCardProps) {
               <Repeat className="h-3 w-3 text-primary shrink-0" />
             )}
             {isTentative && (
-              <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+              <Badge variant="outline" className="text-[10px] uppercase tracking-[0.08em]">
                 Tentative
               </Badge>
             )}
             {isCancelled && (
-              <Badge variant="destructive" className="text-[10px] uppercase tracking-wide">
+              <Badge variant="destructive" className="text-[10px] uppercase tracking-[0.08em]">
                 Cancelled
               </Badge>
             )}
             {isCompleted && (
-              <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">
+              <Badge variant="secondary" className="text-[10px] uppercase tracking-[0.08em]">
                 Done
               </Badge>
             )}
           </div>
 
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             {formatEventTime(event.startsAt, event.endsAt, event.allDay)}
           </p>
 
