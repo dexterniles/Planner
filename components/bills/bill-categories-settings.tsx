@@ -175,20 +175,22 @@ export function BillCategoriesSettings() {
       ) : (
         <div className="flex flex-wrap gap-2">
           {(categories as Category[]).map((cat) => (
-            <Card
+            <div
               key={cat.id}
-              className="group flex items-center gap-2 px-3 py-2"
+              className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1.5 pr-1.5 shadow-sm transition-colors"
             >
               <span
-                className="flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
                 style={{
                   backgroundColor: cat.color ?? defaultCategoryColor,
                 }}
               >
                 {categoryInitial(cat.name)}
               </span>
-              <span className="text-sm font-medium">{cat.name}</span>
-              <div className="flex gap-0.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
+              <span className="text-[13px] font-medium leading-none">
+                {cat.name}
+              </span>
+              <div className="flex gap-0.5">
                 <Button
                   variant="ghost"
                   size="icon-xs"
@@ -207,7 +209,7 @@ export function BillCategoriesSettings() {
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
