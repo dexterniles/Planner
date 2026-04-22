@@ -100,20 +100,20 @@ export function GradeCalculator({ courseId }: GradeCalculatorProps) {
         {categoryGrades.map(
           (cat: Category & { earned: number; possible: number; percentage: number | null; assignmentCount: number }) => (
             <Card key={cat.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">{cat.name}</h4>
-                <span className="text-sm text-muted-foreground">
+              <div className="flex items-baseline justify-between">
+                <h4 className="text-[14px] font-medium">{cat.name}</h4>
+                <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
                   {cat.weight}%
                 </span>
               </div>
               {cat.percentage != null ? (
                 <div className="mt-2">
-                  <p className="text-2xl font-bold">
+                  <p className="font-serif text-[24px] font-medium leading-none tabular-nums">
                     {cat.percentage.toFixed(1)}%
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="mt-1.5 text-[11.5px] text-muted-foreground tabular-nums">
                     {cat.earned}/{cat.possible} pts
-                    {cat.dropLowestN > 0 && ` (drop ${cat.dropLowestN})`}
+                    {cat.dropLowestN > 0 && ` · drop ${cat.dropLowestN}`}
                   </p>
                 </div>
               ) : (
@@ -126,17 +126,21 @@ export function GradeCalculator({ courseId }: GradeCalculatorProps) {
         )}
       </div>
 
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <h4 className="font-medium">Overall Grade</h4>
+      <Card className="p-5">
+        <div className="flex items-baseline justify-between">
+          <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+            Overall Grade
+          </p>
           {overallGrade != null ? (
-            <p className="text-2xl font-bold">{overallGrade.toFixed(1)}%</p>
+            <p className="font-serif text-[28px] font-medium leading-none tabular-nums tracking-tight">
+              {overallGrade.toFixed(1)}%
+            </p>
           ) : (
-            <p className="text-muted-foreground">No grades yet</p>
+            <p className="text-sm text-muted-foreground">No grades yet</p>
           )}
         </div>
         {overallGrade != null && (
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-2 text-[12px] text-muted-foreground">
             Based on {totalWeight}% of total weight graded
           </p>
         )}

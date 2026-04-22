@@ -27,6 +27,7 @@ interface DayEvent {
   allDay: boolean;
   location: string | null;
   status: EventStatus;
+  color: string | null;
 }
 
 function formatDate(date: Date): string {
@@ -113,11 +114,13 @@ export default function DailyLogPage() {
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="text-center">
-          <p className="text-lg font-medium">
+          <p className="font-serif text-[20px] md:text-[22px] font-medium leading-tight tracking-tight">
             {formatDisplayDate(selectedDate)}
           </p>
           {isToday && (
-            <p className="text-xs text-muted-foreground">Today</p>
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-primary">
+              Today
+            </p>
           )}
         </div>
         <Button variant="ghost" size="icon" onClick={() => navigateDay(1)}>
@@ -136,7 +139,7 @@ export default function DailyLogPage() {
 
       {dayEvents && dayEvents.length > 0 && (
         <Card className="p-4">
-          <p className="mb-3 text-xs uppercase tracking-wide text-muted-foreground font-medium">
+          <p className="mb-3 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
             Events on this day
           </p>
           <div className="flex flex-wrap gap-2">
@@ -144,19 +147,24 @@ export default function DailyLogPage() {
               const meta =
                 EVENT_CATEGORIES[ev.category] ?? EVENT_CATEGORIES.other;
               const Icon = meta.icon;
+              const color = ev.color ?? meta.defaultColor;
               return (
                 <Link
                   key={ev.id}
                   href={`/events/${ev.id}`}
-                  className="flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-1.5 text-sm transition-colors hover:bg-accent"
+                  className="flex items-center gap-2 rounded-sm py-1 pl-2 pr-3 text-[13px] transition-colors hover:bg-accent/50"
+                  style={{
+                    borderLeft: `2px solid ${color}`,
+                    backgroundColor: `${color}12`,
+                  }}
                 >
-                  <div
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${meta.gradient}`}
-                  >
-                    <Icon className={`h-3 w-3 ${meta.text}`} />
-                  </div>
-                  <span className="font-medium">{ev.title}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <Icon
+                    className="h-3 w-3 shrink-0"
+                    style={{ color }}
+                    strokeWidth={1.75}
+                  />
+                  <span className="font-medium italic">{ev.title}</span>
+                  <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
                     {formatEventTime(ev.startsAt, ev.endsAt, ev.allDay)}
                   </span>
                 </Link>

@@ -83,7 +83,7 @@ export function UpcomingEvents() {
                     {isTentative && (
                       <Badge
                         variant="outline"
-                        className="h-4 py-0 text-[9px] uppercase tracking-wide"
+                        className="h-4 py-0 text-[9px] uppercase tracking-[0.1em]"
                       >
                         Tentative
                       </Badge>

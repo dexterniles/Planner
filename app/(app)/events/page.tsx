@@ -7,10 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEvents } from "@/lib/hooks/use-events";
 import { EventCard, type EventCardData } from "@/components/events/event-card";
 import { EventDialog } from "@/components/events/event-dialog";
-import {
-  EVENT_CATEGORY_LIST,
-  EVENT_CATEGORIES,
-} from "@/components/events/event-categories";
+import { EVENT_CATEGORY_LIST } from "@/components/events/event-categories";
 import type { EventCategory } from "@/lib/validations/event";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
@@ -178,12 +175,10 @@ function EmptyState({
   if (!hasEvents) {
     return (
       <div className="mt-12 flex flex-col items-center text-center">
-        <div
-          className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${EVENT_CATEGORIES.social.gradient}`}
-        >
-          <PartyPopper className={`h-6 w-6 ${EVENT_CATEGORIES.social.text}`} />
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+          <PartyPopper className="h-6 w-6 text-primary" strokeWidth={1.75} />
         </div>
-        <h3 className="text-base font-medium">Keep your plans in one place</h3>
+        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Keep your plans in one place</h3>
         <p className="mt-1 text-sm text-muted-foreground max-w-sm">
           Dinners, concerts, vacations, hangouts — track the life stuff
           alongside your work.

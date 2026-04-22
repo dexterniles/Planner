@@ -59,6 +59,15 @@ const STATUS_OPTIONS = [
   { value: "graded", label: "Graded" },
 ] as const;
 
+/** Format an ISO datetime as local time for a datetime-local input. */
+function toLocalDateTimeInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export function AssignmentDialog({
   open,
   onOpenChange,
@@ -83,9 +92,7 @@ export function AssignmentDialog({
       courseId,
       title: assignment?.title ?? "",
       description: assignment?.description ?? "",
-      dueDate: assignment?.dueDate
-        ? new Date(assignment.dueDate).toISOString().slice(0, 16)
-        : "",
+      dueDate: toLocalDateTimeInput(assignment?.dueDate),
       categoryId: assignment?.categoryId ?? undefined,
       status: assignment?.status ?? "not_started",
       pointsEarned: assignment?.pointsEarned
@@ -103,9 +110,7 @@ export function AssignmentDialog({
       courseId,
       title: assignment?.title ?? "",
       description: assignment?.description ?? "",
-      dueDate: assignment?.dueDate
-        ? new Date(assignment.dueDate).toISOString().slice(0, 16)
-        : "",
+      dueDate: toLocalDateTimeInput(assignment?.dueDate),
       categoryId: assignment?.categoryId ?? undefined,
       status: assignment?.status ?? "not_started",
       pointsEarned: assignment?.pointsEarned

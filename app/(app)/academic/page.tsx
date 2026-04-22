@@ -64,7 +64,7 @@ export default function AcademicPage() {
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
             <GraduationCap className="h-6 w-6 text-primary" strokeWidth={1.75} />
           </div>
-          <h3 className="text-base font-medium">Start your semester</h3>
+          <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Start your semester</h3>
           <p className="mt-1 text-sm text-muted-foreground max-w-sm">
             Add your classes to track assignments, calculate grades, and never
             miss a deadline.

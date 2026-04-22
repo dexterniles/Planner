@@ -44,6 +44,15 @@ const PRIORITY_OPTIONS = [
   { value: "urgent", label: "Urgent" },
 ] as const;
 
+/** Format an ISO datetime as local time for a datetime-local input. */
+function toLocalDateTimeInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -86,9 +95,7 @@ export function TaskDialog({
       projectId,
       title: task?.title ?? "",
       description: task?.description ?? "",
-      dueDate: task?.dueDate
-        ? new Date(task.dueDate).toISOString().slice(0, 16)
-        : "",
+      dueDate: toLocalDateTimeInput(task?.dueDate),
       status: task?.status ?? "not_started",
       priority: task?.priority ?? "medium",
       parentTaskId: task?.parentTaskId ?? parentTaskId ?? null,
@@ -101,9 +108,7 @@ export function TaskDialog({
       projectId,
       title: task?.title ?? "",
       description: task?.description ?? "",
-      dueDate: task?.dueDate
-        ? new Date(task.dueDate).toISOString().slice(0, 16)
-        : "",
+      dueDate: toLocalDateTimeInput(task?.dueDate),
       status: task?.status ?? "not_started",
       priority: task?.priority ?? "medium",
       parentTaskId: task?.parentTaskId ?? parentTaskId ?? null,

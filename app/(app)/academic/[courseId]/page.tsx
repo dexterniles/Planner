@@ -87,27 +87,29 @@ export default function CourseDetailPage({
             </Badge>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
-            {course.code && (
-              <span className="font-mono text-[12px]">{course.code}</span>
-            )}
-            {course.instructor && (
-              <>
-                {course.code && <span>·</span>}
-                <span>{course.instructor}</span>
-              </>
-            )}
-            {course.semester && (
-              <>
-                <span>·</span>
-                <span>{course.semester}</span>
-              </>
-            )}
-            {course.credits != null && (
-              <>
-                <span>·</span>
-                <span>{course.credits} credits</span>
-              </>
-            )}
+            {(() => {
+              const items: React.ReactNode[] = [];
+              if (course.code)
+                items.push(
+                  <span key="code" className="font-mono text-[12px]">
+                    {course.code}
+                  </span>,
+                );
+              if (course.instructor)
+                items.push(<span key="instr">{course.instructor}</span>);
+              if (course.semester)
+                items.push(<span key="sem">{course.semester}</span>);
+              if (course.credits != null)
+                items.push(
+                  <span key="cred">{course.credits} credits</span>,
+                );
+              return items.map((node, i) => (
+                <span key={i} className="flex items-center gap-x-3">
+                  {i > 0 && <span aria-hidden="true">·</span>}
+                  {node}
+                </span>
+              ));
+            })()}
           </div>
         </div>
         <TimerStartButton loggableType="course" loggableId={courseId} />

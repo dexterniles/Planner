@@ -322,7 +322,7 @@ export default function BillsPage() {
 
       {/* Pay period navigator */}
       {tab === "period" && payPeriod && (
-        <div className="flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2">
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -331,20 +331,22 @@ export default function BillsPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="flex-1 text-center text-sm font-medium">
-            {payPeriod.start.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            })}{" "}
-            –{" "}
-            {payPeriod.end.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-            {periodOffset === 0 && (
-              <span className="ml-2 text-xs text-primary">Current</span>
-            )}
+          <div className="flex-1 text-center">
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              {periodOffset === 0 ? "Current pay period" : "Pay period"}
+            </p>
+            <p className="font-serif text-[15px] leading-tight tabular-nums">
+              {payPeriod.start.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}{" "}
+              –{" "}
+              {payPeriod.end.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
           </div>
           <Button
             variant="ghost"
@@ -368,13 +370,13 @@ export default function BillsPage() {
 
       {/* Bulk action bar */}
       {selectionMode && (
-        <div className="sticky top-2 z-10 flex items-center gap-3 rounded-xl border bg-primary/10 px-4 py-2 shadow-md backdrop-blur-sm">
-          <span className="text-sm font-medium">
+        <div className="sticky top-2 z-10 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 shadow-md backdrop-blur-sm">
+          <span className="font-serif text-[15px] font-medium leading-none tabular-nums">
             {selected.size} selected
           </span>
-          <span className="text-xs text-muted-foreground">
-            Total:{" "}
-            <span className="font-semibold text-foreground tabular-nums">
+          <span className="text-[11.5px] text-muted-foreground">
+            Total{" "}
+            <span className="font-serif text-[15px] font-medium text-foreground tabular-nums">
               {formatCurrency(
                 filtered
                   .filter((b) => selected.has(b.id))
@@ -502,7 +504,7 @@ function EmptyState({
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
           <Wallet className="h-6 w-6 text-primary" strokeWidth={1.75} />
         </div>
-        <h3 className="text-base font-medium">Track what you owe</h3>
+        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Track what you owe</h3>
         <p className="mt-1 text-sm text-muted-foreground max-w-sm">
           Add bills with due dates and amounts. Tag with categories you create
           on the fly. See what&apos;s coming up each paycheck.

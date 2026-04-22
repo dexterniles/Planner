@@ -76,9 +76,9 @@ export function RecurrencePicker({
 
   if (recurrenceRuleId) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
-        <Repeat className="h-3.5 w-3.5 text-primary" />
-        <span className="text-sm text-muted-foreground">Recurring</span>
+      <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 shadow-sm">
+        <Repeat className="h-3.5 w-3.5 text-primary" strokeWidth={1.75} />
+        <span className="text-[13px] text-muted-foreground">Recurring</span>
         <Button
           variant="ghost"
           size="icon-xs"
@@ -107,9 +107,11 @@ export function RecurrencePicker({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border p-3">
+    <div className="space-y-3 rounded-md border border-border bg-card p-3 shadow-sm">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">Recurrence</Label>
+        <Label className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+          Recurrence
+        </Label>
         <Button
           variant="ghost"
           size="icon-xs"
