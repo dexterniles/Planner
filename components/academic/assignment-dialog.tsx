@@ -128,15 +128,23 @@ export function AssignmentDialog({
 
   const onSubmit = async (data: CreateAssignmentInput) => {
     try {
+      // Convert local datetime-local input to a proper UTC ISO string so the
+      // server (running in UTC) doesn't misinterpret it as a UTC wall-clock.
+      const payload: CreateAssignmentInput = {
+        ...data,
+        dueDate: data.dueDate
+          ? new Date(data.dueDate).toISOString()
+          : data.dueDate,
+      };
       if (isEditing) {
-        const { courseId: _omitted, ...updateData } = data;
+        const { courseId: _omitted, ...updateData } = payload;
         await updateAssignment.mutateAsync({
           id: assignment.id,
           data: updateData,
         });
         toast.success("Assignment updated");
       } else {
-        await createAssignment.mutateAsync(data);
+        await createAssignment.mutateAsync(payload);
         toast.success("Assignment created");
       }
       reset();

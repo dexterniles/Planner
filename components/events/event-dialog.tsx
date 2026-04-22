@@ -79,6 +79,22 @@ function defaultEventStart(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T23:59`;
 }
 
+/**
+ * Convert a form input string (either YYYY-MM-DD from an all-day date input
+ * or YYYY-MM-DDTHH:mm from a datetime-local input) to a UTC ISO string.
+ * For date-only strings we explicitly anchor to local midnight so the server
+ * doesn't interpret them as UTC midnight (which would shift the date back
+ * one day in any negative-offset timezone).
+ */
+function formInputToISO(value: string, allDay: boolean): string {
+  if (!value) return "";
+  const local =
+    allDay && !value.includes("T")
+      ? new Date(`${value}T00:00:00`)
+      : new Date(value);
+  return local.toISOString();
+}
+
 export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
   const isEditing = !!event;
   const createEvent = useCreateEvent();
@@ -135,11 +151,11 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
 
   const onSubmit = async (data: CreateEventInput) => {
     try {
-      // Convert local datetime-input strings to ISO
-      const startsAt = data.startsAt
-        ? new Date(data.startsAt).toISOString()
-        : "";
-      const endsAt = data.endsAt ? new Date(data.endsAt).toISOString() : null;
+      // Convert local datetime-input strings to UTC ISO, respecting all-day.
+      const startsAt = formInputToISO(data.startsAt ?? "", data.allDay ?? false);
+      const endsAt = data.endsAt
+        ? formInputToISO(data.endsAt, data.allDay ?? false)
+        : null;
 
       const payload = {
         ...data,

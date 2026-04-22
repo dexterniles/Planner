@@ -121,12 +121,20 @@ export function TaskDialog({
 
   const onSubmit = async (data: CreateTaskInput) => {
     try {
+      // Convert local datetime-local input to a proper UTC ISO string so the
+      // server (running in UTC) doesn't misinterpret it as a UTC wall-clock.
+      const payload: CreateTaskInput = {
+        ...data,
+        dueDate: data.dueDate
+          ? new Date(data.dueDate).toISOString()
+          : data.dueDate,
+      };
       if (isEditing) {
-        const { projectId: _omitted, ...updateData } = data;
+        const { projectId: _omitted, ...updateData } = payload;
         await updateTask.mutateAsync({ id: task.id, data: updateData });
         toast.success("Task updated");
       } else {
-        await createTask.mutateAsync(data);
+        await createTask.mutateAsync(payload);
         toast.success("Task created");
       }
       reset();

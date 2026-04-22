@@ -38,6 +38,13 @@ const STATUS_LABELS: Record<(typeof billStatusValues)[number], string> = {
   skipped: "Skipped",
 };
 
+/** Today's date in the user's local timezone, as YYYY-MM-DD. */
+function todayLocalDate(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 const FREQ_LABELS: Record<"weekly" | "biweekly" | "monthly", string> = {
   weekly: "Weekly",
   biweekly: "Every 2 weeks",
@@ -87,7 +94,7 @@ export function BillDialog({ open, onOpenChange, bill }: BillDialogProps) {
       description: "",
       amount: 0,
       categoryId: null,
-      dueDate: new Date().toISOString().slice(0, 10),
+      dueDate: todayLocalDate(),
       status: "unpaid",
       notes: "",
     },
@@ -102,7 +109,7 @@ export function BillDialog({ open, onOpenChange, bill }: BillDialogProps) {
       description: bill?.description ?? "",
       amount: bill?.amount ? parseFloat(bill.amount) : 0,
       categoryId: bill?.categoryId ?? null,
-      dueDate: bill?.dueDate ?? new Date().toISOString().slice(0, 10),
+      dueDate: bill?.dueDate ?? todayLocalDate(),
       status: bill?.status ?? "unpaid",
       notes: bill?.notes ?? "",
     });
