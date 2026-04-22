@@ -22,6 +22,13 @@
       "when": 1776737645062,
       "tag": "0002_cold_outlaw_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776878580180,
+      "tag": "0003_fix_local_timezone_drift",
+      "breakpoints": true
     }
   ]
 }
