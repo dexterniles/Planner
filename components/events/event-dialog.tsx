@@ -71,6 +71,14 @@ function toLocalInput(iso: string | null | undefined, allDay: boolean): string {
   return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
 }
 
+/** Today at 23:59 local, formatted for datetime-local input. */
+function defaultEventStart(): string {
+  const d = new Date();
+  d.setHours(23, 59, 0, 0);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T23:59`;
+}
+
 export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
   const isEditing = !!event;
   const createEvent = useCreateEvent();
@@ -110,7 +118,11 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
       title: event?.title ?? "",
       description: event?.description ?? "",
       category: event?.category ?? "other",
-      startsAt: event?.startsAt ? toLocalInput(event.startsAt, isAllDay) : "",
+      startsAt: event?.startsAt
+        ? toLocalInput(event.startsAt, isAllDay)
+        : isAllDay
+          ? ""
+          : defaultEventStart(),
       endsAt: event?.endsAt ? toLocalInput(event.endsAt, isAllDay) : "",
       allDay: isAllDay,
       location: event?.location ?? "",

@@ -76,7 +76,7 @@ export default function DashboardPage() {
   const upcomingItems = (allItems ?? [])
     .filter((item: AllItem) => {
       if (!item.dueDate) return false;
-      if (["done", "cancelled", "graded"].includes(item.status)) return false;
+      if (["done", "cancelled", "graded", "submitted"].includes(item.status)) return false;
       const due = new Date(item.dueDate);
       return due >= now && due <= weekFromNow;
     })
@@ -85,7 +85,7 @@ export default function DashboardPage() {
   const overdueItems = (allItems ?? [])
     .filter((item: AllItem) => {
       if (!item.dueDate) return false;
-      if (["done", "cancelled", "graded"].includes(item.status)) return false;
+      if (["done", "cancelled", "graded", "submitted"].includes(item.status)) return false;
       return new Date(item.dueDate) < now;
     })
     .slice(0, 5);

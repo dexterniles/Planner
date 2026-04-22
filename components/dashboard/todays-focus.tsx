@@ -37,7 +37,7 @@ export function TodaysFocus() {
   const todayItems = (allItems ?? []).filter(
     (item: Item) =>
       isToday(item.dueDate) &&
-      !["done", "cancelled", "graded"].includes(item.status),
+      !["done", "cancelled", "graded", "submitted"].includes(item.status),
   );
 
   const tagline =
