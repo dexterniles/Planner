@@ -21,10 +21,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <Topbar />
           <main
             id="main-content"
-            className="flex-1 overflow-y-auto px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+2rem)] md:px-6 md:pt-6 md:pb-10"
+            className="relative flex-1 overflow-y-auto px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)+3rem)] md:px-6 md:pt-6 md:pb-16"
             tabIndex={-1}
           >
             <PageTransition>{children}</PageTransition>
+            {/* Soft fade at the viewport bottom so content dissolves into the
+                page instead of slamming into the edge. Sticky keeps it pinned
+                to the bottom of the scroll container. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none sticky bottom-0 -mt-14 h-12 bg-gradient-to-t from-background via-background/70 to-transparent"
+            />
           </main>
         </div>
         <SearchPalette />
