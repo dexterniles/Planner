@@ -127,6 +127,14 @@ export const recurrenceFrequencyEnum = pgEnum("recurrence_frequency", [
   "custom",
 ]);
 
+export const mediaTypeEnum = pgEnum("media_type", ["movie", "tv"]);
+
+export const mediaStatusEnum = pgEnum("media_status", [
+  "watchlist",
+  "watching",
+  "watched",
+]);
+
 export const timeLogParentTypeEnum = pgEnum("time_log_parent_type", [
   "course",
   "project",
@@ -508,6 +516,37 @@ export const timeLogs = pgTable(
       .notNull(),
   },
   (table) => [index("time_logs_user_id_idx").on(table.userId)],
+);
+
+export const mediaItems = pgTable(
+  "media_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    mediaType: mediaTypeEnum("media_type").notNull(),
+    tmdbId: integer("tmdb_id").notNull(),
+    imdbId: text("imdb_id"),
+    title: text("title").notNull(),
+    posterPath: text("poster_path"),
+    backdropPath: text("backdrop_path"),
+    overview: text("overview"),
+    releaseYear: integer("release_year"),
+    runtime: integer("runtime"),
+    genres: jsonb("genres"),
+    status: mediaStatusEnum("status").default("watchlist").notNull(),
+    rating: decimal("rating", { precision: 2, scale: 1 }),
+    watchedAt: timestamp("watched_at", { withTimezone: true }),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [
+    index("media_items_user_id_idx").on(table.userId),
+    uniqueIndex("media_items_user_media_unique").on(
+      table.userId,
+      table.mediaType,
+      table.tmdbId,
+    ),
+  ],
 );
 
 // ─── Calendar Items View ────────────────────────────────────────────────────

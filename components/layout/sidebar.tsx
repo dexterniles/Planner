@@ -9,6 +9,7 @@ import {
   FolderKanban,
   PartyPopper,
   Wallet,
+  Film,
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
@@ -25,6 +26,7 @@ const navItems = [
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Events", href: "/events", icon: PartyPopper },
   { label: "Bills", href: "/bills", icon: Wallet },
+  { label: "TV & Movies", href: "/movies", icon: Film },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

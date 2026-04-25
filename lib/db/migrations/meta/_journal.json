@@ -50,6 +50,13 @@
       "when": 1777138274549,
       "tag": "0006_drop_daily_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777148877993,
+      "tag": "0007_add_media_items",
+      "breakpoints": true
     }
   ]
 }
