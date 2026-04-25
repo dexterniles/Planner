@@ -122,11 +122,15 @@ export function IngredientList({
         });
         toast.success("Ingredient updated");
       } else {
+        const nextSortOrder =
+          ingredients.length > 0
+            ? Math.max(...ingredients.map((i) => i.sortOrder)) + 1
+            : 0;
         await createIng.mutateAsync({
           recipeId,
           data: {
             ...data,
-            sortOrder: ingredients.length,
+            sortOrder: nextSortOrder,
           },
         });
         toast.success("Ingredient added");
@@ -226,12 +230,18 @@ export function IngredientList({
                 className="group flex items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/40"
               >
                 <span className="flex-1 text-[13.5px] leading-tight">
-                  <span className="font-medium tabular-nums">
-                    {formatScaledQuantity(ing.quantity, scale)}
-                    {ing.unit ? ` ${ing.unit}` : ""}
-                  </span>
-                  {(ing.quantity || ing.unit) && " "}
-                  <span>{ing.name}</span>
+                  {(() => {
+                    const qty = formatScaledQuantity(ing.quantity, scale);
+                    const prefix = [qty, ing.unit].filter(Boolean).join(" ");
+                    return prefix ? (
+                      <>
+                        <span className="font-medium tabular-nums">{prefix}</span>{" "}
+                        <span>{ing.name}</span>
+                      </>
+                    ) : (
+                      <span>{ing.name}</span>
+                    );
+                  })()}
                 </span>
                 <div className="flex shrink-0 gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <Button

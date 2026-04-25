@@ -83,9 +83,13 @@ export function StepList({ recipeId, steps }: StepListProps) {
         await updateStep.mutateAsync({ recipeId, itemId: editingId, data });
         toast.success("Step updated");
       } else {
+        const nextSortOrder =
+          steps.length > 0
+            ? Math.max(...steps.map((s) => s.sortOrder)) + 1
+            : 0;
         await createStep.mutateAsync({
           recipeId,
-          data: { ...data, sortOrder: steps.length },
+          data: { ...data, sortOrder: nextSortOrder },
         });
         toast.success("Step added");
       }

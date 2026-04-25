@@ -34,9 +34,13 @@ export function EquipmentList({ recipeId, equipment }: EquipmentListProps) {
     const name = draft.trim();
     if (!name) return;
     try {
+      const nextSortOrder =
+        equipment.length > 0
+          ? Math.max(...equipment.map((e) => e.sortOrder)) + 1
+          : 0;
       await createEq.mutateAsync({
         recipeId,
-        data: { name, sortOrder: equipment.length },
+        data: { name, sortOrder: nextSortOrder },
       });
       setDraft("");
       setComposing(false);

@@ -10,6 +10,7 @@ import {
   ListChecks,
   PartyPopper,
   Wallet,
+  ChefHat,
 } from "lucide-react";
 import { getEventCategoryMeta } from "@/components/events/event-categories";
 
@@ -30,6 +31,7 @@ const typeIcons: Record<string, typeof GraduationCap> = {
   task: ListChecks,
   event: PartyPopper,
   bill: Wallet,
+  recipe: ChefHat,
 };
 
 const typeLabels: Record<string, string> = {
@@ -39,6 +41,7 @@ const typeLabels: Record<string, string> = {
   task: "Task",
   event: "Event",
   bill: "Bill",
+  recipe: "Recipe",
 };
 
 function getResultIcon(result: SearchResult) {
@@ -62,6 +65,8 @@ function getResultLink(result: SearchResult): string {
       return `/events/${result.id}`;
     case "bill":
       return `/bills`;
+    case "recipe":
+      return `/recipes/${result.id}`;
     default:
       return "/";
   }

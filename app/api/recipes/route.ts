@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { recipes, taggings, tags, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createRecipeSchema } from "@/lib/validations/recipe";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 

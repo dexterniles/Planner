@@ -9,6 +9,7 @@ import {
   eventCategories,
   bills,
   billCategories,
+  recipes,
   SINGLE_USER_ID,
 } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
@@ -31,6 +32,7 @@ export async function GET(request: Request) {
     taskResults,
     eventResults,
     billResults,
+    recipeResults,
   ] = await Promise.all([
     db
       .select({
@@ -136,6 +138,21 @@ export async function GET(request: Request) {
       .then((rows) =>
         rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
       ),
+    db
+      .select({
+        id: recipes.id,
+        type: sql<string>`'recipe'`.as("type"),
+        title: recipes.title,
+        subtitle: recipes.description,
+        color: sql<string | null>`null`.as("color"),
+        parentId: recipes.id,
+        category: sql<string | null>`null`.as("category"),
+      })
+      .from(recipes)
+      .where(eq(recipes.userId, SINGLE_USER_ID))
+      .then((rows) =>
+        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
+      ),
   ]);
 
   const results = [
@@ -145,6 +162,7 @@ export async function GET(request: Request) {
     ...taskResults,
     ...eventResults,
     ...billResults,
+    ...recipeResults,
   ].slice(0, 20);
 
   return NextResponse.json(results);
