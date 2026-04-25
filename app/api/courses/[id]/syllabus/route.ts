@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { courses, SINGLE_USER_ID } from "@/lib/db/schema";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 import {
   ensureSyllabusBucket,
   supabaseAdmin,
@@ -29,6 +30,8 @@ async function getCourseOr404(id: string) {
 
 /** Returns a short-lived signed URL + metadata for the current syllabus. */
 export async function GET(_request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
   const course = await getCourseOr404(id);
   if (!course) {
@@ -63,6 +66,8 @@ export async function GET(_request: Request, { params }: Params) {
 
 /** Multipart upload — replaces any existing syllabus for the course. */
 export async function POST(request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
   const course = await getCourseOr404(id);
   if (!course) {
@@ -139,6 +144,8 @@ export async function POST(request: Request, { params }: Params) {
 
 /** Delete the current syllabus and clear DB columns. */
 export async function DELETE(_request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
   const course = await getCourseOr404(id);
   if (!course) {

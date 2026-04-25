@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 import {
   courses,
   projects,
@@ -21,6 +22,8 @@ function startOfWeek(): Date {
 }
 
 export async function GET() {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const weekStart = startOfWeek();
   const now = new Date();
 

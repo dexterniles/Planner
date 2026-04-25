@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 import {
   courses,
   assignments,
@@ -49,6 +50,8 @@ function computeCategoryGrade(
 }
 
 export async function GET() {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const activeCourses = await db
     .select({
       id: courses.id,

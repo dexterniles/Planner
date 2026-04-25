@@ -3,8 +3,11 @@ import { projects, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createProjectSchema } from "@/lib/validations/project";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId");
 
@@ -24,6 +27,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = createProjectSchema.safeParse(body);
   if (!parsed.success) {

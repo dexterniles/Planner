@@ -3,8 +3,11 @@ import { recurrenceRules, assignments, tasks, events, bills } from "@/lib/db/sch
 import { createRecurrenceRuleSchema } from "@/lib/validations/recurrence";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = createRecurrenceRuleSchema.safeParse(body);
   if (!parsed.success) {

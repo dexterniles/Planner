@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { events, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createEventSchema } from "@/lib/validations/event";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 import type {
   EventCategory,
   EventStatus,
@@ -10,6 +11,8 @@ import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
@@ -37,6 +40,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = createEventSchema.safeParse(body);
   if (!parsed.success) {

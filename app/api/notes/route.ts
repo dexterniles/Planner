@@ -3,8 +3,11 @@ import { notes, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createNoteSchema } from "@/lib/validations/note";
 import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const parentType = searchParams.get("parentType");
   const parentId = searchParams.get("parentId");
@@ -43,6 +46,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = createNoteSchema.safeParse(body);
   if (!parsed.success) {

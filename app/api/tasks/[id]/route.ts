@@ -3,10 +3,13 @@ import { tasks, SINGLE_USER_ID } from "@/lib/db/schema";
 import { updateTaskSchema } from "@/lib/validations/task";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
   const [task] = await db
     .select()
@@ -20,6 +23,8 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
   const body = await request.json();
   const parsed = updateTaskSchema.safeParse(body);
@@ -46,6 +51,8 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
   const [deleted] = await db
     .delete(tasks)

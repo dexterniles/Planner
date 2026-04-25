@@ -3,8 +3,11 @@ import { timeLogs, SINGLE_USER_ID } from "@/lib/db/schema";
 import { startTimeLogSchema } from "@/lib/validations/time-log";
 import { eq, and, isNull, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const loggableType = searchParams.get("loggableType");
   const loggableId = searchParams.get("loggableId");
@@ -37,6 +40,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = startTimeLogSchema.safeParse(body);
   if (!parsed.success) {

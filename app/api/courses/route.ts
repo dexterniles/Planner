@@ -3,6 +3,7 @@ import { courses, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createCourseSchema } from "@/lib/validations/course";
 import { and, eq, lt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 /**
  * Sweep any active courses whose end_date is in the past and mark them
@@ -23,6 +24,8 @@ async function autoCompletePastCourses() {
 }
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   await autoCompletePastCourses();
 
   const { searchParams } = new URL(request.url);
@@ -44,6 +47,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = createCourseSchema.safeParse(body);
   if (!parsed.success) {

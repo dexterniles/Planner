@@ -3,8 +3,11 @@ import { bills, SINGLE_USER_ID } from "@/lib/db/schema";
 import { bulkMarkPaidSchema } from "@/lib/validations/bill";
 import { and, eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = bulkMarkPaidSchema.safeParse(body);
   if (!parsed.success) {

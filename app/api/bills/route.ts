@@ -3,8 +3,11 @@ import { bills, recurrenceRules, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createBillSchema, type BillStatus } from "@/lib/validations/bill";
 import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
@@ -46,6 +49,8 @@ function addInterval(
 }
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = createBillSchema.safeParse(body);
   if (!parsed.success) {

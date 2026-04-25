@@ -2,10 +2,13 @@ import { db } from "@/lib/db";
 import { recurrenceRules, assignments, tasks, events, bills } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
 
   // Unlink from any assignments/tasks/events/bills first

@@ -3,6 +3,7 @@ import { Topbar } from "@/components/layout/topbar";
 import { SearchPalette } from "@/components/layout/search-palette";
 import { PageTransition } from "@/components/layout/page-transition";
 import { SidebarProvider } from "@/components/layout/sidebar-context";
+import { SessionWatcher } from "@/components/layout/session-watcher";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -29,6 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <SearchPalette />
       </div>
+      <SessionWatcher />
     </SidebarProvider>
   );
 }

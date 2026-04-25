@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { mediaItems, SINGLE_USER_ID } from "@/lib/db/schema";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 import {
   addMediaSchema,
   type MediaStatus,
@@ -10,6 +11,8 @@ import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") as MediaStatus | null;
   const mediaType = searchParams.get("mediaType") as MediaType | null;
@@ -32,6 +35,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = addMediaSchema.safeParse(body);
   if (!parsed.success) {

@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { tmdbSearchMulti } from "@/lib/tmdb/client";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 /**
  * Server-side proxy to TMDB /search/multi. Filters out person results so the
  * client only sees movies and TV titles. Returns a normalized shape.
  */
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) {

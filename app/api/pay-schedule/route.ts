@@ -3,8 +3,11 @@ import { paySchedule, SINGLE_USER_ID } from "@/lib/db/schema";
 import { upsertPayScheduleSchema } from "@/lib/validations/bill";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET() {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const [existing] = await db
     .select()
     .from(paySchedule)
@@ -14,6 +17,8 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = upsertPayScheduleSchema.safeParse(body);
   if (!parsed.success) {
@@ -43,6 +48,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE() {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   await db.delete(paySchedule).where(eq(paySchedule.userId, SINGLE_USER_ID));
   return NextResponse.json({ success: true });
 }

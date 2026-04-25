@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { events, SINGLE_USER_ID } from "@/lib/db/schema";
 import { and, asc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 /**
  * Return all events that overlap a given calendar date.
@@ -12,6 +13,8 @@ import { NextResponse } from "next/server";
  *  - Multi-day events whose startsAt <= dayEnd AND (endsAt is null OR endsAt >= dayStart)
  */
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
 

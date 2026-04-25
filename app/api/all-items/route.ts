@@ -2,8 +2,11 @@ import { db } from "@/lib/db";
 import { assignments, tasks, courses, projects, SINGLE_USER_ID } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET() {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const assignmentRows = await db
     .select({
       id: assignments.id,

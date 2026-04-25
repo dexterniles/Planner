@@ -3,8 +3,11 @@ import { billCategories, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createBillCategorySchema } from "@/lib/validations/bill";
 import { asc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET() {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const result = await db
     .select()
     .from(billCategories)
@@ -15,6 +18,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const body = await request.json();
   const parsed = createBillCategorySchema.safeParse(body);
   if (!parsed.success) {

@@ -10,6 +10,7 @@ import {
   PartyPopper,
   Wallet,
   Film,
+  LogOut,
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
@@ -174,7 +175,7 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
       {!forceExpanded && (
         <div
           className={cn(
-            "flex items-center gap-2 border-t border-sidebar-border/60 p-2.5",
+            "flex items-center gap-1 border-t border-sidebar-border/60 p-2.5",
             isCollapsed ? "justify-center" : "",
           )}
         >
@@ -191,6 +192,14 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
               <PanelLeftClose className="h-[15px] w-[15px]" strokeWidth={1.75} />
             )}
           </button>
+          <a
+            href="/api/auth/logout"
+            aria-label="Sign out"
+            title="Sign out"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-sidebar-foreground/55 transition-colors duration-150 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+          >
+            <LogOut className="h-[15px] w-[15px]" strokeWidth={1.75} />
+          </a>
           {!isCollapsed && (
             <span className="ml-auto font-mono text-[10.5px] text-sidebar-foreground/40">
               v{pkg.version}

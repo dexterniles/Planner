@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 import {
   assignments,
   tasks,
@@ -14,6 +15,8 @@ import { eq, and, gte, lte, sql, or, isNull, isNotNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const month = searchParams.get("month"); // YYYY-MM
   const from = searchParams.get("from"); // ISO date

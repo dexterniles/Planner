@@ -3,10 +3,13 @@ import { billCategories, SINGLE_USER_ID } from "@/lib/db/schema";
 import { updateBillCategorySchema } from "@/lib/validations/bill";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
   const body = await request.json();
   const parsed = updateBillCategorySchema.safeParse(body);
@@ -32,6 +35,8 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { id } = await params;
   const [deleted] = await db
     .delete(billCategories)

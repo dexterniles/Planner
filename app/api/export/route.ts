@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requireAuthGuard } from "@/lib/auth/require-auth";
 import {
   workspaces,
   courses,
@@ -16,6 +17,8 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  const __guard = await requireAuthGuard();
+  if (__guard) return __guard;
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") ?? "json";
 
