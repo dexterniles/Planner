@@ -5,27 +5,32 @@ import { PartyPopper, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEvents } from "@/lib/hooks/use-events";
+import { useEventCategories } from "@/lib/hooks/use-event-categories";
 import { EventCard, type EventCardData } from "@/components/events/event-card";
 import { EventDialog } from "@/components/events/event-dialog";
-import { EVENT_CATEGORY_LIST } from "@/components/events/event-categories";
-import type { EventCategory } from "@/lib/validations/event";
+import { getEventCategoryMeta } from "@/components/events/event-categories";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 
 type TimeFilter = "upcoming" | "past" | "all";
 
+interface CategoryRow {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
 export default function EventsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<EventCardData | null>(null);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("upcoming");
-  const [categoryFilter, setCategoryFilter] = useState<EventCategory | null>(
-    null,
-  );
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
   const { data: events, isLoading } = useEvents({
-    ...(categoryFilter && { category: categoryFilter }),
+    ...(categoryFilter && { categoryId: categoryFilter }),
     limit: 500,
   });
+  const { data: categories } = useEventCategories();
 
   const now = useMemo(() => new Date(), []);
 
@@ -41,7 +46,6 @@ export default function EventsPage() {
         return start >= now || (end !== null && end >= now);
       });
     }
-    // past
     return list
       .filter((e) => {
         const start = new Date(e.startsAt);
@@ -61,6 +65,8 @@ export default function EventsPage() {
     setDialogOpen(true);
   };
 
+  const cats = (categories ?? []) as CategoryRow[];
+
   return (
     <div>
       <PageHeader
@@ -74,90 +80,89 @@ export default function EventsPage() {
       />
 
       <div className="space-y-5">
-      {/* Filters */}
-      <div className="space-y-3">
-        {/* Time filter segmented control */}
-        <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
-          {(["upcoming", "past", "all"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTimeFilter(t)}
-              className={cn(
-                "px-3 py-1 text-[12.5px] font-medium capitalize rounded-[5px] transition-colors duration-150",
-                timeFilter === t
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        {/* Category filter strip */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setCategoryFilter(null)}
-            className={cn(
-              "px-3 py-1 text-xs font-medium rounded-full border transition-all",
-              categoryFilter === null
-                ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground",
-            )}
-          >
-            All
-          </button>
-          {EVENT_CATEGORY_LIST.map((cat) => {
-            const active = categoryFilter === cat.value;
-            const Icon = cat.icon;
-            return (
+        {/* Filters */}
+        <div className="space-y-3">
+          {/* Time filter segmented control */}
+          <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
+            {(["upcoming", "past", "all"] as const).map((t) => (
               <button
-                key={cat.value}
-                onClick={() =>
-                  setCategoryFilter(active ? null : cat.value)
-                }
+                key={t}
+                onClick={() => setTimeFilter(t)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border transition-all",
-                  active
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground",
+                  "px-3 py-1 text-[12.5px] font-medium capitalize rounded-[5px] transition-colors duration-150",
+                  timeFilter === t
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="h-3 w-3" />
-                {cat.label}
+                {t}
               </button>
-            );
-          })}
-        </div>
-      </div>
+            ))}
+          </div>
 
-      {/* List */}
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          <Skeleton className="h-[240px] w-full rounded-xl" />
-          <Skeleton className="h-[240px] w-full rounded-xl" />
-          <Skeleton className="h-[240px] w-full rounded-xl" />
-          <Skeleton className="h-[240px] w-full rounded-xl" />
+          {/* Category filter strip */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setCategoryFilter(null)}
+              className={cn(
+                "px-3 py-1 text-xs font-medium rounded-full border transition-all",
+                categoryFilter === null
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground",
+              )}
+            >
+              All
+            </button>
+            {cats.map((cat) => {
+              const active = categoryFilter === cat.id;
+              const meta = getEventCategoryMeta(cat.name, cat.color);
+              const Icon = meta.icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategoryFilter(active ? null : cat.id)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border transition-all",
+                    active
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-3 w-3" />
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          timeFilter={timeFilter}
-          hasEvents={(events?.length ?? 0) > 0}
-          onCreate={openCreate}
+
+        {/* List */}
+        {isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <Skeleton className="h-[240px] w-full rounded-xl" />
+            <Skeleton className="h-[240px] w-full rounded-xl" />
+            <Skeleton className="h-[240px] w-full rounded-xl" />
+            <Skeleton className="h-[240px] w-full rounded-xl" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            timeFilter={timeFilter}
+            hasEvents={(events?.length ?? 0) > 0}
+            onCreate={openCreate}
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filtered.map((event) => (
+              <EventCard key={event.id} event={event} onEdit={() => openEdit(event)} />
+            ))}
+          </div>
+        )}
+
+        <EventDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          event={editing ?? undefined}
         />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((event) => (
-            <EventCard key={event.id} event={event} onEdit={() => openEdit(event)} />
-          ))}
-        </div>
-      )}
-
-      <EventDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        event={editing ?? undefined}
-      />
       </div>
     </div>
   );
@@ -172,7 +177,6 @@ function EmptyState({
   hasEvents: boolean;
   onCreate: () => void;
 }) {
-  // Case 1: no events at all in the DB
   if (!hasEvents) {
     return (
       <div className="mt-12 flex flex-col items-center text-center">
@@ -192,7 +196,6 @@ function EmptyState({
     );
   }
 
-  // Case 2: has events but filters hide them all
   const messages: Record<TimeFilter, string> = {
     upcoming: "Nothing upcoming. Enjoy the quiet.",
     past: "No past events in this view yet.",

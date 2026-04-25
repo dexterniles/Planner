@@ -19,6 +19,7 @@ import { useTags, useCreateTag, useUpdateTag, useDeleteTag } from "@/lib/hooks/u
 import { Skeleton } from "@/components/ui/skeleton";
 import { PayScheduleSettings } from "@/components/bills/pay-schedule-settings";
 import { BillCategoriesSettings } from "@/components/bills/bill-categories-settings";
+import { EventCategoriesSettings } from "@/components/events/event-categories-settings";
 import { PageHeader } from "@/components/layout/page-header";
 import { toast } from "sonner";
 
@@ -158,6 +159,10 @@ export default function SettingsPage() {
 
       <section>
         <BillCategoriesSettings />
+      </section>
+
+      <section>
+        <EventCategoriesSettings />
       </section>
 
       <section>

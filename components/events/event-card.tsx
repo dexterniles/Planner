@@ -21,18 +21,20 @@ import {
 import { useDeleteEvent } from "@/lib/hooks/use-events";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
-  EVENT_CATEGORIES,
   STATUS_LABELS,
   formatEventTime,
+  getEventCategoryMeta,
 } from "./event-categories";
-import type { EventCategory, EventStatus } from "@/lib/validations/event";
+import type { EventStatus } from "@/lib/validations/event";
 import { toast } from "sonner";
 
 export interface EventCardData {
   id: string;
   title: string;
   description: string | null;
-  category: EventCategory;
+  categoryId: string | null;
+  categoryName: string | null;
+  categoryColor: string | null;
   startsAt: string;
   endsAt: string | null;
   allDay: boolean;
@@ -62,13 +64,13 @@ const statusVariants: Record<
 export function EventCard({ event, onEdit }: EventCardProps) {
   const deleteEvent = useDeleteEvent();
   const confirm = useConfirm();
-  const meta = EVENT_CATEGORIES[event.category] ?? EVENT_CATEGORIES.other;
+  const meta = getEventCategoryMeta(event.categoryName, event.categoryColor);
   const Icon = meta.icon;
 
   const isTentative = event.status === "tentative";
   const isCancelled = event.status === "cancelled";
   const isCompleted = event.status === "completed";
-  const accent = event.color ?? meta.defaultColor;
+  const accent = event.color ?? event.categoryColor ?? meta.defaultColor;
 
   const handleDelete = async () => {
     if (
@@ -99,14 +101,12 @@ export function EventCard({ event, onEdit }: EventCardProps) {
         isTentative ? "border-dashed" : ""
       } ${isCancelled || isCompleted ? "opacity-60" : ""}`}
     >
-      {/* Color band with prominent serif date + status */}
       <a
         href={`/events/${event.id}`}
         className="relative block h-[88px] shrink-0"
         style={{ backgroundColor: accent }}
         aria-label={`Open ${event.title}`}
       >
-        {/* Date block — left side */}
         <div className="absolute left-4 top-3 leading-none text-white">
           <div className="font-serif text-[26px] font-medium tabular-nums drop-shadow-sm">
             {dayNumber}
@@ -116,7 +116,6 @@ export function EventCard({ event, onEdit }: EventCardProps) {
           </div>
         </div>
 
-        {/* Category icon + status — right side */}
         <div className="absolute right-3 top-3 flex items-center gap-2">
           <Badge
             variant="outline"
@@ -126,14 +125,14 @@ export function EventCard({ event, onEdit }: EventCardProps) {
           </Badge>
         </div>
 
-        {/* Category chip — bottom-right */}
-        <div className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-1 text-[10.5px] font-medium uppercase tracking-[0.08em] text-white backdrop-blur-sm">
-          <Icon className="h-3 w-3" strokeWidth={2} />
-          {event.category}
-        </div>
+        {event.categoryName && (
+          <div className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-1 text-[10.5px] font-medium uppercase tracking-[0.08em] text-white backdrop-blur-sm">
+            <Icon className="h-3 w-3" strokeWidth={2} />
+            {event.categoryName}
+          </div>
+        )}
       </a>
 
-      {/* Body */}
       <div className="flex flex-1 flex-col p-4">
         <a
           href={`/events/${event.id}`}
@@ -234,10 +233,6 @@ export function EventCard({ event, onEdit }: EventCardProps) {
   );
 }
 
-/**
- * Display-only helper for use in listings that don't need to map status to
- * a badge variant inline.
- */
 export function eventStatusLabel(status: EventStatus): string {
   return STATUS_LABELS[status] ?? status;
 }

@@ -6,6 +6,7 @@ import {
   assignments,
   tasks,
   events,
+  eventCategories,
   bills,
   billCategories,
   SINGLE_USER_ID,
@@ -103,11 +104,14 @@ export async function GET(request: Request) {
         type: sql<string>`'event'`.as("type"),
         title: events.title,
         subtitle: events.location,
-        color: events.color,
+        color: sql<string | null>`COALESCE(${events.color}, ${eventCategories.color})`.as(
+          "color",
+        ),
         parentId: events.id,
-        category: sql<string>`${events.category}::text`.as("category"),
+        category: eventCategories.name,
       })
       .from(events)
+      .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
       .where(eq(events.userId, SINGLE_USER_ID))
       .then((rows) =>
         rows.filter(

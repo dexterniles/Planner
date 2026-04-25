@@ -102,16 +102,6 @@ export const payFrequencyEnum = pgEnum("pay_frequency", [
   "monthly",
 ]);
 
-export const eventCategoryEnum = pgEnum("event_category", [
-  "dinner",
-  "concert",
-  "travel",
-  "hangout",
-  "appointment",
-  "social",
-  "other",
-]);
-
 export const eventStatusEnum = pgEnum("event_status", [
   "confirmed",
   "tentative",
@@ -316,6 +306,25 @@ export const milestones = pgTable("milestones", {
   ...timestamps,
 });
 
+export const eventCategories = pgTable(
+  "event_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    color: text("color"),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    index("event_categories_user_id_idx").on(table.userId),
+    uniqueIndex("event_categories_user_id_name_idx").on(
+      table.userId,
+      table.name,
+    ),
+  ],
+);
+
 export const events = pgTable(
   "events",
   {
@@ -323,7 +332,9 @@ export const events = pgTable(
     userId: uuid("user_id").notNull(),
     title: text("title").notNull(),
     description: text("description"),
-    category: eventCategoryEnum("category").default("other").notNull(),
+    categoryId: uuid("category_id").references(() => eventCategories.id, {
+      onDelete: "set null",
+    }),
     startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     allDay: boolean("all_day").default(false).notNull(),
@@ -341,7 +352,7 @@ export const events = pgTable(
   (table) => [
     index("events_user_id_idx").on(table.userId),
     index("events_starts_at_idx").on(table.startsAt),
-    index("events_category_idx").on(table.category),
+    index("events_category_id_idx").on(table.categoryId),
     index("events_status_idx").on(table.status),
   ],
 );
@@ -547,6 +558,68 @@ export const mediaItems = pgTable(
       table.tmdbId,
     ),
   ],
+);
+
+export const recipes = pgTable(
+  "recipes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    prepTimeMinutes: integer("prep_time_minutes"),
+    cookTimeMinutes: integer("cook_time_minutes"),
+    portions: integer("portions").default(1).notNull(),
+    notes: text("notes"),
+    sourceUrl: text("source_url"),
+    ...timestamps,
+  },
+  (table) => [index("recipes_user_id_idx").on(table.userId)],
+);
+
+export const recipeIngredients = pgTable(
+  "recipe_ingredients",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    recipeId: uuid("recipe_id")
+      .references(() => recipes.id, { onDelete: "cascade" })
+      .notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    quantity: decimal("quantity", { precision: 10, scale: 3 }),
+    unit: text("unit"),
+    name: text("name").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("recipe_ingredients_recipe_id_idx").on(table.recipeId)],
+);
+
+export const recipeSteps = pgTable(
+  "recipe_steps",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    recipeId: uuid("recipe_id")
+      .references(() => recipes.id, { onDelete: "cascade" })
+      .notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    body: text("body").notNull(),
+    durationMinutes: integer("duration_minutes"),
+    ...timestamps,
+  },
+  (table) => [index("recipe_steps_recipe_id_idx").on(table.recipeId)],
+);
+
+export const recipeEquipment = pgTable(
+  "recipe_equipment",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    recipeId: uuid("recipe_id")
+      .references(() => recipes.id, { onDelete: "cascade" })
+      .notNull(),
+    sortOrder: integer("sort_order").default(0).notNull(),
+    name: text("name").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("recipe_equipment_recipe_id_idx").on(table.recipeId)],
 );
 
 // ─── Calendar Items View ────────────────────────────────────────────────────

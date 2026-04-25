@@ -57,6 +57,13 @@
       "when": 1777148877993,
       "tag": "0007_add_media_items",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777158107379,
+      "tag": "0008_event_categories_and_recipes",
+      "breakpoints": true
     }
   ]
 }

@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useCalendarItems } from "@/lib/hooks/use-calendar-items";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EVENT_CATEGORIES } from "@/components/events/event-categories";
+import { getEventCategoryMeta } from "@/components/events/event-categories";
 import {
   type CalendarItem,
-  type EventCategory,
   formatMonth,
   getItemLink,
   getMonthDays,
@@ -189,8 +188,11 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
               <div className="mt-1 flex flex-wrap gap-0.5 md:hidden">
                 {dayItems.slice(0, 4).map((dayItem, idx) => {
                   const meta =
-                    dayItem.item.sourceType === "event" && dayItem.item.category
-                      ? EVENT_CATEGORIES[dayItem.item.category as EventCategory]
+                    dayItem.item.sourceType === "event"
+                      ? getEventCategoryMeta(
+                          dayItem.item.category,
+                          dayItem.item.color,
+                        )
                       : null;
                   const color =
                     dayItem.item.color ?? meta?.defaultColor ?? "#888";
@@ -220,10 +222,7 @@ function DayPill({ dayItem }: { dayItem: DayItem }) {
   const { item, isStart, isEnd } = dayItem;
   const isEvent = item.sourceType === "event";
   const isMultiDay = isEvent && item.endDate && !(isStart && isEnd);
-  const meta =
-    isEvent && item.category
-      ? EVENT_CATEGORIES[item.category as EventCategory]
-      : null;
+  const meta = isEvent ? getEventCategoryMeta(item.category, item.color) : null;
   const color = item.color ?? meta?.defaultColor ?? "#888";
 
   const prefix = isMultiDay && !isStart ? "← " : "";

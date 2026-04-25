@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { events, SINGLE_USER_ID } from "@/lib/db/schema";
+import { events, eventCategories, SINGLE_USER_ID } from "@/lib/db/schema";
 import { updateEventSchema } from "@/lib/validations/event";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -12,8 +12,28 @@ export async function GET(_request: Request, { params }: Params) {
   if (__guard) return __guard;
   const { id } = await params;
   const [event] = await db
-    .select()
+    .select({
+      id: events.id,
+      userId: events.userId,
+      title: events.title,
+      description: events.description,
+      categoryId: events.categoryId,
+      categoryName: eventCategories.name,
+      categoryColor: eventCategories.color,
+      startsAt: events.startsAt,
+      endsAt: events.endsAt,
+      allDay: events.allDay,
+      location: events.location,
+      url: events.url,
+      attendees: events.attendees,
+      status: events.status,
+      color: events.color,
+      recurrenceRuleId: events.recurrenceRuleId,
+      createdAt: events.createdAt,
+      updatedAt: events.updatedAt,
+    })
     .from(events)
+    .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
     .where(and(eq(events.id, id), eq(events.userId, SINGLE_USER_ID)));
 
   if (!event) {

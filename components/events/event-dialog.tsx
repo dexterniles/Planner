@@ -28,11 +28,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  EVENT_CATEGORIES,
-  EVENT_CATEGORY_LIST,
-  STATUS_LABELS,
-} from "./event-categories";
+import { STATUS_LABELS } from "./event-categories";
+import { EventCategoryPicker } from "./event-category-picker";
 import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toast } from "sonner";
 
@@ -43,7 +40,7 @@ interface EventDialogProps {
     id: string;
     title: string;
     description: string | null;
-    category: CreateEventInput["category"];
+    categoryId: string | null;
     startsAt: string;
     endsAt: string | null;
     allDay: boolean;
@@ -60,7 +57,6 @@ function toLocalInput(iso: string | null | undefined, allDay: boolean): string {
   if (!iso) return "";
   const date = new Date(iso);
   if (isNaN(date.getTime())) return "";
-  // Convert to local-ISO for datetime-local/date input
   const pad = (n: number) => String(n).padStart(2, "0");
   const yyyy = date.getFullYear();
   const mm = pad(date.getMonth() + 1);
@@ -79,13 +75,6 @@ function defaultEventStart(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T23:59`;
 }
 
-/**
- * Convert a form input string (either YYYY-MM-DD from an all-day date input
- * or YYYY-MM-DDTHH:mm from a datetime-local input) to a UTC ISO string.
- * For date-only strings we explicitly anchor to local midnight so the server
- * doesn't interpret them as UTC midnight (which would shift the date back
- * one day in any negative-offset timezone).
- */
 function formInputToISO(value: string, allDay: boolean): string {
   if (!value) return "";
   const local =
@@ -112,7 +101,7 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
     defaultValues: {
       title: "",
       description: "",
-      category: "other",
+      categoryId: null,
       startsAt: "",
       endsAt: "",
       allDay: false,
@@ -125,7 +114,7 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
   });
 
   const allDay = watch("allDay");
-  const currentCategory = watch("category") ?? "other";
+  const currentCategoryId = watch("categoryId") ?? null;
   const currentStatus = watch("status") ?? "confirmed";
 
   useEffect(() => {
@@ -133,7 +122,7 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
     reset({
       title: event?.title ?? "",
       description: event?.description ?? "",
-      category: event?.category ?? "other",
+      categoryId: event?.categoryId ?? null,
       startsAt: event?.startsAt
         ? toLocalInput(event.startsAt, isAllDay)
         : isAllDay
@@ -151,7 +140,6 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
 
   const onSubmit = async (data: CreateEventInput) => {
     try {
-      // Convert local datetime-input strings to UTC ISO, respecting all-day.
       const startsAt = formInputToISO(data.startsAt ?? "", data.allDay ?? false);
       const endsAt = data.endsAt
         ? formInputToISO(data.endsAt, data.allDay ?? false)
@@ -204,41 +192,13 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
             )}
           </div>
 
-          {/* Category picker — icon grid */}
+          {/* Category picker — chips with inline +New */}
           <div className="space-y-2">
             <Label>Category</Label>
-            <div className="grid grid-cols-4 gap-2">
-              {EVENT_CATEGORY_LIST.map((cat) => {
-                const Icon = cat.icon;
-                const active = currentCategory === cat.value;
-                return (
-                  <button
-                    key={cat.value}
-                    type="button"
-                    onClick={() => setValue("category", cat.value)}
-                    className={`group flex flex-col items-center gap-1 rounded-lg border p-2 text-xs transition-all ${
-                      active
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                        : "border-border hover:bg-accent hover:border-border/80"
-                    }`}
-                    aria-label={cat.label}
-                  >
-                    <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br ${cat.gradient}`}
-                    >
-                      <Icon className={`h-3.5 w-3.5 ${cat.text}`} />
-                    </div>
-                    <span
-                      className={
-                        active ? "font-medium" : "text-muted-foreground"
-                      }
-                    >
-                      {cat.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <EventCategoryPicker
+              value={currentCategoryId}
+              onChange={(id) => setValue("categoryId", id)}
+            />
           </div>
 
           {/* All-day toggle */}

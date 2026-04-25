@@ -11,8 +11,7 @@ import {
   PartyPopper,
   Wallet,
 } from "lucide-react";
-import { EVENT_CATEGORIES } from "@/components/events/event-categories";
-import type { EventCategory } from "@/lib/validations/event";
+import { getEventCategoryMeta } from "@/components/events/event-categories";
 
 interface SearchResult {
   id: string;
@@ -43,9 +42,8 @@ const typeLabels: Record<string, string> = {
 };
 
 function getResultIcon(result: SearchResult) {
-  if (result.type === "event" && result.category) {
-    const meta = EVENT_CATEGORIES[result.category as EventCategory];
-    if (meta) return meta.icon;
+  if (result.type === "event") {
+    return getEventCategoryMeta(result.category, result.color).icon;
   }
   return typeIcons[result.type] ?? FileText;
 }

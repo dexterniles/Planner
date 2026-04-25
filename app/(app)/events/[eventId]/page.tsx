@@ -17,13 +17,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEvent } from "@/lib/hooks/use-events";
 import {
-  EVENT_CATEGORIES,
   STATUS_LABELS,
   formatEventTime,
+  getEventCategoryMeta,
 } from "@/components/events/event-categories";
 import { EventDialog } from "@/components/events/event-dialog";
 import { NotesList } from "@/components/notes-list";
-import type { EventCategory, EventStatus } from "@/lib/validations/event";
+import type { EventStatus } from "@/lib/validations/event";
 
 const statusVariants: Record<
   EventStatus,
@@ -74,10 +74,9 @@ export default function EventDetailPage({
     );
   }
 
-  const category = (event.category ?? "other") as EventCategory;
-  const meta = EVENT_CATEGORIES[category] ?? EVENT_CATEGORIES.other;
+  const meta = getEventCategoryMeta(event.categoryName, event.categoryColor);
   const Icon = meta.icon;
-  const accent = event.color ?? meta.defaultColor;
+  const accent = event.color ?? event.categoryColor ?? meta.defaultColor;
   const status = (event.status ?? "confirmed") as EventStatus;
 
   const start = new Date(event.startsAt);
@@ -97,7 +96,6 @@ export default function EventDetailPage({
       <div className="mb-7 border-b border-border pb-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6">
           <div className="flex min-w-0 flex-1 items-start gap-4">
-            {/* Serif date block */}
             <div
               className="flex shrink-0 flex-col items-center justify-center rounded-md border-l-2 bg-card px-3 py-1.5 text-center"
               style={{ borderLeftColor: accent }}
@@ -132,7 +130,6 @@ export default function EventDetailPage({
                 )}
               </div>
 
-              {/* Quick info strip */}
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.75} />

@@ -1,5 +1,3 @@
-import type { EventCategory } from "@/lib/validations/event";
-
 export interface CalendarItem {
   sourceType: "assignment" | "task" | "milestone" | "event" | "bill";
   sourceId: string;
@@ -135,9 +133,4 @@ export function itemOverlapsDay(item: CalendarItem, day: Date): boolean {
   return d >= dayStart && d <= dayEnd;
 }
 
-/**
- * Get the event metadata (icon, colors) for an event item, or null for
- * non-event items.
- */
-export { EVENT_CATEGORIES } from "@/components/events/event-categories";
-export type { EventCategory };
+export { getEventCategoryMeta } from "@/components/events/event-categories";

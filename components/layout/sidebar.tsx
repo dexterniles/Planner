@@ -10,6 +10,7 @@ import {
   PartyPopper,
   Wallet,
   Film,
+  ChefHat,
   LogOut,
   Settings,
   PanelLeftClose,
@@ -28,6 +29,7 @@ const navItems = [
   { label: "Events", href: "/events", icon: PartyPopper },
   { label: "Bills", href: "/bills", icon: Wallet },
   { label: "TV & Movies", href: "/movies", icon: Film },
+  { label: "Recipes", href: "/recipes", icon: ChefHat },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

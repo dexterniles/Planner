@@ -7,23 +7,27 @@ import {
   PartyPopper,
   Sparkles,
 } from "lucide-react";
-import type { EventCategory, EventStatus } from "@/lib/validations/event";
+import type { EventStatus } from "@/lib/validations/event";
 
 export interface EventCategoryMeta {
-  value: EventCategory;
+  /** Display label */
   label: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   /** Tailwind gradient tone used for icon background */
   gradient: string;
   /** Tailwind text color for icon/label */
   text: string;
-  /** Default hex color when no override is set */
+  /** Hex fallback color when the category has no override */
   defaultColor: string;
 }
 
-export const EVENT_CATEGORIES: Record<EventCategory, EventCategoryMeta> = {
+/**
+ * Built-in metadata keyed by lowercase category name. Matches the seven seeded
+ * defaults so existing events keep their familiar icon/colors. User-created
+ * categories fall through to a generic Sparkles look in `getEventCategoryMeta`.
+ */
+const BUILTIN_META: Record<string, EventCategoryMeta> = {
   dinner: {
-    value: "dinner",
     label: "Dinner",
     icon: Utensils,
     gradient: "from-amber-500/20 to-amber-500/5",
@@ -31,7 +35,6 @@ export const EVENT_CATEGORIES: Record<EventCategory, EventCategoryMeta> = {
     defaultColor: "#F59E0B",
   },
   concert: {
-    value: "concert",
     label: "Concert",
     icon: Music,
     gradient: "from-violet-500/20 to-violet-500/5",
@@ -39,7 +42,6 @@ export const EVENT_CATEGORIES: Record<EventCategory, EventCategoryMeta> = {
     defaultColor: "#8B5CF6",
   },
   travel: {
-    value: "travel",
     label: "Travel",
     icon: Plane,
     gradient: "from-emerald-500/20 to-emerald-500/5",
@@ -47,7 +49,6 @@ export const EVENT_CATEGORIES: Record<EventCategory, EventCategoryMeta> = {
     defaultColor: "#10B981",
   },
   hangout: {
-    value: "hangout",
     label: "Hangout",
     icon: Users,
     gradient: "from-blue-500/20 to-blue-500/5",
@@ -55,7 +56,6 @@ export const EVENT_CATEGORIES: Record<EventCategory, EventCategoryMeta> = {
     defaultColor: "#3B82F6",
   },
   appointment: {
-    value: "appointment",
     label: "Appointment",
     icon: CalendarClock,
     gradient: "from-slate-500/20 to-slate-500/5",
@@ -63,7 +63,6 @@ export const EVENT_CATEGORIES: Record<EventCategory, EventCategoryMeta> = {
     defaultColor: "#64748B",
   },
   social: {
-    value: "social",
     label: "Social",
     icon: PartyPopper,
     gradient: "from-rose-500/20 to-rose-500/5",
@@ -71,7 +70,6 @@ export const EVENT_CATEGORIES: Record<EventCategory, EventCategoryMeta> = {
     defaultColor: "#EC4899",
   },
   other: {
-    value: "other",
     label: "Other",
     icon: Sparkles,
     gradient: "from-indigo-500/20 to-indigo-500/5",
@@ -80,7 +78,32 @@ export const EVENT_CATEGORIES: Record<EventCategory, EventCategoryMeta> = {
   },
 };
 
-export const EVENT_CATEGORY_LIST = Object.values(EVENT_CATEGORIES);
+const GENERIC_META: EventCategoryMeta = {
+  label: "Category",
+  icon: Sparkles,
+  gradient: "from-indigo-500/20 to-indigo-500/5",
+  text: "text-indigo-600 dark:text-indigo-400",
+  defaultColor: "#6366F1",
+};
+
+/**
+ * Resolve the icon/gradient/color for an event category. Built-in default
+ * categories get their custom icon; user-created categories fall back to a
+ * generic Sparkles look but keep the user's stored color.
+ */
+export function getEventCategoryMeta(
+  name: string | null | undefined,
+  color: string | null = null,
+): EventCategoryMeta {
+  if (name) {
+    const known = BUILTIN_META[name.toLowerCase()];
+    if (known) {
+      return color ? { ...known, label: name, defaultColor: color } : known;
+    }
+    return { ...GENERIC_META, label: name, defaultColor: color ?? GENERIC_META.defaultColor };
+  }
+  return GENERIC_META;
+}
 
 export const STATUS_LABELS: Record<EventStatus, string> = {
   confirmed: "Confirmed",

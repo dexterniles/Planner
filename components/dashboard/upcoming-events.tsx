@@ -6,12 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useUpcomingEvents } from "@/lib/hooks/use-events";
 import { formatEventWhen } from "@/components/events/event-categories";
-import type { EventCategory, EventStatus } from "@/lib/validations/event";
+import type { EventStatus } from "@/lib/validations/event";
 
 interface EventRow {
   id: string;
   title: string;
-  category: EventCategory;
   startsAt: string;
   endsAt: string | null;
   allDay: boolean;

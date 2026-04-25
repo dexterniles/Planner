@@ -7,6 +7,7 @@ import {
   courses,
   projects,
   events,
+  eventCategories,
   bills,
   billCategories,
   SINGLE_USER_ID,
@@ -123,11 +124,14 @@ export async function GET(request: Request) {
         dueDate: events.startsAt,
         endDate: events.endsAt,
         allDay: events.allDay,
-        category: sql<string>`${events.category}::text`,
+        category: eventCategories.name,
         status: sql<string>`${events.status}::text`,
-        color: events.color,
+        color: sql<string | null>`COALESCE(${events.color}, ${eventCategories.color})`.as(
+          "color",
+        ),
       })
       .from(events)
+      .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
       .where(
         and(
           eq(events.userId, SINGLE_USER_ID),

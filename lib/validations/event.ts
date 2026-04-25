@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-export const eventCategoryValues = [
-  "dinner",
-  "concert",
-  "travel",
-  "hangout",
-  "appointment",
-  "social",
-  "other",
-] as const;
-
 export const eventStatusValues = [
   "confirmed",
   "tentative",
@@ -20,7 +10,7 @@ export const eventStatusValues = [
 export const createEventSchema = z.object({
   title: z.string().min(1, "Title is required").max(300),
   description: z.string().nullable().optional(),
-  category: z.enum(eventCategoryValues).optional(),
+  categoryId: z.string().uuid().nullable().optional(),
   startsAt: z.string().min(1, "Start date is required"),
   endsAt: z.string().nullable().optional(),
   allDay: z.boolean().optional(),
@@ -33,7 +23,15 @@ export const createEventSchema = z.object({
 
 export const updateEventSchema = createEventSchema.partial();
 
+export const createEventCategorySchema = z.object({
+  name: z.string().min(1, "Name is required").max(60),
+  color: z.string().nullable().optional(),
+});
+
+export const updateEventCategorySchema = createEventCategorySchema.partial();
+
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
-export type EventCategory = (typeof eventCategoryValues)[number];
+export type CreateEventCategoryInput = z.infer<typeof createEventCategorySchema>;
+export type UpdateEventCategoryInput = z.infer<typeof updateEventCategorySchema>;
 export type EventStatus = (typeof eventStatusValues)[number];

@@ -1,11 +1,8 @@
 import { db } from "@/lib/db";
-import { events, SINGLE_USER_ID } from "@/lib/db/schema";
+import { events, eventCategories, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createEventSchema } from "@/lib/validations/event";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
-import type {
-  EventCategory,
-  EventStatus,
-} from "@/lib/validations/event";
+import type { EventStatus } from "@/lib/validations/event";
 import { autoCompletePastEvents } from "@/lib/auto-complete-events";
 import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -16,7 +13,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
-  const category = searchParams.get("category");
+  const categoryId = searchParams.get("categoryId");
   const status = searchParams.get("status");
   const limit = parseInt(searchParams.get("limit") ?? "500", 10);
 
@@ -26,12 +23,32 @@ export async function GET(request: Request) {
   const conditions: SQL[] = [eq(events.userId, SINGLE_USER_ID)];
   if (from) conditions.push(gte(events.startsAt, new Date(from)));
   if (to) conditions.push(lte(events.startsAt, new Date(to)));
-  if (category) conditions.push(eq(events.category, category as EventCategory));
+  if (categoryId) conditions.push(eq(events.categoryId, categoryId));
   if (status) conditions.push(eq(events.status, status as EventStatus));
 
   const result = await db
-    .select()
+    .select({
+      id: events.id,
+      userId: events.userId,
+      title: events.title,
+      description: events.description,
+      categoryId: events.categoryId,
+      categoryName: eventCategories.name,
+      categoryColor: eventCategories.color,
+      startsAt: events.startsAt,
+      endsAt: events.endsAt,
+      allDay: events.allDay,
+      location: events.location,
+      url: events.url,
+      attendees: events.attendees,
+      status: events.status,
+      color: events.color,
+      recurrenceRuleId: events.recurrenceRuleId,
+      createdAt: events.createdAt,
+      updatedAt: events.updatedAt,
+    })
     .from(events)
+    .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
     .where(and(...conditions))
     .orderBy(asc(events.startsAt))
     .limit(limit);

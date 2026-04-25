@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { events, SINGLE_USER_ID } from "@/lib/db/schema";
+import { events, eventCategories, SINGLE_USER_ID } from "@/lib/db/schema";
 import { and, asc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
@@ -7,10 +7,6 @@ import { requireAuthGuard } from "@/lib/auth/require-auth";
 /**
  * Return all events that overlap a given calendar date.
  * ?date=YYYY-MM-DD
- *
- * Overlaps include:
- *  - Single-day events whose startsAt is on that date
- *  - Multi-day events whose startsAt <= dayEnd AND (endsAt is null OR endsAt >= dayStart)
  */
 export async function GET(request: Request) {
   const __guard = await requireAuthGuard();
@@ -30,8 +26,26 @@ export async function GET(request: Request) {
   const dayEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
 
   const result = await db
-    .select()
+    .select({
+      id: events.id,
+      userId: events.userId,
+      title: events.title,
+      description: events.description,
+      categoryId: events.categoryId,
+      categoryName: eventCategories.name,
+      categoryColor: eventCategories.color,
+      startsAt: events.startsAt,
+      endsAt: events.endsAt,
+      allDay: events.allDay,
+      location: events.location,
+      url: events.url,
+      attendees: events.attendees,
+      status: events.status,
+      color: events.color,
+      recurrenceRuleId: events.recurrenceRuleId,
+    })
     .from(events)
+    .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
     .where(
       and(
         eq(events.userId, SINGLE_USER_ID),
@@ -39,7 +53,6 @@ export async function GET(request: Request) {
         or(
           isNull(events.endsAt),
           and(gte(events.endsAt, dayStart)),
-          // Single-point events: startsAt falls inside the day
           and(
             gte(events.startsAt, dayStart),
             lt(events.startsAt, dayEnd),

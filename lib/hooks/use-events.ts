@@ -9,7 +9,7 @@ import type {
 interface EventFilters {
   from?: string;
   to?: string;
-  category?: string;
+  categoryId?: string;
   status?: string;
   limit?: number;
 }
@@ -18,7 +18,7 @@ export function useEvents(filters: EventFilters = {}) {
   const params = new URLSearchParams();
   if (filters.from) params.set("from", filters.from);
   if (filters.to) params.set("to", filters.to);
-  if (filters.category) params.set("category", filters.category);
+  if (filters.categoryId) params.set("categoryId", filters.categoryId);
   if (filters.status) params.set("status", filters.status);
   if (filters.limit) params.set("limit", String(filters.limit));
   const query = params.toString();

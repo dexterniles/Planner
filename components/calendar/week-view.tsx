@@ -4,10 +4,9 @@ import Link from "next/link";
 import { useCalendarItemsRange } from "@/lib/hooks/use-calendar-items";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { EVENT_CATEGORIES } from "@/components/events/event-categories";
+import { getEventCategoryMeta } from "@/components/events/event-categories";
 import {
   type CalendarItem,
-  type EventCategory,
   endOfWeek,
   getWeekDays,
   getItemLink,
@@ -100,10 +99,7 @@ export function WeekView({ currentDate, onSelectDay }: WeekViewProps) {
 
 function WeekItemCard({ item, day }: { item: CalendarItem; day: Date }) {
   const isEvent = item.sourceType === "event";
-  const meta =
-    isEvent && item.category
-      ? EVENT_CATEGORIES[item.category as EventCategory]
-      : null;
+  const meta = isEvent ? getEventCategoryMeta(item.category, item.color) : null;
   const color = item.color ?? meta?.defaultColor ?? "#888";
 
   const start = new Date(item.dueDate);
