@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { useTasks, useDeleteTask } from "@/lib/hooks/use-tasks";
 import { TaskDialog } from "./task-dialog";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface TaskListProps {
@@ -73,9 +74,18 @@ export function TaskList({ projectId }: TaskListProps) {
   const [subtaskParentId, setSubtaskParentId] = useState<string | null>(null);
   const { data: allTasks, isLoading } = useTasks(projectId);
   const deleteTask = useDeleteTask();
+  const confirm = useConfirm();
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this task?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this task?",
+        description: "Subtasks will be removed too.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteTask.mutateAsync(id);
       toast.success("Task deleted");

@@ -18,6 +18,7 @@ import {
 } from "@/lib/hooks/use-pay-schedule";
 import { payFrequencyValues } from "@/lib/validations/bill";
 import type { PayFrequency } from "@/lib/validations/bill";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 const FREQ_LABELS: Record<PayFrequency, string> = {
@@ -30,6 +31,7 @@ export function PayScheduleSettings() {
   const { data: existing, isLoading } = usePaySchedule();
   const upsert = useUpsertPaySchedule();
   const remove = useDeletePaySchedule();
+  const confirm = useConfirm();
 
   const [frequency, setFrequency] = useState<PayFrequency>("biweekly");
   const [referenceDate, setReferenceDate] = useState("");
@@ -58,7 +60,17 @@ export function PayScheduleSettings() {
   };
 
   const handleRemove = async () => {
-    if (!confirm("Clear your pay schedule?")) return;
+    if (
+      !(await confirm({
+        title: "Clear your pay schedule?",
+        description:
+          "Bills will go back to grouping by the next 14 days instead of by pay period.",
+        confirmLabel: "Clear",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await remove.mutateAsync();
       toast.success("Pay schedule cleared");

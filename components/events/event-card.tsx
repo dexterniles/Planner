@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDeleteEvent } from "@/lib/hooks/use-events";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   EVENT_CATEGORIES,
   STATUS_LABELS,
@@ -60,6 +61,7 @@ const statusVariants: Record<
 
 export function EventCard({ event, onEdit }: EventCardProps) {
   const deleteEvent = useDeleteEvent();
+  const confirm = useConfirm();
   const meta = EVENT_CATEGORIES[event.category] ?? EVENT_CATEGORIES.other;
   const Icon = meta.icon;
 
@@ -69,7 +71,15 @@ export function EventCard({ event, onEdit }: EventCardProps) {
   const accent = event.color ?? meta.defaultColor;
 
   const handleDelete = async () => {
-    if (!confirm("Delete this event?")) return;
+    if (
+      !(await confirm({
+        title: `Delete ${event.title}?`,
+        description: "This event will be removed from your library.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteEvent.mutateAsync(event.id);
       toast.success("Event deleted");

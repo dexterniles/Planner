@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDeleteCourse } from "@/lib/hooks/use-courses";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface CourseCardProps {
@@ -39,9 +40,19 @@ const statusLabels: Record<string, string> = {
 
 export function CourseCard({ course, onEdit }: CourseCardProps) {
   const deleteCourse = useDeleteCourse();
+  const confirm = useConfirm();
 
   const handleDelete = async () => {
-    if (!confirm("Delete this course and all its assignments?")) return;
+    if (
+      !(await confirm({
+        title: `Delete ${course.name}?`,
+        description:
+          "All assignments and grade categories for this course will also be removed. This can't be undone.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteCourse.mutateAsync(course.id);
       toast.success("Course deleted");

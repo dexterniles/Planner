@@ -3,6 +3,7 @@
 import { Clock, Timer, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTimeLogs, useDeleteTimeLog } from "@/lib/hooks/use-time-logs";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface TimeLogHistoryProps {
@@ -35,9 +36,18 @@ export function TimeLogHistory({
 }: TimeLogHistoryProps) {
   const { data: logs, isLoading } = useTimeLogs(loggableType, loggableId);
   const deleteLog = useDeleteTimeLog();
+  const confirm = useConfirm();
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this time entry?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this time entry?",
+        description: "The logged duration will be removed from your history.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteLog.mutateAsync(id);
       toast.success("Entry deleted");

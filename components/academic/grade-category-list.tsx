@@ -16,6 +16,7 @@ import {
   useDeleteGradeCategory,
 } from "@/lib/hooks/use-grade-categories";
 import { GradeCategoryDialog } from "./grade-category-dialog";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface GradeCategoryListProps {
@@ -34,9 +35,19 @@ export function GradeCategoryList({ courseId }: GradeCategoryListProps) {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const { data: categories, isLoading } = useGradeCategories(courseId);
   const deleteCategory = useDeleteGradeCategory();
+  const confirm = useConfirm();
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this grade category?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this grade category?",
+        description:
+          "Assignments in this category will become uncategorized.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteCategory.mutateAsync(id);
       toast.success("Category deleted");

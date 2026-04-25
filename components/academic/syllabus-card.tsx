@@ -16,6 +16,7 @@ import {
   useSyllabus,
   useUploadSyllabus,
 } from "@/lib/hooks/use-syllabus";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface SyllabusCardProps {
@@ -40,6 +41,7 @@ export function SyllabusCard({ courseId }: SyllabusCardProps) {
   const { data, isLoading } = useSyllabus(courseId);
   const upload = useUploadSyllabus(courseId);
   const remove = useDeleteSyllabus(courseId);
+  const confirm = useConfirm();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -58,7 +60,16 @@ export function SyllabusCard({ courseId }: SyllabusCardProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Remove the uploaded syllabus?")) return;
+    if (
+      !(await confirm({
+        title: "Remove this syllabus?",
+        description: "The uploaded file will be deleted from storage.",
+        confirmLabel: "Remove",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await remove.mutateAsync();
       toast.success("Syllabus removed");

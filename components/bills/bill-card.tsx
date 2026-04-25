@@ -8,6 +8,7 @@ import {
   useDeleteBill,
   useUpdateBill,
 } from "@/lib/hooks/use-bills";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   defaultCategoryColor,
   formatCurrency,
@@ -54,6 +55,7 @@ export function BillCard({
 }: BillCardProps) {
   const updateBill = useUpdateBill();
   const deleteBill = useDeleteBill();
+  const confirm = useConfirm();
 
   const overdue = isOverdue(bill.dueDate, bill.status);
   const paid = bill.status === "paid";
@@ -86,7 +88,15 @@ export function BillCard({
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Delete "${bill.name}"?`)) return;
+    if (
+      !(await confirm({
+        title: `Delete ${bill.name}?`,
+        description: "This bill will be removed from your tracker.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteBill.mutateAsync(bill.id);
       toast.success("Bill deleted");

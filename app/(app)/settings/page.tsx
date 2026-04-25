@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Download } from "lucide-react";
 import { ColorTile } from "@/components/ui/color-tile";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +50,7 @@ export default function SettingsPage() {
   const createTag = useCreateTag();
   const updateTag = useUpdateTag();
   const deleteTag = useDeleteTag();
+  const confirm = useConfirm();
 
   const openDialog = (tag?: Tag) => {
     if (tag) {
@@ -85,7 +87,16 @@ export default function SettingsPage() {
   };
 
   const handleDeleteTag = async (id: string) => {
-    if (!confirm("Delete this tag?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this tag?",
+        description:
+          "Items currently tagged with it will lose the association.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteTag.mutateAsync(id);
       toast.success("Tag deleted");

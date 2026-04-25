@@ -13,6 +13,7 @@ import {
 } from "@/lib/hooks/use-bill-categories";
 import { defaultCategoryColor } from "@/components/bills/bill-utils";
 import { ColorTile } from "@/components/ui/color-tile";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 const COLORS = [
@@ -39,6 +40,7 @@ export function BillCategoriesSettings() {
   const createCat = useCreateBillCategory();
   const updateCat = useUpdateBillCategory();
   const deleteCat = useDeleteBillCategory();
+  const confirm = useConfirm();
 
   const [composing, setComposing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -80,7 +82,16 @@ export function BillCategoriesSettings() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this category? Bills using it become uncategorized.")) return;
+    if (
+      !(await confirm({
+        title: "Delete this category?",
+        description:
+          "Bills currently using it will become uncategorized. This can't be undone.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteCat.mutateAsync(id);
       toast.success("Category deleted");

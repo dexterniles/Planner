@@ -9,6 +9,7 @@ import {
   useDeleteMilestone,
 } from "@/lib/hooks/use-milestones";
 import { MilestoneDialog } from "./milestone-dialog";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface MilestoneListProps {
@@ -31,6 +32,7 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
   const { data: milestones, isLoading } = useMilestones(projectId);
   const updateMilestone = useUpdateMilestone();
   const deleteMilestone = useDeleteMilestone();
+  const confirm = useConfirm();
 
   const handleToggleComplete = async (milestone: Milestone) => {
     try {
@@ -51,7 +53,14 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this milestone?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this milestone?",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteMilestone.mutateAsync(id);
       toast.success("Milestone deleted");

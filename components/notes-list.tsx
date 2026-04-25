@@ -21,6 +21,7 @@ import {
   useUpdateNote,
   useDeleteNote,
 } from "@/lib/hooks/use-notes";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface NotesListProps {
@@ -79,6 +80,7 @@ export function NotesList({
   const createNote = useCreateNote();
   const updateNote = useUpdateNote();
   const deleteNote = useDeleteNote();
+  const confirm = useConfirm();
 
   const resetDraft = () => {
     setDraftTitle("");
@@ -139,7 +141,14 @@ export function NotesList({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this note?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this note?",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteNote.mutateAsync(id);
       toast.success("Note deleted");

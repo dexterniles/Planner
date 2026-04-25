@@ -25,6 +25,7 @@ import { useGradeCategories } from "@/lib/hooks/use-grade-categories";
 import { useCourse } from "@/lib/hooks/use-courses";
 import { groupByWeek } from "@/lib/utils/group-by-week";
 import { AssignmentDialog } from "./assignment-dialog";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface AssignmentListProps {
@@ -87,6 +88,7 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
   const { data: categories } = useGradeCategories(courseId);
   const { data: course } = useCourse(courseId);
   const deleteAssignment = useDeleteAssignment();
+  const confirm = useConfirm();
 
   const categoryMap = useMemo(
     () =>
@@ -142,7 +144,14 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this assignment?")) return;
+    if (
+      !(await confirm({
+        title: "Delete this assignment?",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteAssignment.mutateAsync(id);
       toast.success("Assignment deleted");

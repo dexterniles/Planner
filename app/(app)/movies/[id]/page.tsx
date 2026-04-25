@@ -29,6 +29,7 @@ import {
   useRefreshMedia,
   useUpdateMedia,
 } from "@/lib/hooks/use-movies";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import type { MediaStatus } from "@/lib/validations/media";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -64,6 +65,7 @@ export default function MovieDetailPage({
   const updateMedia = useUpdateMedia();
   const deleteMedia = useDeleteMedia();
   const refreshMedia = useRefreshMedia();
+  const confirm = useConfirm();
 
   const handleRefresh = async () => {
     try {
@@ -119,7 +121,17 @@ export default function MovieDetailPage({
 
   const handleDelete = async () => {
     if (!item) return;
-    if (!confirm(`Remove ${item.title} from your library?`)) return;
+    if (
+      !(await confirm({
+        title: `Remove ${item.title}?`,
+        description:
+          "This title will be removed from your library along with your rating and notes.",
+        confirmLabel: "Remove",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteMedia.mutateAsync(id);
       toast.success("Removed from library");

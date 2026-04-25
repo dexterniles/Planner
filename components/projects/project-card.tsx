@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDeleteProject } from "@/lib/hooks/use-projects";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface ProjectCardProps {
@@ -52,9 +53,19 @@ const priorityColors: Record<string, string> = {
 
 export function ProjectCard({ project, onEdit }: ProjectCardProps) {
   const deleteProject = useDeleteProject();
+  const confirm = useConfirm();
 
   const handleDelete = async () => {
-    if (!confirm("Delete this project and all its tasks?")) return;
+    if (
+      !(await confirm({
+        title: `Delete ${project.name}?`,
+        description:
+          "All tasks and milestones for this project will also be removed. This can't be undone.",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await deleteProject.mutateAsync(project.id);
       toast.success("Project deleted");
