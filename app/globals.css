@@ -57,25 +57,25 @@
   --shadow-xl: var(--shadow-elev-xl);
 }
 
-/* ─── Light: warm off-white paper, editor pastels, mauve accent ──────── */
+/* ─── Light: neutral hair-off-white surfaces, mauve accent untouched ─── */
 :root {
-  --background: oklch(0.975 0.004 95);
+  --background: oklch(0.985 0 0);          /* ~#fafafa — hair off pure white */
   --foreground: oklch(0.30 0.010 250);
-  --card: oklch(1 0 0);
+  --card: oklch(1 0 0);                    /* #ffffff — slightly elevated above page */
   --card-foreground: oklch(0.30 0.010 250);
-  --popover: oklch(1 0 0);
+  --popover: oklch(1 0 0);                 /* #ffffff */
   --popover-foreground: oklch(0.30 0.010 250);
   --primary: oklch(0.55 0.11 340);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.955 0.005 95);
+  --secondary: oklch(0.961 0 0);           /* ~#f5f5f5 — neutral chip/hover surface */
   --secondary-foreground: oklch(0.40 0.010 250);
-  --muted: oklch(0.955 0.005 95);
+  --muted: oklch(0.961 0 0);               /* ~#f5f5f5 */
   --muted-foreground: oklch(0.62 0.015 250);
   --accent: oklch(0.955 0.008 340);
   --accent-foreground: oklch(0.38 0.050 340);
   --destructive: oklch(0.60 0.14 28);
-  --border: oklch(0.89 0.006 95 / 0.9);
-  --input: oklch(0.89 0.006 95);
+  --border: oklch(0.911 0 0 / 0.9);        /* ~#e5e5e5 @ 90% — neutralized, no blue tint */
+  --input: oklch(0.926 0 0);               /* ~#ebebeb */
   --ring: oklch(0.55 0.11 340);
   --chart-1: oklch(0.55 0.11 340);   /* mauve (keyword) */
   --chart-2: oklch(0.62 0.10 160);   /* sage (string) */
@@ -86,54 +86,54 @@
   /* 12px base = rounded-lg on cards */
   --radius: 0.75rem;
 
-  --sidebar: oklch(0.99 0.003 95);
+  --sidebar: oklch(0.961 0 0);             /* ~#f5f5f5 — distinct, one step darker than page */
   --sidebar-foreground: oklch(0.40 0.010 250);
   --sidebar-primary: oklch(0.55 0.11 340);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.955 0.005 95);
+  --sidebar-accent: oklch(0.945 0 0);      /* ~#f0f0f0 */
   --sidebar-accent-foreground: oklch(0.30 0.010 250);
-  --sidebar-border: oklch(0.89 0.006 95 / 0.9);
+  --sidebar-border: oklch(0.911 0 0 / 0.9);
   --sidebar-ring: oklch(0.55 0.11 340);
 
-  /* Elevation — light mode: subtle warm shadows */
-  --shadow-elev-sm: 0 1px 2px 0 oklch(0.2 0.02 95 / 0.05);
-  --shadow-elev-md: 0 2px 4px -1px oklch(0.2 0.02 95 / 0.06), 0 4px 8px -2px oklch(0.2 0.02 95 / 0.05);
-  --shadow-elev-lg: 0 4px 12px -2px oklch(0.2 0.02 95 / 0.10), 0 8px 24px -4px oklch(0.2 0.02 95 / 0.07);
-  --shadow-elev-xl: 0 10px 32px -4px oklch(0.2 0.02 95 / 0.14), 0 16px 48px -8px oklch(0.2 0.02 95 / 0.10);
+  /* Elevation — light mode: neutral grey shadows */
+  --shadow-elev-sm: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+  --shadow-elev-md: 0 2px 4px -1px oklch(0 0 0 / 0.06), 0 4px 8px -2px oklch(0 0 0 / 0.05);
+  --shadow-elev-lg: 0 4px 12px -2px oklch(0 0 0 / 0.10), 0 8px 24px -4px oklch(0 0 0 / 0.07);
+  --shadow-elev-xl: 0 10px 32px -4px oklch(0 0 0 / 0.14), 0 16px 48px -8px oklch(0 0 0 / 0.10);
 }
 
-/* ─── Dark: deep blue-black editor pane, pastel lavender accent ──────── */
+/* ─── Dark: neutral three-tier (#1f2020 / #282828 / #3c3c3c), accents kept ─── */
 .dark {
-  --background: oklch(0.195 0.016 255);
+  --background: oklch(0.245 0 0);          /* ~#1f2020 — page */
   --foreground: oklch(0.86 0.020 90);
-  --card: oklch(0.255 0.018 255);
+  --card: oklch(0.299 0 0);                /* ~#282828 — elevated surface */
   --card-foreground: oklch(0.86 0.020 90);
-  --popover: oklch(0.265 0.018 255);
+  --popover: oklch(0.299 0 0);             /* ~#282828 */
   --popover-foreground: oklch(0.86 0.020 90);
   --primary: oklch(0.78 0.10 300);
   --primary-foreground: oklch(0.18 0.015 255);
-  --secondary: oklch(0.295 0.018 255);
+  --secondary: oklch(0.299 0 0);           /* ~#282828 — chip/hover surface */
   --secondary-foreground: oklch(0.84 0.020 90);
-  --muted: oklch(0.285 0.018 255);
-  --muted-foreground: oklch(0.62 0.015 255);
+  --muted: oklch(0.299 0 0);               /* ~#282828 */
+  --muted-foreground: oklch(0.65 0 0);
   --accent: oklch(0.32 0.025 300);
   --accent-foreground: oklch(0.88 0.020 90);
   --destructive: oklch(0.76 0.14 28);
-  --border: oklch(0.35 0.020 255 / 0.7);
-  --input: oklch(0.35 0.020 255);
+  --border: oklch(0.405 0 0 / 0.7);        /* ~#3c3c3c @ 70% — neutralized */
+  --input: oklch(0.32 0 0);                /* slightly elevated input surface */
   --ring: oklch(0.78 0.10 300);
   --chart-1: oklch(0.78 0.10 300);   /* pastel lavender */
   --chart-2: oklch(0.78 0.12 155);   /* pastel mint */
   --chart-3: oklch(0.86 0.11 95);    /* pastel yellow */
   --chart-4: oklch(0.78 0.10 230);   /* pastel sky */
   --chart-5: oklch(0.76 0.14 28);    /* pastel coral */
-  --sidebar: oklch(0.225 0.016 255);
+  --sidebar: oklch(0.299 0 0);             /* ~#282828 — distinct from page */
   --sidebar-foreground: oklch(0.80 0.020 90);
   --sidebar-primary: oklch(0.78 0.10 300);
   --sidebar-primary-foreground: oklch(0.18 0.015 255);
-  --sidebar-accent: oklch(0.305 0.018 255);
+  --sidebar-accent: oklch(0.405 0 0);      /* ~#3c3c3c */
   --sidebar-accent-foreground: oklch(0.88 0.020 90);
-  --sidebar-border: oklch(0.35 0.020 255 / 0.7);
+  --sidebar-border: oklch(0.405 0 0 / 0.7);
   --sidebar-ring: oklch(0.78 0.10 300);
 
   /* Elevation — dark mode: deeper shadows for floating cards */
