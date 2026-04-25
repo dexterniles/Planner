@@ -133,10 +133,11 @@ export default function EventsPage() {
 
       {/* List */}
       {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-[96px] w-full" />
-          <Skeleton className="h-[96px] w-full" />
-          <Skeleton className="h-[96px] w-full" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <Skeleton className="h-[240px] w-full rounded-xl" />
+          <Skeleton className="h-[240px] w-full rounded-xl" />
+          <Skeleton className="h-[240px] w-full rounded-xl" />
+          <Skeleton className="h-[240px] w-full rounded-xl" />
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
@@ -145,7 +146,7 @@ export default function EventsPage() {
           onCreate={openCreate}
         />
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((event) => (
             <EventCard key={event.id} event={event} onEdit={() => openEdit(event)} />
           ))}

@@ -8,7 +8,6 @@ import {
   tasks,
   milestones,
   timeLogs,
-  dailyLogs,
   tags,
   inboxItems,
   SINGLE_USER_ID,
@@ -29,7 +28,6 @@ export async function GET(request: Request) {
     taskRows,
     milestoneRows,
     timeLogRows,
-    dailyLogRows,
     tagRows,
     inboxRows,
   ] = await Promise.all([
@@ -41,7 +39,6 @@ export async function GET(request: Request) {
     db.select().from(tasks).where(eq(tasks.userId, SINGLE_USER_ID)),
     db.select().from(milestones),
     db.select().from(timeLogs).where(eq(timeLogs.userId, SINGLE_USER_ID)),
-    db.select().from(dailyLogs).where(eq(dailyLogs.userId, SINGLE_USER_ID)),
     db.select().from(tags).where(eq(tags.userId, SINGLE_USER_ID)),
     db.select().from(inboxItems).where(eq(inboxItems.userId, SINGLE_USER_ID)),
   ]);
@@ -56,7 +53,6 @@ export async function GET(request: Request) {
     tasks: taskRows,
     milestones: milestoneRows,
     timeLogs: timeLogRows,
-    dailyLogs: dailyLogRows,
     tags: tagRows,
     inboxItems: inboxRows,
   };

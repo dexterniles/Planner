@@ -10,6 +10,8 @@ export const createCourseSchema = z.object({
   meetingSchedule: z.any().nullable().optional(),
   color: z.string().nullable().optional(),
   status: z.enum(["active", "completed", "dropped", "planned"]).optional(),
+  startDate: z.string().nullable().optional(),
+  endDate: z.string().nullable().optional(),
 });
 
 export const updateCourseSchema = createCourseSchema.partial().omit({

@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDeleteProject } from "@/lib/hooks/use-projects";
 import { toast } from "sonner";
 
@@ -31,10 +37,10 @@ const statusLabels: Record<string, string> = {
 };
 
 const priorityLabels: Record<string, string> = {
-  low: "low",
-  medium: "med",
-  high: "high",
-  urgent: "urgent",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  urgent: "Urgent",
 };
 
 const priorityColors: Record<string, string> = {
@@ -58,72 +64,101 @@ export function ProjectCard({ project, onEdit }: ProjectCardProps) {
   };
 
   const accent = project.color ?? "#8B5CF6";
+  const isDone = project.status === "done";
+  const isPaused = project.status === "paused";
 
   return (
-    <Card hover className="group relative overflow-hidden p-0">
-      <div
-        className="absolute inset-y-0 left-0 w-1"
+    <Card
+      hover
+      className={`group relative flex h-full flex-col overflow-hidden p-0 transition-opacity ${
+        isPaused ? "opacity-60" : ""
+      }`}
+    >
+      {/* Color band */}
+      <Link
+        href={`/projects/${project.id}`}
+        className="relative block h-[88px] shrink-0"
         style={{ backgroundColor: accent }}
-        aria-hidden="true"
-      />
-      <div className="flex items-start gap-4 p-5 pl-6">
+        aria-label={`Open ${project.name}`}
+      >
+        <span className="absolute left-4 top-3 inline-flex">
+          <span
+            className={`text-[11px] font-medium uppercase tracking-[0.12em] text-white/85 ${
+              priorityColors[project.priority] ?? ""
+            }`}
+            style={{ color: "rgba(255,255,255,0.85)" }}
+          >
+            {priorityLabels[project.priority] ?? project.priority} priority
+          </span>
+        </span>
+        <span className="absolute right-3 top-3 inline-flex">
+          <Badge
+            variant="outline"
+            className="border-white/30 bg-white/15 text-[10px] uppercase tracking-[0.08em] text-white backdrop-blur-sm"
+          >
+            {statusLabels[project.status] ?? project.status}
+          </Badge>
+        </span>
+      </Link>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-4">
         <Link
           href={`/projects/${project.id}`}
-          className="flex-1 min-w-0 space-y-1.5"
+          className="block flex-1"
+          aria-label={`Open ${project.name}`}
         >
-          <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">
+          <h3
+            className={`font-serif text-[18px] font-medium leading-tight tracking-tight line-clamp-2 ${
+              isDone ? "line-through text-muted-foreground" : ""
+            }`}
+          >
             {project.name}
           </h3>
           {project.description && (
-            <p className="text-[13px] text-muted-foreground line-clamp-1">
+            <p className="mt-1.5 text-[12.5px] text-muted-foreground line-clamp-2">
               {project.description}
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
-            <span>
-              <span
-                className={`mr-1 font-medium ${priorityColors[project.priority] ?? ""}`}
-              >
-                {priorityLabels[project.priority] ?? project.priority}
-              </span>
-              priority
-            </span>
-            {project.targetDate && (
-              <>
-                <span>·</span>
-                <span>
-                  due{" "}
-                  <span className="text-foreground/80 tabular-nums">
-                    {new Date(project.targetDate).toLocaleDateString()}
-                  </span>
-                </span>
-              </>
-            )}
-          </div>
+          {project.targetDate && (
+            <p className="mt-2 font-mono text-[10.5px] tabular-nums text-muted-foreground/80">
+              due {new Date(project.targetDate + "T12:00:00").toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+          )}
         </Link>
-        <div className="flex items-center gap-1 shrink-0">
-          <Badge variant="outline" className="text-[10.5px] capitalize">
-            {statusLabels[project.status] ?? project.status}
-          </Badge>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onEdit}
-            aria-label={`Edit ${project.name}`}
-            className="md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
-          >
-            <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleDelete}
-            disabled={deleteProject.isPending}
-            aria-label={`Delete ${project.name}`}
-            className="md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity text-destructive"
-          >
-            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
+
+        <div className="mt-3 flex items-center justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Actions for ${project.name}`}
+                />
+              }
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onEdit}>
+                <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteProject.isPending}
+              >
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </Card>

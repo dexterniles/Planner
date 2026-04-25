@@ -39,10 +39,11 @@ export default function ProjectsPage() {
     return (
       <div>
         <PageHeader title="Projects" />
-        <div className="grid gap-3">
-          <Skeleton className="h-[76px] w-full" />
-          <Skeleton className="h-[76px] w-full" />
-          <Skeleton className="h-[76px] w-full" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
         </div>
       </div>
     );
@@ -98,7 +99,7 @@ export default function ProjectsPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {projects?.map((project: Project) => (
             <ProjectCard
               key={project.id}

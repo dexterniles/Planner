@@ -1,18 +1,32 @@
 import { db } from "@/lib/db";
 import { courses, SINGLE_USER_ID } from "@/lib/db/schema";
 import { createCourseSchema } from "@/lib/validations/course";
-import { eq } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
+/**
+ * Sweep any active courses whose end_date is in the past and mark them
+ * completed. Cheap and idempotent — fires on every list read so courses
+ * auto-close without needing a cron.
+ */
+async function autoCompletePastCourses() {
+  await db
+    .update(courses)
+    .set({ status: "completed" })
+    .where(
+      and(
+        eq(courses.userId, SINGLE_USER_ID),
+        eq(courses.status, "active"),
+        lt(courses.endDate, sql`CURRENT_DATE`),
+      ),
+    );
+}
+
 export async function GET(request: Request) {
+  await autoCompletePastCourses();
+
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId");
-
-  const query = db
-    .select()
-    .from(courses)
-    .where(eq(courses.userId, SINGLE_USER_ID))
-    .orderBy(courses.name);
 
   const result = workspaceId
     ? await db
@@ -20,7 +34,11 @@ export async function GET(request: Request) {
         .from(courses)
         .where(eq(courses.workspaceId, workspaceId))
         .orderBy(courses.name)
-    : await query;
+    : await db
+        .select()
+        .from(courses)
+        .where(eq(courses.userId, SINGLE_USER_ID))
+        .orderBy(courses.name);
 
   return NextResponse.json(result);
 }

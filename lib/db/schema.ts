@@ -177,8 +177,14 @@ export const courses = pgTable(
     credits: integer("credits"),
     meetingSchedule: jsonb("meeting_schedule"),
     syllabusFilePath: text("syllabus_file_path"),
+    syllabusName: text("syllabus_name"),
+    syllabusUploadedAt: timestamp("syllabus_uploaded_at", {
+      withTimezone: true,
+    }),
     color: text("color"),
     status: courseStatusEnum("status").default("active").notNull(),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
     ...timestamps,
   },
   (table) => [
@@ -467,24 +473,6 @@ export const taggings = pgTable(
   ],
 );
 
-export const dailyLogs = pgTable(
-  "daily_logs",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: uuid("user_id").notNull(),
-    logDate: date("log_date").notNull(),
-    content: text("content"),
-    mood: text("mood"),
-    ...timestamps,
-  },
-  (table) => [
-    index("daily_logs_user_id_idx").on(table.userId),
-    uniqueIndex("daily_logs_user_id_log_date_idx").on(
-      table.userId,
-      table.logDate,
-    ),
-  ],
-);
 
 export const inboxItems = pgTable(
   "inbox_items",

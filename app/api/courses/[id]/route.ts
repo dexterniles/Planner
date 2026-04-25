@@ -1,13 +1,28 @@
 import { db } from "@/lib/db";
 import { courses, SINGLE_USER_ID } from "@/lib/db/schema";
 import { updateCourseSchema } from "@/lib/validations/course";
-import { and, eq } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
   const { id } = await params;
+
+  // Auto-complete this course if its end date has passed and it's still active.
+  // Idempotent — runs on every detail read, matching the behaviour of the list.
+  await db
+    .update(courses)
+    .set({ status: "completed" })
+    .where(
+      and(
+        eq(courses.id, id),
+        eq(courses.userId, SINGLE_USER_ID),
+        eq(courses.status, "active"),
+        lt(courses.endDate, sql`CURRENT_DATE`),
+      ),
+    );
+
   const [course] = await db
     .select()
     .from(courses)

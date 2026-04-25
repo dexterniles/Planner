@@ -45,6 +45,8 @@ interface CourseDialogProps {
     credits: number | null;
     color: string | null;
     status: "active" | "completed" | "dropped" | "planned";
+    startDate?: string | null;
+    endDate?: string | null;
   };
 }
 
@@ -76,6 +78,8 @@ export function CourseDialog({
       credits: course?.credits ?? undefined,
       color: course?.color ?? COURSE_COLORS[0],
       status: course?.status ?? "active",
+      startDate: course?.startDate ?? "",
+      endDate: course?.endDate ?? "",
     },
   });
 
@@ -89,6 +93,8 @@ export function CourseDialog({
       credits: course?.credits ?? undefined,
       color: course?.color ?? COURSE_COLORS[0],
       status: course?.status ?? "active",
+      startDate: course?.startDate ?? "",
+      endDate: course?.endDate ?? "",
     });
   }, [course, open, workspaceId, reset]);
 
@@ -96,12 +102,17 @@ export function CourseDialog({
 
   const onSubmit = async (data: CreateCourseInput) => {
     try {
+      const payload: CreateCourseInput = {
+        ...data,
+        startDate: data.startDate ? data.startDate : null,
+        endDate: data.endDate ? data.endDate : null,
+      };
       if (isEditing) {
-        const { workspaceId: _omitted, ...updateData } = data;
+        const { workspaceId: _omitted, ...updateData } = payload;
         await updateCourse.mutateAsync({ id: course.id, data: updateData });
         toast.success("Course updated");
       } else {
-        await createCourse.mutateAsync(data);
+        await createCourse.mutateAsync(payload);
         toast.success("Course created");
       }
       reset();
@@ -157,6 +168,21 @@ export function CourseDialog({
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start date</Label>
+              <Input id="startDate" type="date" {...register("startDate")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End date</Label>
+              <Input id="endDate" type="date" {...register("endDate")} />
+            </div>
+          </div>
+          <p className="-mt-2 text-[12px] text-muted-foreground">
+            Setting an end date will mark the course complete automatically once
+            the date passes.
+          </p>
 
           <div className="space-y-2">
             <Label>Color</Label>

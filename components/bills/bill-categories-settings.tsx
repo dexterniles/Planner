@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -11,10 +11,8 @@ import {
   useDeleteBillCategory,
   useUpdateBillCategory,
 } from "@/lib/hooks/use-bill-categories";
-import {
-  categoryInitial,
-  defaultCategoryColor,
-} from "@/components/bills/bill-utils";
+import { defaultCategoryColor } from "@/components/bills/bill-utils";
+import { ColorTile } from "@/components/ui/color-tile";
 import { toast } from "sonner";
 
 const COLORS = [
@@ -173,43 +171,16 @@ export function BillCategoriesSettings() {
           </p>
         )
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {(categories as Category[]).map((cat) => (
-            <div
+            <ColorTile
               key={cat.id}
-              className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1.5 pr-1.5 shadow-sm transition-colors"
-            >
-              <span
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-                style={{
-                  backgroundColor: cat.color ?? defaultCategoryColor,
-                }}
-              >
-                {categoryInitial(cat.name)}
-              </span>
-              <span className="text-[13px] font-medium leading-none">
-                {cat.name}
-              </span>
-              <div className="flex gap-0.5">
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => startEdit(cat)}
-                  aria-label={`Edit ${cat.name}`}
-                >
-                  <Pencil className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  className="text-destructive"
-                  onClick={() => handleDelete(cat.id)}
-                  aria-label={`Delete ${cat.name}`}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
+              color={cat.color ?? defaultCategoryColor}
+              name={cat.name}
+              onEdit={() => startEdit(cat)}
+              onDelete={() => handleDelete(cat.id)}
+              ariaPrefix="category"
+            />
           ))}
         </div>
       )}

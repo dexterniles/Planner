@@ -29,6 +29,27 @@
       "when": 1776878580180,
       "tag": "0003_fix_local_timezone_drift",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777136542552,
+      "tag": "0004_courses_add_date_range",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777137058228,
+      "tag": "0005_courses_syllabus_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777138274549,
+      "tag": "0006_drop_daily_logs",
+      "breakpoints": true
     }
   ]
 }

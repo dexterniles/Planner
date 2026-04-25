@@ -27,10 +27,11 @@ export default function AcademicPage() {
     return (
       <div>
         <PageHeader title="Academic" />
-        <div className="grid gap-3">
-          <Skeleton className="h-[76px] w-full" />
-          <Skeleton className="h-[76px] w-full" />
-          <Skeleton className="h-[76px] w-full" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
         </div>
       </div>
     );
@@ -78,7 +79,7 @@ export default function AcademicPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {courses?.map((course: Record<string, unknown>) => (
             <CourseCard
               key={course.id as string}
@@ -119,4 +120,6 @@ type CourseDialogCourse = {
   credits: number | null;
   color: string | null;
   status: "active" | "completed" | "dropped" | "planned";
+  startDate?: string | null;
+  endDate?: string | null;
 };

@@ -1,17 +1,19 @@
 "use client";
 
 import { use } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useCourse } from "@/lib/hooks/use-courses";
+import { useCourse, useUpdateCourse } from "@/lib/hooks/use-courses";
+import { toast } from "sonner";
 import { AssignmentList } from "@/components/academic/assignment-list";
 import { GradeCategoryList } from "@/components/academic/grade-category-list";
 import { GradeCalculator } from "@/components/academic/grade-calculator";
 import { GradeProjector } from "@/components/academic/grade-projector";
 import { CourseSnapshot } from "@/components/academic/course-snapshot";
+import { SyllabusCard } from "@/components/academic/syllabus-card";
 import { TimerStartButton } from "@/components/layout/timer";
 import { TimeLogHistory } from "@/components/time-log-history";
 import { NotesList } from "@/components/notes-list";
@@ -31,6 +33,23 @@ export default function CourseDetailPage({
 }) {
   const { courseId } = use(params);
   const { data: course, isLoading } = useCourse(courseId);
+  const updateCourse = useUpdateCourse();
+
+  const handleToggleComplete = async () => {
+    if (!course) return;
+    const nextStatus = course.status === "completed" ? "active" : "completed";
+    try {
+      await updateCourse.mutateAsync({
+        id: courseId,
+        data: { status: nextStatus },
+      });
+      toast.success(
+        nextStatus === "completed" ? "Course marked complete" : "Course reopened",
+      );
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -103,6 +122,24 @@ export default function CourseDetailPage({
                 items.push(
                   <span key="cred">{course.credits} credits</span>,
                 );
+              if (course.startDate || course.endDate) {
+                const fmt = (d: string) =>
+                  new Date(d + "T12:00:00").toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  });
+                const range =
+                  course.startDate && course.endDate
+                    ? `${fmt(course.startDate)} – ${fmt(course.endDate)}`
+                    : course.endDate
+                      ? `ends ${fmt(course.endDate)}`
+                      : `starts ${fmt(course.startDate!)}`;
+                items.push(
+                  <span key="dates" className="tabular-nums">
+                    {range}
+                  </span>,
+                );
+              }
               return items.map((node, i) => (
                 <span key={i} className="flex items-center gap-x-3">
                   {i > 0 && <span aria-hidden="true">·</span>}
@@ -112,11 +149,33 @@ export default function CourseDetailPage({
             })()}
           </div>
         </div>
-        <TimerStartButton loggableType="course" loggableId={courseId} />
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleComplete}
+            disabled={updateCourse.isPending}
+          >
+            {course.status === "completed" ? (
+              <>
+                <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                Reopen
+              </>
+            ) : (
+              <>
+                <Check className="mr-1.5 h-3.5 w-3.5" />
+                Mark complete
+              </>
+            )}
+          </Button>
+          <TimerStartButton loggableType="course" loggableId={courseId} />
+        </div>
       </div>
 
       <div className="space-y-6">
       <CourseSnapshot courseId={courseId} />
+
+      <SyllabusCard courseId={courseId} />
 
       <Tabs defaultValue="assignments">
         <TabsList>

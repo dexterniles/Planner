@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Download } from "lucide-react";
+import { Plus, Download } from "lucide-react";
+import { ColorTile } from "@/components/ui/color-tile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,45 +115,27 @@ export default function SettingsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-10 w-24 rounded-xl" />
-            <Skeleton className="h-10 w-28 rounded-xl" />
-            <Skeleton className="h-10 w-20 rounded-xl" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <Skeleton className="h-[80px] w-full rounded-xl" />
+            <Skeleton className="h-[80px] w-full rounded-xl" />
+            <Skeleton className="h-[80px] w-full rounded-xl" />
+            <Skeleton className="h-[80px] w-full rounded-xl" />
           </div>
         ) : tags?.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No tags yet. Create tags to categorize your items.
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {tags?.map((tag: Tag) => (
-              <div
+              <ColorTile
                 key={tag.id}
-                className="group flex items-center gap-2 rounded-full border border-border bg-card pl-2.5 pr-1.5 py-1 shadow-sm transition-colors"
-              >
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: tag.color ?? "#6B7280" }}
-                />
-                <span className="text-[13px] font-medium">{tag.name}</span>
-                <div className="flex gap-0.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => openDialog(tag)}
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    className="text-destructive"
-                    onClick={() => handleDeleteTag(tag.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
+                color={tag.color ?? "#6B7280"}
+                name={tag.name}
+                onEdit={() => openDialog(tag)}
+                onDelete={() => handleDeleteTag(tag.id)}
+                ariaPrefix="tag"
+              />
             ))}
           </div>
         )}

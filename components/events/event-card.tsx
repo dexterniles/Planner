@@ -3,6 +3,7 @@
 import {
   ExternalLink,
   MapPin,
+  MoreHorizontal,
   Pencil,
   Repeat,
   Trash2,
@@ -10,6 +11,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDeleteEvent } from "@/lib/hooks/use-events";
 import {
   EVENT_CATEGORIES,
@@ -75,127 +83,144 @@ export function EventCard({ event, onEdit }: EventCardProps) {
   const monthLabel = start.toLocaleDateString("en-US", { month: "short" });
 
   return (
-    <div
-      className={`group relative overflow-hidden rounded-xl border bg-card shadow-md transition-all hover:shadow-lg hover:-translate-y-px ${
-        isTentative
-          ? "border-dashed border-border/80 opacity-75"
-          : "border-border/60"
+    <Card
+      hover
+      className={`group relative flex h-full flex-col overflow-hidden p-0 transition-opacity ${
+        isTentative ? "border-dashed" : ""
       } ${isCancelled || isCompleted ? "opacity-60" : ""}`}
     >
-      <div
-        className="absolute inset-y-0 left-0 w-1"
+      {/* Color band with prominent serif date + status */}
+      <a
+        href={`/events/${event.id}`}
+        className="relative block h-[88px] shrink-0"
         style={{ backgroundColor: accent }}
-        aria-hidden="true"
-      />
-
-      <div className="flex items-start gap-4 p-5 pl-6">
-        {/* Serif date block */}
-        <div className="flex shrink-0 flex-col items-center justify-center border-r border-border/60 pr-4 text-center">
-          <div className="font-serif text-[28px] leading-none tabular-nums">
+        aria-label={`Open ${event.title}`}
+      >
+        {/* Date block — left side */}
+        <div className="absolute left-4 top-3 leading-none text-white">
+          <div className="font-serif text-[26px] font-medium tabular-nums drop-shadow-sm">
             {dayNumber}
           </div>
-          <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+          <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/85">
             {monthLabel}
           </div>
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
-              style={{ backgroundColor: `${accent}20` }}
-            >
-              <Icon className="h-3 w-3" style={{ color: accent }} />
-            </div>
+        {/* Category icon + status — right side */}
+        <div className="absolute right-3 top-3 flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className="border-white/30 bg-white/15 text-[10px] uppercase tracking-[0.08em] text-white backdrop-blur-sm"
+          >
+            {STATUS_LABELS[event.status] ?? event.status}
+          </Badge>
+        </div>
+
+        {/* Category chip — bottom-right */}
+        <div className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2 py-1 text-[10.5px] font-medium uppercase tracking-[0.08em] text-white backdrop-blur-sm">
+          <Icon className="h-3 w-3" strokeWidth={2} />
+          {event.category}
+        </div>
+      </a>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-4">
+        <a
+          href={`/events/${event.id}`}
+          className="block flex-1"
+          aria-label={`Open ${event.title}`}
+        >
+          <div className="flex items-start gap-2">
             <h3
-              className={`font-serif text-[17px] font-medium leading-tight tracking-tight ${isCompleted ? "line-through" : ""}`}
+              className={`flex-1 font-serif text-[18px] font-medium leading-tight tracking-tight line-clamp-2 ${isCompleted ? "line-through" : ""}`}
             >
               {event.title}
             </h3>
             {event.recurrenceRuleId && (
-              <Repeat className="h-3 w-3 text-primary shrink-0" />
-            )}
-            {isTentative && (
-              <Badge variant="outline" className="text-[10px] uppercase tracking-[0.08em]">
-                Tentative
-              </Badge>
-            )}
-            {isCancelled && (
-              <Badge variant="destructive" className="text-[10px] uppercase tracking-[0.08em]">
-                Cancelled
-              </Badge>
-            )}
-            {isCompleted && (
-              <Badge variant="secondary" className="text-[10px] uppercase tracking-[0.08em]">
-                Done
-              </Badge>
+              <Repeat
+                className="mt-1 h-3 w-3 shrink-0 text-primary"
+                strokeWidth={2}
+              />
             )}
           </div>
 
-          <p className="text-[13px] text-muted-foreground">
+          <p className="mt-1.5 text-[12.5px] text-muted-foreground">
             {formatEventTime(event.startsAt, event.endsAt, event.allDay)}
           </p>
 
-          {(event.location || event.attendees || event.url) && (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {(event.location || event.attendees) && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-muted-foreground">
               {event.location && (
                 <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {event.location}
+                  <MapPin className="h-3 w-3" strokeWidth={1.75} />
+                  <span className="truncate max-w-[180px]">
+                    {event.location}
+                  </span>
                 </span>
               )}
               {event.attendees && (
                 <span className="flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {event.attendees}
+                  <Users className="h-3 w-3" strokeWidth={1.75} />
+                  <span className="truncate max-w-[180px]">
+                    {event.attendees}
+                  </span>
                 </span>
-              )}
-              {event.url && (
-                <a
-                  href={event.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 hover:text-foreground transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Link
-                </a>
               )}
             </div>
           )}
 
           {event.description && (
-            <p className="text-xs text-muted-foreground/90 line-clamp-2 pt-1">
+            <p className="mt-2 text-[12px] text-muted-foreground/90 line-clamp-2">
               {event.description}
             </p>
           )}
-        </div>
+        </a>
 
-        {/* Hover actions */}
-        <div className="flex gap-1 shrink-0 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onEdit}
-            aria-label={`Edit ${event.title}`}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleDelete}
-            disabled={deleteEvent.isPending}
-            aria-label={`Delete ${event.title}`}
-            className="text-destructive"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+        <div className="mt-3 flex items-center justify-between">
+          {event.url ? (
+            <a
+              href={event.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[11.5px] text-muted-foreground transition-colors hover:text-foreground"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExternalLink className="h-3 w-3" strokeWidth={1.75} />
+              Link
+            </a>
+          ) : (
+            <span />
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Actions for ${event.title}`}
+                />
+              }
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onEdit}>
+                <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteEvent.isPending}
+              >
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
