@@ -137,7 +137,7 @@ export function CourseDialog({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="code">Course Code</Label>
               <Input id="code" {...register("code")} placeholder="e.g. CS201" />
@@ -148,7 +148,7 @@ export function CourseDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="instructor">Instructor</Label>
               <Input id="instructor" {...register("instructor")} placeholder="e.g. Dr. Smith" />
@@ -169,7 +169,7 @@ export function CourseDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate">Start date</Label>
               <Input id="startDate" type="date" {...register("startDate")} />

@@ -195,7 +195,7 @@ export function SearchPalette() {
                   <button
                     key={`${result.type}-${result.id}`}
                     onClick={() => navigate(result)}
-                    className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-[13px] transition-colors ${
+                    className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 sm:py-2 text-left text-[13px] transition-colors ${
                       i === selectedIndex
                         ? "bg-accent text-accent-foreground"
                         : "hover:bg-accent/50"

@@ -155,7 +155,7 @@ export default function MoviesPage() {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {availableGenres.length > 0 && (
             <Select value={genreFilter} onValueChange={(v) => setGenreFilter(v ?? ALL_GENRES)}>
-              <SelectTrigger size="sm" className="min-w-[140px]">
+              <SelectTrigger size="sm" className="flex-1 sm:flex-none sm:min-w-[140px]">
                 <SelectValue>
                   {(value) =>
                     value === ALL_GENRES ? "All genres" : (value as string)
@@ -173,7 +173,7 @@ export default function MoviesPage() {
             </Select>
           )}
           <Select value={sortBy} onValueChange={(v) => setSortBy((v as SortKey) ?? "recent")}>
-            <SelectTrigger size="sm" className="min-w-[180px]">
+            <SelectTrigger size="sm" className="flex-1 sm:flex-none sm:min-w-[180px]">
               <SelectValue>
                 {(value) =>
                   SORT_OPTIONS.find((o) => o.value === value)?.label ?? value

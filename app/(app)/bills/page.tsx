@@ -370,7 +370,7 @@ export default function BillsPage() {
 
       {/* Bulk action bar */}
       {selectionMode && (
-        <div className="sticky top-2 z-10 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 shadow-md backdrop-blur-sm">
+        <div className="sticky top-2 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 shadow-md backdrop-blur-sm">
           <span className="font-serif text-[15px] font-medium leading-none tabular-nums">
             {selected.size} selected
           </span>

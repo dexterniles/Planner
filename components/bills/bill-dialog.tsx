@@ -170,7 +170,7 @@ export function BillDialog({ open, onOpenChange, bill }: BillDialogProps) {
           </div>
 
           {/* Amount + Due date */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="amount">Amount *</Label>
               <div className="relative">
@@ -259,7 +259,7 @@ export function BillDialog({ open, onOpenChange, bill }: BillDialogProps) {
               </div>
 
               {useRecurrence && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs">Frequency</Label>
                     <Select
