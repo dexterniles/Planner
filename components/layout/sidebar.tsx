@@ -80,7 +80,7 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
             width={22}
             height={22}
             priority
-            className="h-[22px] w-[22px] shrink-0 rounded-[5px]"
+            className="h-[22px] w-[22px] shrink-0"
           />
           {!isCollapsed && (
             <span className="font-serif text-[18px] leading-none tracking-tight text-sidebar-foreground">

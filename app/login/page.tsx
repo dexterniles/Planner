@@ -78,7 +78,7 @@ function LoginForm() {
             width={56}
             height={56}
             priority
-            className="mb-4 h-14 w-14 rounded-2xl"
+            className="mb-4 h-14 w-14"
           />
           <h1 className="font-serif text-[28px] font-medium leading-tight tracking-tight">
             Planner
