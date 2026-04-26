@@ -71,23 +71,6 @@ export function useMedia(id: string) {
   });
 }
 
-export function useTmdbSearch(query: string) {
-  const trimmed = query.trim();
-  return useQuery<{ results: SearchResultItem[] }>({
-    queryKey: ["tmdb-search", trimmed],
-    queryFn: async () => {
-      if (trimmed.length < 2) return { results: [] };
-      const res = await fetch(
-        `/api/movies/search?q=${encodeURIComponent(trimmed)}`,
-      );
-      if (!res.ok) throw new Error("Search failed");
-      return res.json();
-    },
-    enabled: trimmed.length >= 2,
-    staleTime: 60_000,
-  });
-}
-
 export function useAddMedia() {
   const qc = useQueryClient();
   return useMutation({

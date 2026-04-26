@@ -12,14 +12,14 @@ import {
 import { ThemeToggle } from "./theme-toggle";
 import { ActiveTimer } from "./timer";
 import { Sidebar } from "./sidebar";
+import { useSearchPalette } from "./search-palette-context";
 
 export function Topbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { setOpen } = useSearchPalette();
 
   const openSearch = () => {
-    document.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "k", metaKey: true }),
-    );
+    setOpen(true);
   };
 
   const today = new Date();

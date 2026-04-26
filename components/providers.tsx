@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
+import { SearchPaletteProvider } from "@/components/layout/search-palette-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -18,8 +19,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <ConfirmProvider>
-          {children}
-          <Toaster />
+          <SearchPaletteProvider>
+            {children}
+            <Toaster />
+          </SearchPaletteProvider>
         </ConfirmProvider>
       </ThemeProvider>
     </QueryClientProvider>

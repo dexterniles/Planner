@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MovieTile } from "@/components/movies/movie-tile";
-import { SearchDialog } from "@/components/movies/search-dialog";
+import { useSearchPalette } from "@/components/layout/search-palette-context";
 import { useMediaList, type MediaItem } from "@/lib/hooks/use-movies";
 import type { MediaStatus, MediaType } from "@/lib/validations/media";
 import { cn } from "@/lib/utils";
@@ -76,7 +76,7 @@ function sortItems(items: MediaItem[], sortBy: SortKey): MediaItem[] {
 }
 
 export default function MoviesPage() {
-  const [searchOpen, setSearchOpen] = useState(false);
+  const { setOpen: setSearchOpen } = useSearchPalette();
   const [statusFilter, setStatusFilter] = useState<MediaStatus | "all">("all");
   const [typeFilter, setTypeFilter] = useState<MediaType | "all">("all");
   const [sortBy, setSortBy] = useState<SortKey>("recent");
@@ -239,7 +239,6 @@ export default function MoviesPage() {
         </>
       )}
 
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 }
