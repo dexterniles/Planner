@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -73,9 +74,14 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
           className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           aria-label="Planner — go to dashboard"
         >
-          <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[5px] bg-primary text-[14px] font-medium italic text-primary-foreground font-serif">
-            P
-          </span>
+          <Image
+            src="/brand-icon.png"
+            alt=""
+            width={22}
+            height={22}
+            priority
+            className="h-[22px] w-[22px] shrink-0 rounded-[5px]"
+          />
           {!isCollapsed && (
             <span className="font-serif text-[18px] leading-none tracking-tight text-sidebar-foreground">
               Planner
