@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 import { courses, assignments, gradeCategories } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 interface AssignmentRow {
@@ -13,6 +13,7 @@ interface AssignmentRow {
 
 interface CategoryRow {
   id: string;
+  courseId: string;
   weight: string;
   dropLowestN: number;
 }
@@ -59,65 +60,88 @@ export async function GET(request: Request) {
     .where(and(eq(courses.userId, userId), eq(courses.status, "active")))
     .orderBy(courses.name);
 
-  const results = await Promise.all(
-    activeCourses.map(async (course) => {
-      const [categoryRows, assignmentRows] = await Promise.all([
-        db
-          .select({
-            id: gradeCategories.id,
-            weight: gradeCategories.weight,
-            dropLowestN: gradeCategories.dropLowestN,
-          })
-          .from(gradeCategories)
-          .where(eq(gradeCategories.courseId, course.id)),
-        db
-          .select({
-            id: assignments.id,
-            categoryId: assignments.categoryId,
-            pointsEarned: assignments.pointsEarned,
-            pointsPossible: assignments.pointsPossible,
-          })
-          .from(assignments)
-          .where(eq(assignments.courseId, course.id)),
-      ]);
+  if (activeCourses.length === 0) {
+    return NextResponse.json([]);
+  }
 
-      if (categoryRows.length === 0) {
-        return {
-          courseId: course.id,
-          name: course.name,
-          code: course.code,
-          color: course.color,
-          grade: null,
-          weightGraded: 0,
-        };
-      }
+  const courseIds = activeCourses.map((c) => c.id);
 
-      let weightedSum = 0;
-      let totalGradedWeight = 0;
+  const [allCategoryRows, allAssignmentRows] = await Promise.all([
+    db
+      .select({
+        id: gradeCategories.id,
+        courseId: gradeCategories.courseId,
+        weight: gradeCategories.weight,
+        dropLowestN: gradeCategories.dropLowestN,
+      })
+      .from(gradeCategories)
+      .where(inArray(gradeCategories.courseId, courseIds)),
+    db
+      .select({
+        id: assignments.id,
+        courseId: assignments.courseId,
+        categoryId: assignments.categoryId,
+        pointsEarned: assignments.pointsEarned,
+        pointsPossible: assignments.pointsPossible,
+      })
+      .from(assignments)
+      .where(inArray(assignments.courseId, courseIds)),
+  ]);
 
-      for (const cat of categoryRows as CategoryRow[]) {
-        const catAssignments = assignmentRows.filter(
-          (a) => a.categoryId === cat.id,
-        );
-        const grade = computeCategoryGrade(catAssignments, cat.dropLowestN);
-        if (grade && grade.possible > 0) {
-          const pct = (grade.earned / grade.possible) * 100;
-          weightedSum += (Number(cat.weight) / 100) * pct;
-          totalGradedWeight += Number(cat.weight);
-        }
-      }
+  const categoriesByCourse = new Map<string, CategoryRow[]>();
+  for (const row of allCategoryRows) {
+    const list = categoriesByCourse.get(row.courseId) ?? [];
+    list.push(row);
+    categoriesByCourse.set(row.courseId, list);
+  }
 
+  const assignmentsByCourse = new Map<string, AssignmentRow[]>();
+  for (const row of allAssignmentRows) {
+    const list = assignmentsByCourse.get(row.courseId) ?? [];
+    list.push(row);
+    assignmentsByCourse.set(row.courseId, list);
+  }
+
+  const results = activeCourses.map((course) => {
+    const categoryRows = categoriesByCourse.get(course.id) ?? [];
+    const assignmentRows = assignmentsByCourse.get(course.id) ?? [];
+
+    if (categoryRows.length === 0) {
       return {
         courseId: course.id,
         name: course.name,
         code: course.code,
         color: course.color,
-        grade:
-          totalGradedWeight > 0 ? (weightedSum / totalGradedWeight) * 100 : null,
-        weightGraded: totalGradedWeight,
+        grade: null,
+        weightGraded: 0,
       };
-    }),
-  );
+    }
+
+    let weightedSum = 0;
+    let totalGradedWeight = 0;
+
+    for (const cat of categoryRows) {
+      const catAssignments = assignmentRows.filter(
+        (a) => a.categoryId === cat.id,
+      );
+      const grade = computeCategoryGrade(catAssignments, cat.dropLowestN);
+      if (grade && grade.possible > 0) {
+        const pct = (grade.earned / grade.possible) * 100;
+        weightedSum += (Number(cat.weight) / 100) * pct;
+        totalGradedWeight += Number(cat.weight);
+      }
+    }
+
+    return {
+      courseId: course.id,
+      name: course.name,
+      code: course.code,
+      color: course.color,
+      grade:
+        totalGradedWeight > 0 ? (weightedSum / totalGradedWeight) * 100 : null,
+      weightGraded: totalGradedWeight,
+    };
+  });
 
   return NextResponse.json(results);
 }

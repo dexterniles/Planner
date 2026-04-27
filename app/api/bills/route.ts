@@ -1,9 +1,10 @@
 import { db } from "@/lib/db";
 import { bills, recurrenceRules } from "@/lib/db/schema";
-import { createBillSchema, type BillStatus } from "@/lib/validations/bill";
+import { createBillSchema, billStatusValues } from "@/lib/validations/bill";
 import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { z } from "zod";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -19,7 +20,10 @@ export async function GET(request: Request) {
   const conditions: SQL[] = [eq(bills.userId, userId)];
   if (from) conditions.push(gte(bills.dueDate, from));
   if (to) conditions.push(lte(bills.dueDate, to));
-  if (status) conditions.push(eq(bills.status, status as BillStatus));
+  const statusParse = z.enum(billStatusValues).safeParse(status);
+  if (statusParse.success) {
+    conditions.push(eq(bills.status, statusParse.data));
+  }
   if (categoryId) conditions.push(eq(bills.categoryId, categoryId));
 
   const result = await db
@@ -74,34 +78,37 @@ export async function POST(request: Request) {
     return NextResponse.json(bill, { status: 201 });
   }
 
-  const [rule] = await db
-    .insert(recurrenceRules)
-    .values({
-      ownerType: "bill",
-      ownerId: "00000000-0000-0000-0000-000000000000",
-      frequency: recurrence.frequency,
-      endDate: recurrence.endDate ?? null,
-      count: recurrence.count ?? null,
-    })
-    .returning();
+  const { rule, inserted } = await db.transaction(async (tx) => {
+    const [rule] = await tx
+      .insert(recurrenceRules)
+      .values({
+        ownerType: "bill",
+        ownerId: "00000000-0000-0000-0000-000000000000",
+        frequency: recurrence.frequency,
+        endDate: recurrence.endDate ?? null,
+        count: recurrence.count ?? null,
+      })
+      .returning();
 
-  const count = recurrence.count ?? 12;
-  const billsToInsert = [];
-  for (let i = 0; i < count; i++) {
-    const due = addInterval(rest.dueDate, recurrence.frequency, i);
-    if (recurrence.endDate && due > recurrence.endDate) break;
-    billsToInsert.push({
-      ...rest,
-      dueDate: due,
-      amount: amount.toString(),
-      paidAmount: null,
-      paidAt: null,
-      recurrenceRuleId: rule.id,
-      userId,
-    });
-  }
+    const count = recurrence.count ?? 12;
+    const billsToInsert = [];
+    for (let i = 0; i < count; i++) {
+      const due = addInterval(rest.dueDate, recurrence.frequency, i);
+      if (recurrence.endDate && due > recurrence.endDate) break;
+      billsToInsert.push({
+        ...rest,
+        dueDate: due,
+        amount: amount.toString(),
+        paidAmount: null,
+        paidAt: null,
+        recurrenceRuleId: rule.id,
+        userId,
+      });
+    }
 
-  const inserted = await db.insert(bills).values(billsToInsert).returning();
+    const inserted = await tx.insert(bills).values(billsToInsert).returning();
+    return { rule, inserted };
+  });
 
   return NextResponse.json(
     { rule, bills: inserted, count: inserted.length },

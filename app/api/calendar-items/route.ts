@@ -30,9 +30,21 @@ export async function GET(request: Request) {
     startDate = new Date(from);
     endDate = new Date(to);
   } else if (month) {
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return NextResponse.json(
+        { error: "month must be in YYYY-MM format" },
+        { status: 400 },
+      );
+    }
     const [yearStr, monthStr] = month.split("-");
     const year = parseInt(yearStr, 10);
     const mon = parseInt(monthStr, 10);
+    if (Number.isNaN(year) || Number.isNaN(mon) || mon < 1 || mon > 12) {
+      return NextResponse.json(
+        { error: "Invalid month value" },
+        { status: 400 },
+      );
+    }
     startDate = new Date(year, mon - 1, 1);
     endDate = new Date(year, mon, 1);
   } else {
@@ -111,7 +123,13 @@ export async function GET(request: Request) {
       })
       .from(milestones)
       .innerJoin(projects, eq(milestones.projectId, projects.id))
-      .where(eq(projects.userId, userId)),
+      .where(
+        and(
+          eq(projects.userId, userId),
+          gte(milestones.targetDate, startStr),
+          lte(milestones.targetDate, endStr),
+        ),
+      ),
     db
       .select({
         sourceType: sql<string>`'event'`.as("source_type"),

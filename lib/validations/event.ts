@@ -7,12 +7,24 @@ export const eventStatusValues = [
   "completed",
 ] as const;
 
+const datetimeString = z
+  .string()
+  .refine((s) => !Number.isNaN(Date.parse(s)), {
+    message: "Invalid datetime",
+  });
+
+const optionalDatetimeString = z
+  .string()
+  .refine((s) => s === "" || !Number.isNaN(Date.parse(s)), {
+    message: "Invalid datetime",
+  });
+
 export const createEventSchema = z.object({
   title: z.string().min(1, "Title is required").max(300),
   description: z.string().nullable().optional(),
   categoryId: z.string().uuid().nullable().optional(),
-  startsAt: z.string().min(1, "Start date is required"),
-  endsAt: z.string().nullable().optional(),
+  startsAt: datetimeString,
+  endsAt: optionalDatetimeString.nullable().optional(),
   allDay: z.boolean().optional(),
   location: z.string().max(500).nullable().optional(),
   url: z.string().max(1000).nullable().optional(),

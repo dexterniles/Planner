@@ -28,8 +28,10 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ✅ **C** — drop `unoptimized` on TMDB images (behavioral, confirmed).
 - ✅ **Backlog batch 1** — N7 (utility lift to `lib/utils.ts`/`lib/grades.ts`/`lib/format.ts`), N8 (cargo-cult `useMemo`), N11 (dead SQL view + `scripts/create-view.ts`), N12 (5 unused SVGs), N13 (TS target ES2022), N14 (`NEXT_PUBLIC_APP_VERSION` env), S22 (409 on already-stopped timer).
 - ✅ **Backlog batch 2** — clock-drift cluster closed via shared `useCurrentDate(intervalMs)` hook in `lib/hooks/use-current-date.ts`. Wired into `bills-this-period.tsx` (B3), `events/page.tsx` (S2), `week-view.tsx` + `month-view.tsx` (S3), `notes-list.tsx` (N10), and `day-view.tsx` (`NowIndicator` line + `isSameDay` check, caught by reviewer).
+- ✅ **Backlog batch 3** — form-seed-from-server cluster closed. B4: `handleRefresh` busts `initialNotesRef` so refresh metadata re-seeds notes. S5: pay-schedule effect converted to seed-once with explicit reset in `handleRemove`. Bonus: lint count dropped 13 → 12 (one `set-state-in-effect` resolved naturally).
+- ✅ **Backlog batch 4** — backend correctness pass shipped. B8 (grades 2N+1 → 3 queries via inArray), B9 (`/api/all-items` Promise.all), B12 (inbox PATCH Zod-validated via new `lib/validations/inbox.ts`), S11 (calendar milestone SQL date filter), S16 (5 parallel COUNTs collapsed to one `db.execute`), S18 (regex+NaN+range guards on month/year/day, status filter casts replaced with `z.enum().safeParse()`), S20 (date-string validators tightened with empty-string allowance for optional fields per regression caught by reviewer), S21 (bills bulk-recurrence wrapped in transaction). Plus S18b day-rollover fix using round-trip date check.
 
-**Next up:** Backlog batch 3 (form-seed-from-server: B4 + S5), then batch 4 (backend correctness pass: B8/B9/B12/S11/S16/S18/S20/S21), then headline #2 (server-component refactor) at the end of the roadmap.
+**Next up:** Pick from remaining backlog batches (5: cache hygiene; 6: a11y/UX polish; 7: bundle/perf; 8-10: schema/optimistic/quality), or jump to headline #2 (server-component refactor).
 
 ---
 
@@ -56,18 +58,18 @@ Real bugs or perf cliffs that will fire under realistic conditions.
 - ✅ **B1.** Object-literal queryKey thrash — see headline #3.
 - ✅ **B2.** Pomodoro auto-stop double-fires. [components/layout/timer.tsx:28-75](components/layout/timer.tsx#L28-L75) The 1s interval keeps writing `pomodoroRemaining = 0` after expiry; the second effect fires `stopTimer.mutate` on every tick of identity-changed deps. Result: rapid duplicate "Pomodoro complete!" toasts and duplicate stop calls. The interval is not cleared when remaining hits 0.
 - ✅ **B3.** `BillsThisPeriod` "next 14 days" window frozen at first paint. [components/dashboard/bills-this-period.tsx:26-46](components/dashboard/bills-this-period.tsx#L26-L46) `useMemo` captures `new Date()` and only recomputes when `paySchedule` changes. Past midnight, the window is stale until something else triggers a re-render.
-- **B4.** Notes seed-once ref breaks on metadata refresh. [app/(app)/movies/[id]/page.tsx:80-88](app/\(app\)/movies/[id]/page.tsx#L80-L88) `initialNotesRef.current` is set once and never reset. After a `refreshMedia` mutation invalidates and refetches, the ref-guard prevents re-seeding.
+- ✅ **B4.** Notes seed-once ref breaks on metadata refresh. [app/(app)/movies/[id]/page.tsx:80-88](app/\(app\)/movies/[id]/page.tsx#L80-L88) `initialNotesRef.current` is set once and never reset. After a `refreshMedia` mutation invalidates and refetches, the ref-guard prevents re-seeding.
 
 ### Backend / data layer
 
 - ✅ **B5.** `useActiveTimer` 1s polling — see headline #4.
 - ✅ **B6.** `/api/search` JS-side full-table scans — see headline #5.
 - ✅ **B7.** `/api/recipes` repeats the same anti-pattern with the tag filter. [app/api/recipes/route.ts:64-66](app/api/recipes/route.ts#L64-L66) Should be a SQL `EXISTS` against `taggings`/`tags`.
-- **B8.** `/api/dashboard/grades` is a 2N+1. [app/api/dashboard/grades/route.ts:55-88](app/api/dashboard/grades/route.ts#L55-L88) N active courses → 2 awaited subqueries each. Replace with a single LEFT JOIN.
-- **B9.** `/api/all-items` does sequential awaits, not `Promise.all`. [app/api/all-items/route.ts:10-40](app/api/all-items/route.ts#L10-L40)
+- ✅ **B8.** `/api/dashboard/grades` is a 2N+1. [app/api/dashboard/grades/route.ts:55-88](app/api/dashboard/grades/route.ts#L55-L88) N active courses → 2 awaited subqueries each. Replace with a single LEFT JOIN.
+- ✅ **B9.** `/api/all-items` does sequential awaits, not `Promise.all`. [app/api/all-items/route.ts:10-40](app/api/all-items/route.ts#L10-L40)
 - **B10.** Unbounded list endpoints (no `LIMIT`). Will get slow even on a single user. — `recipes`, `all-items`, `movies`, `inbox`, `notes`, `tags`, `workspaces`, `event-categories`, `bill-categories`, `courses`, `projects`, `tasks`, `assignments`, `milestones`, `calendar-items` (milestone branch).
 - ✅ **B11.** Tenant-isolation gap — see headline #6.
-- **B12.** `/api/inbox/[id]` PATCH not Zod-validated. [app/api/inbox/[id]/route.ts:9-29](app/api/inbox/[id]/route.ts#L9-L29) Malformed `triagedAt` silently sets the column to `NULL`; `resultingItemType` is unconstrained text from outside the trust boundary.
+- ✅ **B12.** `/api/inbox/[id]` PATCH not Zod-validated. [app/api/inbox/[id]/route.ts:9-29](app/api/inbox/[id]/route.ts#L9-L29) Malformed `triagedAt` silently sets the column to `NULL`; `resultingItemType` is unconstrained text from outside the trust boundary.
 
 ### Performance / Next 16
 
@@ -88,7 +90,7 @@ Won't crash but will degrade UX or invite future bugs.
 - ✅ **S2.** `EventsPage` `now` captured in `useMemo([])` — never updates after midnight. [app/(app)/events/page.tsx:35](app/\(app\)/events/page.tsx#L35)
 - ✅ **S3.** `WeekView` / `MonthView` "today highlight" doesn't update across midnight. [components/calendar/week-view.tsx:34](components/calendar/week-view.tsx#L34), [components/calendar/month-view.tsx:111](components/calendar/month-view.tsx#L111). `DayView` `NowIndicator` also caught and fixed.
 - **S4.** Dashboard runs chrono `parseDate` per inbox item per render. [app/(app)/page.tsx:188-189](app/\(app\)/page.tsx#L188-L189) Memoize the parsed-dates array.
-- **S5.** `pay-schedule-settings` form effect overwrites user input on background refetch. [components/bills/pay-schedule-settings.tsx:39-47](components/bills/pay-schedule-settings.tsx#L39-L47) If the user types and a refetch fires, their value is wiped.
+- ✅ **S5.** `pay-schedule-settings` form effect overwrites user input on background refetch. [components/bills/pay-schedule-settings.tsx:39-47](components/bills/pay-schedule-settings.tsx#L39-L47) If the user types and a refetch fires, their value is wiped.
 - **S6.** `MovieDetailPage` notes-save races with rapid blur. [app/(app)/movies/[id]/page.tsx:90-102](app/\(app\)/movies/[id]/page.tsx#L90-L102) No mutex; an older request can complete second and stomp the newer save.
 - **S7.** Mutations missing optimistic updates — task toggle, mark-paid, ratings round-trip then re-paint. Most visible in [components/projects/milestone-list.tsx:37-53](components/projects/milestone-list.tsx#L37-L53), [components/dashboard/bills-this-period.tsx:61-68](components/dashboard/bills-this-period.tsx#L61-L68), [app/(app)/movies/[id]/page.tsx:104-120](app/\(app\)/movies/[id]/page.tsx#L104-L120).
 - **S8.** `confirm-dialog` doesn't restore focus to trigger. [components/ui/confirm-dialog.tsx:40-89](components/ui/confirm-dialog.tsx#L40-L89) After delete, focus falls to `document.body`. Save the previously-focused element on open.
@@ -97,7 +99,7 @@ Won't crash but will degrade UX or invite future bugs.
 ### Backend / data layer
 
 - **S10.** `auto-complete-past-courses/events` runs UPDATE on every list read. [app/api/courses/route.ts:13-23](app/api/courses/route.ts#L13-L23), [lib/auto-complete-events.ts:14-30](lib/auto-complete-events.ts#L14-L30). Move to a daily `pg_cron` or cache-last-run timestamp. [BEHAVIORAL] — accept up to 1-day lag in status flip.
-- **S11.** Calendar-items milestone branch has no SQL date filter. [app/api/calendar-items/route.ts:98-115](app/api/calendar-items/route.ts#L98-L115) Pulls every milestone for the user, then JS-filters. Push `gte`/`lte(targetDate)` into SQL.
+- ✅ **S11.** Calendar-items milestone branch has no SQL date filter. [app/api/calendar-items/route.ts:98-115](app/api/calendar-items/route.ts#L98-L115) Pulls every milestone for the user, then JS-filters. Push `gte`/`lte(targetDate)` into SQL.
 - **S12.** `calendar_items` SQL view defined in `lib/db/schema.ts:625-665` but never read. The handler reimplements the same UNION-ALL by hand. Pick one.
 - **S13.** `/api/recurrence-rules/[id]` DELETE fans out 4 redundant updates. [app/api/recurrence-rules/[id]/route.ts:14-30](app/api/recurrence-rules/[id]/route.ts#L14-L30) FK already declares `onDelete: "set null"`. Dead work.
 - **S14.** `recurrenceRules.ownerId/ownerType` placeholder pattern half-broken. [app/api/recurrence-rules/route.ts:17-43](app/api/recurrence-rules/route.ts#L17-L43) Bills insert `'00000000-…'`; nothing reads the columns. Either drop them or write the real owner. [BEHAVIORAL]
@@ -109,16 +111,16 @@ Won't crash but will degrade UX or invite future bugs.
   - `media_items(user_id, created_at desc)`
   - `taggings(tag_id)`
   - `grade_categories(course_id)`
-- **S16.** `/api/dashboard/stats` could be one query with `FILTER` aggregates. [app/api/dashboard/stats/route.ts:30-84](app/api/dashboard/stats/route.ts#L30-L84) Five parallel COUNTs → single round-trip with subselects.
+- ✅ **S16.** `/api/dashboard/stats` could be one query with `FILTER` aggregates. [app/api/dashboard/stats/route.ts:30-84](app/api/dashboard/stats/route.ts#L30-L84) Five parallel COUNTs → single round-trip with subselects.
 - **S17.** TanStack invalidation gaps:
   - `useUpdateBill`/`useCreateBill` don't invalidate `["dashboard","stats"]` — counters go stale.
   - `useStartTimer`/`useStopTimer` don't invalidate dashboard hours-this-week.
   - `useUpdateAssignment` doesn't invalidate `["dashboard","grades"]`.
   - Recurrence-rule mutations only invalidate `["assignments"]` and `["tasks"]`; events/bills also own recurrence rules.
-- **S18.** Inputs not Zod-validated at boundary in [app/api/calendar-items/route.ts:33-47](app/api/calendar-items/route.ts#L33-L47) (parseInt without NaN check), [app/api/events/by-date/route.ts:24-26](app/api/events/by-date/route.ts#L24-L26), and the `status` filter casts in `events`/`bills` GETs.
+- ✅ **S18.** Inputs not Zod-validated at boundary in [app/api/calendar-items/route.ts:33-47](app/api/calendar-items/route.ts#L33-L47) (parseInt without NaN check), [app/api/events/by-date/route.ts:24-26](app/api/events/by-date/route.ts#L24-L26), and the `status` filter casts in `events`/`bills` GETs.
 - **S19.** TMDB client: short revalidate on metadata, no retry/rate-limit. [lib/tmdb/client.ts:34](lib/tmdb/client.ts#L34) — 60s revalidate is short for `/movie/{id}` and `/tv/{id}`; bump to 24h since data is snapshotted to DB anyway. Letterboxd import will burn 429s without backoff.
-- **S20.** Drizzle / Zod drift on date strings. [lib/validations/event.ts:14](lib/validations/event.ts#L14) accepts any non-empty string for `startsAt`; route does `new Date(startsAt)`; bad input → "Invalid Date" inserted into `notNull` column → Postgres throws. Same for `endsAt`, `paidAt`, `dueDate`. Use `z.string().datetime()` or refine.
-- **S21.** Bills bulk-recurrence creation skips a transaction. [app/api/bills/route.ts:78-105](app/api/bills/route.ts#L78-L105) Inserts rule, then bills batch — failure orphans the rule.
+- ✅ **S20.** Drizzle / Zod drift on date strings. [lib/validations/event.ts:14](lib/validations/event.ts#L14) accepts any non-empty string for `startsAt`; route does `new Date(startsAt)`; bad input → "Invalid Date" inserted into `notNull` column → Postgres throws. Same for `endsAt`, `paidAt`, `dueDate`. Use `z.string().datetime()` or refine.
+- ✅ **S21.** Bills bulk-recurrence creation skips a transaction. [app/api/bills/route.ts:78-105](app/api/bills/route.ts#L78-L105) Inserts rule, then bills batch — failure orphans the rule.
 - ✅ **S22.** `time_logs/[id]/stop` returns 400 not 409 for "already stopped". [app/api/time-logs/[id]/stop/route.ts:24-28](app/api/time-logs/[id]/stop/route.ts#L24-L28)
 
 ### Performance / Next 16
@@ -168,7 +170,7 @@ Low-priority cleanup. Address opportunistically.
 - **E.** Set `staleTime` on QueryClient. See S23.
 - ✅ **F.** ~~Switch `/api/search` to SQL `ilike`~~ → done in headline #5. Per-type `.limit(5)`, no relevance ranking change beyond the truncation cap.
 - **G.** Move auto-complete sweeps to cron. 1-day lag on status flips.
-- **H.** Tighten `userId` filters on `?parentId=` endpoints. No effect for legitimate user.
+- ✅ **H.** ~~Tighten `userId` filters on `?parentId=` endpoints~~ → done as part of headline #1.
 - **I.** Drop `recurrenceRules.ownerId/ownerType` placeholder columns. Migration; no consumer breaks.
 
 ---

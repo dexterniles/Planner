@@ -70,6 +70,7 @@ export default function MovieDetailPage({
   const handleRefresh = async () => {
     try {
       await refreshMedia.mutateAsync(id);
+      initialNotesRef.current = null; // Allow re-seed from refreshed server data
       toast.success("Metadata refreshed");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Refresh failed");

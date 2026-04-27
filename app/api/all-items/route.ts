@@ -8,37 +8,38 @@ export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
   const { userId } = auth;
-  const assignmentRows = await db
-    .select({
-      id: assignments.id,
-      type: sql<string>`'assignment'`.as("type"),
-      title: assignments.title,
-      status: assignments.status,
-      dueDate: assignments.dueDate,
-      parentId: assignments.courseId,
-      parentName: courses.name,
-      parentColor: courses.color,
-      priority: sql<string>`null`.as("priority"),
-    })
-    .from(assignments)
-    .innerJoin(courses, eq(assignments.courseId, courses.id))
-    .where(eq(assignments.userId, userId));
-
-  const taskRows = await db
-    .select({
-      id: tasks.id,
-      type: sql<string>`'task'`.as("type"),
-      title: tasks.title,
-      status: tasks.status,
-      dueDate: tasks.dueDate,
-      parentId: tasks.projectId,
-      parentName: projects.name,
-      parentColor: projects.color,
-      priority: tasks.priority,
-    })
-    .from(tasks)
-    .innerJoin(projects, eq(tasks.projectId, projects.id))
-    .where(eq(tasks.userId, userId));
+  const [assignmentRows, taskRows] = await Promise.all([
+    db
+      .select({
+        id: assignments.id,
+        type: sql<string>`'assignment'`.as("type"),
+        title: assignments.title,
+        status: assignments.status,
+        dueDate: assignments.dueDate,
+        parentId: assignments.courseId,
+        parentName: courses.name,
+        parentColor: courses.color,
+        priority: sql<string>`null`.as("priority"),
+      })
+      .from(assignments)
+      .innerJoin(courses, eq(assignments.courseId, courses.id))
+      .where(eq(assignments.userId, userId)),
+    db
+      .select({
+        id: tasks.id,
+        type: sql<string>`'task'`.as("type"),
+        title: tasks.title,
+        status: tasks.status,
+        dueDate: tasks.dueDate,
+        parentId: tasks.projectId,
+        parentName: projects.name,
+        parentColor: projects.color,
+        priority: tasks.priority,
+      })
+      .from(tasks)
+      .innerJoin(projects, eq(tasks.projectId, projects.id))
+      .where(eq(tasks.userId, userId)),
+  ]);
 
   const allItems = [...assignmentRows, ...taskRows].sort((a, b) => {
     if (!a.dueDate && !b.dueDate) return 0;

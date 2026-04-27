@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,14 +35,13 @@ export function PayScheduleSettings() {
 
   const [frequency, setFrequency] = useState<PayFrequency>("biweekly");
   const [referenceDate, setReferenceDate] = useState("");
+  const initialSeedRef = useRef(false);
 
   useEffect(() => {
-    if (existing) {
+    if (existing && !initialSeedRef.current) {
       setFrequency(existing.frequency);
       setReferenceDate(existing.referenceDate);
-    } else {
-      setFrequency("biweekly");
-      setReferenceDate("");
+      initialSeedRef.current = true;
     }
   }, [existing]);
 
@@ -73,6 +72,9 @@ export function PayScheduleSettings() {
     }
     try {
       await remove.mutateAsync();
+      setFrequency("biweekly");
+      setReferenceDate("");
+      initialSeedRef.current = false;
       toast.success("Pay schedule cleared");
     } catch {
       toast.error("Failed");

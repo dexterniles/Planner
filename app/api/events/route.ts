@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
 import { events, eventCategories } from "@/lib/db/schema";
-import { createEventSchema } from "@/lib/validations/event";
+import { createEventSchema, eventStatusValues } from "@/lib/validations/event";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
-import type { EventStatus } from "@/lib/validations/event";
 import { autoCompletePastEvents } from "@/lib/auto-complete-events";
 import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -24,7 +24,10 @@ export async function GET(request: Request) {
   if (from) conditions.push(gte(events.startsAt, new Date(from)));
   if (to) conditions.push(lte(events.startsAt, new Date(to)));
   if (categoryId) conditions.push(eq(events.categoryId, categoryId));
-  if (status) conditions.push(eq(events.status, status as EventStatus));
+  const statusParse = z.enum(eventStatusValues).safeParse(status);
+  if (statusParse.success) {
+    conditions.push(eq(events.status, statusParse.data));
+  }
 
   const result = await db
     .select({
