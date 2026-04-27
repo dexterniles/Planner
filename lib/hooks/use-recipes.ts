@@ -24,7 +24,7 @@ export function useRecipes(filters: RecipeFilters = {}) {
   const query = params.toString();
 
   return useQuery({
-    queryKey: ["recipes", filters],
+    queryKey: ["recipes", filters.q, filters.tagId],
     queryFn: async () => {
       const res = await fetch(`/api/recipes${query ? `?${query}` : ""}`);
       if (!res.ok) throw new Error("Failed to fetch recipes");

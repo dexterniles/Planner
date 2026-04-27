@@ -24,7 +24,7 @@ export function useEvents(filters: EventFilters = {}) {
   const query = params.toString();
 
   return useQuery({
-    queryKey: ["events", filters],
+    queryKey: ["events", filters.from, filters.to, filters.categoryId, filters.status, filters.limit],
     queryFn: async () => {
       const res = await fetch(`/api/events${query ? `?${query}` : ""}`);
       if (!res.ok) throw new Error("Failed to fetch events");

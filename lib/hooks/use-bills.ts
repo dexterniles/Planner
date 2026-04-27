@@ -24,7 +24,7 @@ export function useBills(filters: BillFilters = {}) {
   const query = params.toString();
 
   return useQuery({
-    queryKey: ["bills", filters],
+    queryKey: ["bills", filters.from, filters.to, filters.status, filters.categoryId, filters.limit],
     queryFn: async () => {
       const res = await fetch(`/api/bills${query ? `?${query}` : ""}`);
       if (!res.ok) throw new Error("Failed to fetch bills");
