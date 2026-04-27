@@ -1,28 +1,14 @@
 import { db } from "@/lib/db";
 import { courses } from "@/lib/db/schema";
 import { createCourseSchema } from "@/lib/validations/course";
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
-
-async function autoCompletePastCourses(userId: string) {
-  await db
-    .update(courses)
-    .set({ status: "completed" })
-    .where(
-      and(
-        eq(courses.userId, userId),
-        eq(courses.status, "active"),
-        lt(courses.endDate, sql`CURRENT_DATE`),
-      ),
-    );
-}
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
   const { userId } = auth;
-  await autoCompletePastCourses(userId);
 
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId");

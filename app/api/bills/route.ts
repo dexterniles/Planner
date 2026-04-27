@@ -82,8 +82,6 @@ export async function POST(request: Request) {
     const [rule] = await tx
       .insert(recurrenceRules)
       .values({
-        ownerType: "bill",
-        ownerId: "00000000-0000-0000-0000-000000000000",
         frequency: recurrence.frequency,
         endDate: recurrence.endDate ?? null,
         count: recurrence.count ?? null,

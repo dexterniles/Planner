@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { events, eventCategories } from "@/lib/db/schema";
-import { autoCompletePastEvents } from "@/lib/auto-complete-events";
 import { and, asc, eq, gte, isNotNull, ne, or } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
@@ -12,8 +11,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get("limit") ?? "10", 10);
   const now = new Date();
-
-  await autoCompletePastEvents(userId);
 
   const result = await db
     .select({

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { courses } from "@/lib/db/schema";
 import { updateCourseSchema } from "@/lib/validations/course";
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
@@ -12,18 +12,6 @@ export async function GET(request: Request, { params }: Params) {
   if (!auth.ok) return auth.response;
   const { userId } = auth;
   const { id } = await params;
-
-  await db
-    .update(courses)
-    .set({ status: "completed" })
-    .where(
-      and(
-        eq(courses.id, id),
-        eq(courses.userId, userId),
-        eq(courses.status, "active"),
-        lt(courses.endDate, sql`CURRENT_DATE`),
-      ),
-    );
 
   const [course] = await db
     .select()

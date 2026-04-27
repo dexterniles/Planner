@@ -55,7 +55,13 @@ export async function POST(request: Request) {
 
   const [rule] = await db
     .insert(recurrenceRules)
-    .values(parsed.data)
+    .values({
+      frequency: parsed.data.frequency,
+      interval: parsed.data.interval,
+      daysOfWeek: parsed.data.daysOfWeek ?? null,
+      endDate: parsed.data.endDate ?? null,
+      count: parsed.data.count ?? null,
+    })
     .returning();
 
   if (ownerType === "assignment") {

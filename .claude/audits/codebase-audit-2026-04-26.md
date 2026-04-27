@@ -34,8 +34,9 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ✅ **Backlog batch 6** — a11y / UX polish. S6 (notes save bails on `updateMedia.isPending` to prevent rapid-blur race), S8 (`ConfirmProvider` captures `document.activeElement` on open and restores via `requestAnimationFrame` after close), S9 (`RatingStars` left-half buttons get `tabIndex={-1}` — keyboard tab stops 10 → 5), N5 (`RecipeDialog` wired to `zodResolver` via string-mirror `recipeFormSchema`).
 - ✅ **Backlog batch 5+9 combined** — TanStack mutation pass shipped. S23: `QueryClient` defaults set to `staleTime: 30_000` and `refetchOnWindowFocus: false` (behavioral E confirmed). S17: dashboard invalidation gaps closed across bills/time-logs/assignments mutations; recurrence-rule mutations now invalidate events/bills too. S7: optimistic updates with `onMutate`/`onError` rollback added to `useUpdateBill`, `useUpdateAssignment`, `useUpdateMilestone`, `useUpdateTask`, `useUpdateMedia`. Decimal-as-string coercion fix applied post-review for `amount`/`paidAmount` (bills) and `pointsEarned`/`pointsPossible` (assignments) so optimistic shape matches Drizzle's decimal-string cache shape.
 - ✅ **Backlog batch 7** — bundle/perf shipped. S25: chrono-node import switched to `chrono-node/en` (locale-only) — chrono chunk dropped ~109 KB raw (~62%). S26: `EB_Garamond` config trimmed from 6 font files to 2 (`weight: ["400", "500"]`, no italic) — confirmed via grep that no `font-serif` is paired with `font-semibold`/`bold`/`italic` anywhere. S27: `experimental.optimizePackageImports: ["@base-ui/react"]` added to `next.config.ts`. S28: `PageTransition` no longer remounts on navigation — class-restart pattern via `useRef`/`useEffect` with `void el.offsetWidth` reflow.
+- ✅ **Backlog batch 8** — schema & migrations shipped. S15: 9 indexes added (`assignments_course_id_idx`, `tasks_project_id_idx`, `milestones_project_id_idx`, `time_logs_loggable_idx`, `time_logs_active_idx` partial, `bills_user_status_due_idx`, `media_items_user_created_idx`, `taggings_tag_id_idx`, `grade_categories_course_id_idx`). S14: `recurrenceRules.ownerType`/`ownerId` columns dropped, placeholder UUID writes removed; `recurrenceOwnerTypeEnum` left exported as no-op to avoid drizzle-kit interactive prompts. S10: per-read auto-complete sweeps removed from `/api/courses*` and `/api/events*`; new `/api/cron/auto-complete` route with Bearer auth + fail-closed on missing `CRON_SECRET`; `vercel.json` cron `0 4 * * *`. Migration `0009_drop_recurrence_owner_add_indexes.sql` hand-authored (matching repo precedent for snapshot-drift workaround) and applied to live DB. Behavioral G + I confirmed.
 
-**Next up:** Batch 8 (schema/migrations: S15/S14/S10), then headline #2 (server-component refactor).
+**Next up:** Headline #2 (server-component refactor) — the architectural finale.
 
 ---
 
@@ -102,12 +103,12 @@ Won't crash but will degrade UX or invite future bugs.
 
 ### Backend / data layer
 
-- **S10.** `auto-complete-past-courses/events` runs UPDATE on every list read. [app/api/courses/route.ts:13-23](app/api/courses/route.ts#L13-L23), [lib/auto-complete-events.ts:14-30](lib/auto-complete-events.ts#L14-L30). Move to a daily `pg_cron` or cache-last-run timestamp. [BEHAVIORAL] — accept up to 1-day lag in status flip.
+- ✅ **S10.** `auto-complete-past-courses/events` runs UPDATE on every list read. [app/api/courses/route.ts:13-23](app/api/courses/route.ts#L13-L23), [lib/auto-complete-events.ts:14-30](lib/auto-complete-events.ts#L14-L30). Move to a daily `pg_cron` or cache-last-run timestamp. [BEHAVIORAL] — accept up to 1-day lag in status flip.
 - ✅ **S11.** Calendar-items milestone branch has no SQL date filter. [app/api/calendar-items/route.ts:98-115](app/api/calendar-items/route.ts#L98-L115) Pulls every milestone for the user, then JS-filters. Push `gte`/`lte(targetDate)` into SQL.
 - **S12.** `calendar_items` SQL view defined in `lib/db/schema.ts:625-665` but never read. The handler reimplements the same UNION-ALL by hand. Pick one.
 - **S13.** `/api/recurrence-rules/[id]` DELETE fans out 4 redundant updates. [app/api/recurrence-rules/[id]/route.ts:14-30](app/api/recurrence-rules/[id]/route.ts#L14-L30) FK already declares `onDelete: "set null"`. Dead work.
-- **S14.** `recurrenceRules.ownerId/ownerType` placeholder pattern half-broken. [app/api/recurrence-rules/route.ts:17-43](app/api/recurrence-rules/route.ts#L17-L43) Bills insert `'00000000-…'`; nothing reads the columns. Either drop them or write the real owner. [BEHAVIORAL]
-- **S15.** Index opportunities — every one is a `userId`-filtered or FK-joined hot column with no index:
+- ✅ **S14.** `recurrenceRules.ownerId/ownerType` placeholder pattern half-broken. [app/api/recurrence-rules/route.ts:17-43](app/api/recurrence-rules/route.ts#L17-L43) Bills insert `'00000000-…'`; nothing reads the columns. Either drop them or write the real owner. [BEHAVIORAL]
+- ✅ **S15.** Index opportunities — every one is a `userId`-filtered or FK-joined hot column with no index:
   - `assignments(course_id)`, `tasks(project_id)`, `milestones(project_id)`
   - `time_logs(loggable_type, loggable_id)`
   - `time_logs(user_id, ended_at) WHERE ended_at IS NULL` partial index
@@ -173,9 +174,9 @@ Low-priority cleanup. Address opportunistically.
 - ✅ **D.** ~~Gate `useActiveTimer` polling~~ → polling removed entirely. Multi-tab sync via window focus.
 - ✅ **E.** ~~Set `staleTime` on QueryClient~~ → done in batch 5+9. `staleTime: 30_000` and `refetchOnWindowFocus: false`.
 - ✅ **F.** ~~Switch `/api/search` to SQL `ilike`~~ → done in headline #5. Per-type `.limit(5)`, no relevance ranking change beyond the truncation cap.
-- **G.** Move auto-complete sweeps to cron. 1-day lag on status flips.
+- ✅ **G.** ~~Move auto-complete sweeps to cron~~ → done in batch 8. Cron daily at 04:00 UTC.
 - ✅ **H.** ~~Tighten `userId` filters on `?parentId=` endpoints~~ → done as part of headline #1.
-- **I.** Drop `recurrenceRules.ownerId/ownerType` placeholder columns. Migration; no consumer breaks.
+- ✅ **I.** ~~Drop `recurrenceRules.ownerId/ownerType` placeholder columns~~ → done in batch 8. Columns dropped via migration 0009; data preserved (placeholder UUIDs were the only loss).
 
 ---
 

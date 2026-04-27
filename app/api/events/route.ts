@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import { events, eventCategories } from "@/lib/db/schema";
 import { createEventSchema, eventStatusValues } from "@/lib/validations/event";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
-import { autoCompletePastEvents } from "@/lib/auto-complete-events";
 import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -17,8 +16,6 @@ export async function GET(request: Request) {
   const categoryId = searchParams.get("categoryId");
   const status = searchParams.get("status");
   const limit = parseInt(searchParams.get("limit") ?? "500", 10);
-
-  await autoCompletePastEvents(userId);
 
   const conditions: SQL[] = [eq(events.userId, userId)];
   if (from) conditions.push(gte(events.startsAt, new Date(from)));

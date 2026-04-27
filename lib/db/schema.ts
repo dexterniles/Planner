@@ -12,6 +12,7 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ─── Enums ──────────────────────────────────────────────────────────────────
 export const workspaceTypeEnum = pgEnum("workspace_type", [
@@ -79,6 +80,8 @@ export const resourceTypeEnum = pgEnum("resource_type", [
   "book_reference",
 ]);
 
+// Retained as a Postgres type for backward compatibility with prior migrations
+// that referenced `recurrence_owner_type`. No column uses this enum anymore.
 export const recurrenceOwnerTypeEnum = pgEnum("recurrence_owner_type", [
   "assignment",
   "task",
@@ -187,20 +190,22 @@ export const courses = pgTable(
   ],
 );
 
-export const gradeCategories = pgTable("grade_categories", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  courseId: uuid("course_id")
-    .references(() => courses.id, { onDelete: "cascade" })
-    .notNull(),
-  name: text("name").notNull(),
-  weight: decimal("weight", { precision: 5, scale: 2 }).notNull(),
-  dropLowestN: integer("drop_lowest_n").default(0).notNull(),
-});
+export const gradeCategories = pgTable(
+  "grade_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    courseId: uuid("course_id")
+      .references(() => courses.id, { onDelete: "cascade" })
+      .notNull(),
+    name: text("name").notNull(),
+    weight: decimal("weight", { precision: 5, scale: 2 }).notNull(),
+    dropLowestN: integer("drop_lowest_n").default(0).notNull(),
+  },
+  (table) => [index("grade_categories_course_id_idx").on(table.courseId)],
+);
 
 export const recurrenceRules = pgTable("recurrence_rules", {
   id: uuid("id").defaultRandom().primaryKey(),
-  ownerType: recurrenceOwnerTypeEnum("owner_type").notNull(),
-  ownerId: uuid("owner_id").notNull(),
   frequency: recurrenceFrequencyEnum("frequency").notNull(),
   interval: integer("interval").default(1).notNull(),
   daysOfWeek: integer("days_of_week").array(),
@@ -236,6 +241,7 @@ export const assignments = pgTable(
   (table) => [
     index("assignments_user_id_idx").on(table.userId),
     index("assignments_due_date_idx").on(table.dueDate),
+    index("assignments_course_id_idx").on(table.courseId),
   ],
 );
 
@@ -287,20 +293,25 @@ export const tasks = pgTable(
   (table) => [
     index("tasks_user_id_idx").on(table.userId),
     index("tasks_due_date_idx").on(table.dueDate),
+    index("tasks_project_id_idx").on(table.projectId),
   ],
 );
 
-export const milestones = pgTable("milestones", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  projectId: uuid("project_id")
-    .references(() => projects.id, { onDelete: "cascade" })
-    .notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  targetDate: date("target_date"),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  ...timestamps,
-});
+export const milestones = pgTable(
+  "milestones",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    projectId: uuid("project_id")
+      .references(() => projects.id, { onDelete: "cascade" })
+      .notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    targetDate: date("target_date"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [index("milestones_project_id_idx").on(table.projectId)],
+);
 
 export const eventCategories = pgTable(
   "event_categories",
@@ -400,6 +411,11 @@ export const bills = pgTable(
     index("bills_due_date_idx").on(table.dueDate),
     index("bills_status_idx").on(table.status),
     index("bills_category_id_idx").on(table.categoryId),
+    index("bills_user_status_due_idx").on(
+      table.userId,
+      table.status,
+      table.dueDate,
+    ),
   ],
 );
 
@@ -485,6 +501,7 @@ export const taggings = pgTable(
   },
   (table) => [
     index("taggings_parent_idx").on(table.taggableType, table.taggableId),
+    index("taggings_tag_id_idx").on(table.tagId),
   ],
 );
 
@@ -522,7 +539,13 @@ export const timeLogs = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [index("time_logs_user_id_idx").on(table.userId)],
+  (table) => [
+    index("time_logs_user_id_idx").on(table.userId),
+    index("time_logs_loggable_idx").on(table.loggableType, table.loggableId),
+    index("time_logs_active_idx")
+      .on(table.userId, table.endedAt)
+      .where(sql`ended_at IS NULL`),
+  ],
 );
 
 export const mediaItems = pgTable(
@@ -553,6 +576,7 @@ export const mediaItems = pgTable(
       table.mediaType,
       table.tmdbId,
     ),
+    index("media_items_user_created_idx").on(table.userId, table.createdAt),
   ],
 );
 
