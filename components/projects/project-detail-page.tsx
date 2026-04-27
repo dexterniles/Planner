@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { BackLink } from "@/components/layout/back-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -62,24 +62,24 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
     return (
       <div>
         <p className="text-muted-foreground">Project not found.</p>
-        <Link href="/projects">
+        <BackLink href="/projects">
           <Button variant="outline" className="mt-4">
             Back to Projects
           </Button>
-        </Link>
+        </BackLink>
       </div>
     );
   }
 
   return (
     <div>
-      <Link
+      <BackLink
         href="/projects"
         className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.75} />
         Projects
-      </Link>
+      </BackLink>
 
       <div className="mb-7 flex flex-col gap-3 border-b border-border pb-5 md:flex-row md:items-end md:justify-between md:gap-6">
         <div className="min-w-0 flex-1">

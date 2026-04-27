@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { BackLink } from "@/components/layout/back-link";
 import {
   ArrowLeft,
   ChefHat,
@@ -64,11 +64,11 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
     return (
       <div>
         <p className="text-muted-foreground">Recipe not found.</p>
-        <Link href="/recipes">
+        <BackLink href="/recipes">
           <Button variant="outline" className="mt-4">
             Back to Recipes
           </Button>
-        </Link>
+        </BackLink>
       </div>
     );
   }
@@ -104,13 +104,13 @@ export function RecipeDetailPage({ recipeId }: RecipeDetailPageProps) {
 
   return (
     <div>
-      <Link
+      <BackLink
         href="/recipes"
         className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.75} />
         Recipes
-      </Link>
+      </BackLink>
 
       <div className="mb-7 border-b border-border pb-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6">

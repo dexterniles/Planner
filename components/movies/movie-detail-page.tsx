@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { BackLink } from "@/components/layout/back-link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -157,11 +157,11 @@ export function MovieDetailPage({ id }: MovieDetailPageProps) {
     return (
       <div>
         <p className="text-muted-foreground">Title not found.</p>
-        <Link href="/movies">
+        <BackLink href="/movies">
           <Button variant="outline" className="mt-4">
             Back to TV & Movies
           </Button>
-        </Link>
+        </BackLink>
       </div>
     );
   }
@@ -177,13 +177,13 @@ export function MovieDetailPage({ id }: MovieDetailPageProps) {
 
   return (
     <div>
-      <Link
+      <BackLink
         href="/movies"
         className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.75} />
         TV & Movies
-      </Link>
+      </BackLink>
 
       {/* Hero */}
       <Card className="relative overflow-hidden p-0">
