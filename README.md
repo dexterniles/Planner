@@ -44,10 +44,10 @@ npm run db:migrate
 
 ### 4. Seed the database
 
-Creates starter "Academic" and "Projects" workspaces:
+Creates starter "Academic" and "Projects" workspaces. Requires `SEED_USER_ID` (the Supabase auth UUID to seed for) in env:
 
 ```bash
-npm run db:seed
+SEED_USER_ID=<your-auth-uuid> npm run db:seed
 ```
 
 ### 5. Start the dev server

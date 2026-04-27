@@ -10,13 +10,17 @@
  * unique (userId, mediaType, tmdbId) index.
  */
 
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
 import fs from "node:fs";
 import path from "node:path";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { and, eq } from "drizzle-orm";
-import { mediaItems, SINGLE_USER_ID } from "../lib/db/schema";
+import { mediaItems } from "../lib/db/schema";
+
+// Next.js convention: secrets live in .env.local; fall back to .env.
+loadEnv({ path: ".env.local" });
+loadEnv({ path: ".env" });
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
@@ -53,6 +57,7 @@ interface TmdbMovieDetails {
 
 const TMDB_TOKEN = process.env.TMDB_API_KEY;
 const DB_URL = process.env.DATABASE_URL;
+const SEED_USER_ID = process.env.SEED_USER_ID;
 
 if (!TMDB_TOKEN) {
   console.error("TMDB_API_KEY missing in env");
@@ -60,6 +65,12 @@ if (!TMDB_TOKEN) {
 }
 if (!DB_URL) {
   console.error("DATABASE_URL missing in env");
+  process.exit(1);
+}
+if (!SEED_USER_ID) {
+  console.error(
+    "SEED_USER_ID missing in env — set it to the Supabase auth UUID of the user to import for",
+  );
   process.exit(1);
 }
 
@@ -190,7 +201,7 @@ async function importGroup(
       .from(mediaItems)
       .where(
         and(
-          eq(mediaItems.userId, SINGLE_USER_ID),
+          eq(mediaItems.userId, SEED_USER_ID!),
           eq(mediaItems.mediaType, "movie"),
           eq(mediaItems.tmdbId, match.id),
         ),
@@ -219,7 +230,7 @@ async function importGroup(
           : null;
 
     await db.insert(mediaItems).values({
-      userId: SINGLE_USER_ID,
+      userId: SEED_USER_ID!,
       mediaType: "movie",
       tmdbId: match.id,
       imdbId: details.imdb_id,
