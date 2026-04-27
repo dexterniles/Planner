@@ -79,7 +79,10 @@ export default function BillsPage() {
     return { start: shiftedStart, end: shiftedEnd };
   }, [paySchedule, periodOffset]);
 
-  const allBills = (bills ?? []) as BillCardData[];
+  const allBills = useMemo(
+    () => (bills ?? []) as BillCardData[],
+    [bills],
+  );
 
   // Bills filtered by current tab + filters
   const filtered = useMemo(() => {

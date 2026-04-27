@@ -23,6 +23,7 @@ export function ActiveTimer() {
     firedRef.current = false;
 
     if (!activeLog) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset interval-driven mirror state when source clears
       setElapsed(0);
       setPomodoroRemaining(null);
       return;

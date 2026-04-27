@@ -26,10 +26,11 @@ export default function CalendarPage() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === "month" || stored === "week" || stored === "day") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is unavailable during SSR; hydrate on mount
         setViewState(stored);
       }
     } catch {
-      // ignore
+      // localStorage unavailable — ignore
     }
     setReady(true);
   }, []);

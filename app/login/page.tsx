@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -17,13 +17,9 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (forbidden) {
-      setError("That account isn’t allowed here.");
-    }
-  }, [forbidden]);
+  const [error, setError] = useState<string | null>(() =>
+    forbidden ? "That account isn’t allowed here." : null,
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

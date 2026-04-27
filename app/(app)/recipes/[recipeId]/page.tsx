@@ -46,6 +46,7 @@ export default function RecipeDetailPage({
   // Sync the displayed portion count with the saved recipe value when it loads
   // or changes. The user can then scale up/down and reset back to original.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror local scaling state to recipe source on load/change
     if (recipe?.portions) setTargetPortions(recipe.portions);
   }, [recipe?.portions]);
 

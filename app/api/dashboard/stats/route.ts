@@ -17,8 +17,8 @@ export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
   const { userId } = auth;
-  const weekStart = startOfWeek();
-  const now = new Date();
+  const weekStart = startOfWeek().toISOString();
+  const now = new Date().toISOString();
 
   const result = await db.execute(sql`
     SELECT

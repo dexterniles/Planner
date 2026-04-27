@@ -21,6 +21,7 @@ export function useCountUp(
 
   useEffect(() => {
     if (target === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot reset of animated value when target collapses to zero
       setValue(0);
       return;
     }

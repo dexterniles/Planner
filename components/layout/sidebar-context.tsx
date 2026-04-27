@@ -28,6 +28,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is unavailable during SSR; hydrate on mount
       if (stored === "true") setCollapsedState(true);
     } catch {
       // localStorage unavailable — ignore

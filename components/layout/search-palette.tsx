@@ -67,6 +67,7 @@ export function SearchPalette() {
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset palette state when opened; deferred TanStack Query refactor
       setQuery("");
       setLocalResults([]);
       setTmdbResults([]);
@@ -78,6 +79,7 @@ export function SearchPalette() {
 
   useEffect(() => {
     if (!query || query.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear in-effect fetch results when query is empty; deferred TanStack Query refactor
       setLocalResults([]);
       setTmdbResults([]);
       setTmdbError(false);

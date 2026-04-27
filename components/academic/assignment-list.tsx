@@ -119,6 +119,7 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(storageKey);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is unavailable during SSR; hydrate on mount
       if (raw) setCollapsed(JSON.parse(raw));
     } catch {
       // ignore corrupt data
