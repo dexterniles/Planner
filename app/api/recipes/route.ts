@@ -1,28 +1,45 @@
 import { db } from "@/lib/db";
 import { recipes, taggings, tags } from "@/lib/db/schema";
 import { createRecipeSchema } from "@/lib/validations/recipe";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, exists, ilike, inArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { escapeLike } from "@/lib/utils";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
   const { userId } = auth;
   const { searchParams } = new URL(request.url);
-  const search = searchParams.get("q")?.trim().toLowerCase() ?? "";
+  const search = searchParams.get("q")?.trim() ?? "";
   const tagId = searchParams.get("tagId");
 
-  const rows = await db
+  const conditions = [eq(recipes.userId, userId)];
+  if (search) {
+    conditions.push(ilike(recipes.title, `%${escapeLike(search)}%`));
+  }
+  if (tagId) {
+    conditions.push(
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(taggings)
+          .where(
+            and(
+              eq(taggings.taggableId, recipes.id),
+              eq(taggings.taggableType, "recipe"),
+              eq(taggings.tagId, tagId),
+            ),
+          ),
+      ),
+    );
+  }
+
+  const filtered = await db
     .select()
     .from(recipes)
-    .where(eq(recipes.userId, userId))
+    .where(and(...conditions))
     .orderBy(desc(recipes.updatedAt));
-
-  let filtered = rows;
-  if (search) {
-    filtered = filtered.filter((r) => r.title.toLowerCase().includes(search));
-  }
 
   const recipeIds = filtered.map((r) => r.id);
   const taggingRows = recipeIds.length
@@ -54,14 +71,10 @@ export async function GET(request: Request) {
     tagsByRecipe.set(t.taggableId, list);
   }
 
-  let result = filtered.map((r) => ({
+  const result = filtered.map((r) => ({
     ...r,
     tags: tagsByRecipe.get(r.id) ?? [],
   }));
-
-  if (tagId) {
-    result = result.filter((r) => r.tags.some((t) => t.id === tagId));
-  }
 
   return NextResponse.json(result);
 }

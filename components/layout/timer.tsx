@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Play, Square, Timer, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,13 +24,18 @@ export function ActiveTimer() {
   const stopTimer = useStopTimer();
   const [elapsed, setElapsed] = useState(0);
   const [pomodoroRemaining, setPomodoroRemaining] = useState<number | null>(null);
+  const firedRef = useRef(false);
 
   useEffect(() => {
+    firedRef.current = false;
+
     if (!activeLog) {
       setElapsed(0);
       setPomodoroRemaining(null);
       return;
     }
+
+    let interval: ReturnType<typeof setInterval> | null = null;
 
     const update = () => {
       const started = new Date(activeLog.startedAt).getTime();
@@ -43,8 +48,9 @@ export function ActiveTimer() {
         const remaining = target - secs;
         setPomodoroRemaining(remaining);
 
-        if (remaining <= 0) {
-          setPomodoroRemaining(0);
+        if (remaining <= 0 && interval) {
+          clearInterval(interval);
+          interval = null;
         }
       } else {
         setPomodoroRemaining(null);
@@ -52,8 +58,10 @@ export function ActiveTimer() {
     };
 
     update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
+    interval = setInterval(update, 1000);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [activeLog]);
 
   const handleStop = useCallback(async () => {
@@ -66,9 +74,14 @@ export function ActiveTimer() {
     }
   }, [activeLog, stopTimer, elapsed]);
 
-  // Auto-stop when Pomodoro finishes
   useEffect(() => {
-    if (pomodoroRemaining !== null && pomodoroRemaining <= 0 && activeLog) {
+    if (
+      !firedRef.current &&
+      pomodoroRemaining !== null &&
+      pomodoroRemaining <= 0 &&
+      activeLog
+    ) {
+      firedRef.current = true;
       toast.success("Pomodoro complete!", { duration: 5000 });
       stopTimer.mutate({ id: activeLog.id });
     }

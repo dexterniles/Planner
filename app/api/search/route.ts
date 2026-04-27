@@ -11,8 +11,9 @@ import {
   billCategories,
   recipes,
 } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { escapeLike } from "@/lib/utils";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -24,6 +25,8 @@ export async function GET(request: Request) {
   if (!q || q.length < 2) {
     return NextResponse.json([]);
   }
+
+  const pattern = `%${escapeLike(q)}%`;
 
   const [
     courseResults,
@@ -45,14 +48,13 @@ export async function GET(request: Request) {
         category: sql<string | null>`null`.as("category"),
       })
       .from(courses)
-      .where(eq(courses.userId, userId))
-      .then((rows) =>
-        rows.filter(
-          (r) =>
-            r.title.toLowerCase().includes(q.toLowerCase()) ||
-            (r.subtitle && r.subtitle.toLowerCase().includes(q.toLowerCase())),
+      .where(
+        and(
+          eq(courses.userId, userId),
+          or(ilike(courses.name, pattern), ilike(courses.code, pattern)),
         ),
-      ),
+      )
+      .limit(5),
     db
       .select({
         id: projects.id,
@@ -64,10 +66,8 @@ export async function GET(request: Request) {
         category: sql<string | null>`null`.as("category"),
       })
       .from(projects)
-      .where(eq(projects.userId, userId))
-      .then((rows) =>
-        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
-      ),
+      .where(and(eq(projects.userId, userId), ilike(projects.name, pattern)))
+      .limit(5),
     db
       .select({
         id: assignments.id,
@@ -80,10 +80,10 @@ export async function GET(request: Request) {
       })
       .from(assignments)
       .innerJoin(courses, eq(assignments.courseId, courses.id))
-      .where(eq(assignments.userId, userId))
-      .then((rows) =>
-        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
-      ),
+      .where(
+        and(eq(assignments.userId, userId), ilike(assignments.title, pattern)),
+      )
+      .limit(5),
     db
       .select({
         id: tasks.id,
@@ -96,10 +96,8 @@ export async function GET(request: Request) {
       })
       .from(tasks)
       .innerJoin(projects, eq(tasks.projectId, projects.id))
-      .where(eq(tasks.userId, userId))
-      .then((rows) =>
-        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
-      ),
+      .where(and(eq(tasks.userId, userId), ilike(tasks.title, pattern)))
+      .limit(5),
     db
       .select({
         id: events.id,
@@ -114,14 +112,13 @@ export async function GET(request: Request) {
       })
       .from(events)
       .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
-      .where(eq(events.userId, userId))
-      .then((rows) =>
-        rows.filter(
-          (r) =>
-            r.title.toLowerCase().includes(q.toLowerCase()) ||
-            (r.subtitle && r.subtitle.toLowerCase().includes(q.toLowerCase())),
+      .where(
+        and(
+          eq(events.userId, userId),
+          or(ilike(events.title, pattern), ilike(events.location, pattern)),
         ),
-      ),
+      )
+      .limit(5),
     db
       .select({
         id: bills.id,
@@ -134,10 +131,8 @@ export async function GET(request: Request) {
       })
       .from(bills)
       .leftJoin(billCategories, eq(bills.categoryId, billCategories.id))
-      .where(eq(bills.userId, userId))
-      .then((rows) =>
-        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
-      ),
+      .where(and(eq(bills.userId, userId), ilike(bills.name, pattern)))
+      .limit(5),
     db
       .select({
         id: recipes.id,
@@ -149,10 +144,8 @@ export async function GET(request: Request) {
         category: sql<string | null>`null`.as("category"),
       })
       .from(recipes)
-      .where(eq(recipes.userId, userId))
-      .then((rows) =>
-        rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
-      ),
+      .where(and(eq(recipes.userId, userId), ilike(recipes.title, pattern)))
+      .limit(5),
   ]);
 
   const results = [

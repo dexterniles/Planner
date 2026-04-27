@@ -26,7 +26,6 @@ export function useActiveTimer() {
       if (!res.ok) throw new Error("Failed to fetch active timer");
       return res.json();
     },
-    refetchInterval: 1000,
   });
 }
 

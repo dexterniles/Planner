@@ -19,8 +19,12 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ➕ **Bonus** — `middleware.ts` → `proxy.ts` rename (Next 16 deprecation), `/api/health` correctly excluded from auth matcher.
 - ✅ **Headline #3** — queryKey thrash fix shipped. Hook-side: flattened filter objects into primitive queryKey slots in `use-events.ts`, `use-bills.ts`, `use-recipes.ts`. No consumer changes; mutation invalidation still prefix-matches.
 - ✅ **B1** — object-literal queryKey thrash (closed via headline #3).
+- ✅ **Headline #4** — `useActiveTimer` polling shipped. `refetchInterval: 1000` removed; cross-tab sync via `refetchOnWindowFocus` default + mutation invalidation. Saves ~60 req/min/tab.
+- ✅ **B2** — pomodoro auto-stop double-fire (closed alongside #4). `firedRef` guarantees single fire per session; local interval clears at 0 so no further ticks.
+- ✅ **Headline #5** — `/api/search` and `/api/recipes` SQL filtering shipped. JS-side `.includes()` filters replaced with Postgres `ilike`; `escapeLike` helper added; per-type `.limit(5)` on search; recipes `tagId` uses correlated `EXISTS` subquery.
+- ✅ **B6 / B7** — `/api/search` and `/api/recipes` JS-side full-table scans (closed via headline #5).
 
-**Next up:** #4 (`useActiveTimer` polling), #5 (`/api/search` SQL filtering), #6 (TMDB image optimization), #2 (dashboard server-component refactor — biggest, last).
+**Next up:** #6 (TMDB image optimization), #2 (dashboard server-component refactor — biggest, last).
 
 ---
 
@@ -31,8 +35,8 @@ These are the highest-impact items. The behavioral ones need a yes/no before any
 1. ✅ **`requireAuthGuard` + Supabase auth wired into 49 routes despite AGENTS.md saying "no auth, single-user."** [BE][PERF][BEHAVIORAL] Either kill the auth stack (~50 files: `lib/auth/*`, `lib/supabase/{server-auth,middleware}.ts`, `middleware.ts`, `app/login/`, `app/api/auth/logout`, the guard call in 49 routes) or update AGENTS.md to remove the "no auth" claim. Auth is currently double-checked on every request (middleware → route handler), each costing a Supabase JWT verification. Pick a side.
 2. **Authenticated app tree is fully client-rendered.** [PERF][BEHAVIORAL] `app/(app)/layout.tsx` is a Server Component, but every page beneath (`page.tsx`, `projects/page.tsx`, `recipes/page.tsx`, `events/page.tsx`, `movies/page.tsx`, `calendar/page.tsx`) is `"use client"`. Initial paint is "client transition + skeletons + fetch waterfall." Server-rendering the dashboard is the single biggest LCP/INP win available, but it's a real refactor.
 3. ✅ **Object-literal queryKey thrash.** [FE] `EventsPage`, `BillsPage`, `RecipesPage` (and `BillsThisPeriod`) construct fresh filter object literals every render, passed as part of the TanStack `queryKey`. Every render is a new key → cache thrash, lost cache hits, observable flicker. Fix: `useMemo` the filter in the consumer. — [app/(app)/events/page.tsx:29](app/\(app\)/events/page.tsx#L29), [app/(app)/bills/page.tsx:49](app/\(app\)/bills/page.tsx#L49), [components/dashboard/bills-this-period.tsx:23](components/dashboard/bills-this-period.tsx#L23), [app/(app)/recipes/page.tsx:26](app/\(app\)/recipes/page.tsx#L26).
-4. **`useActiveTimer` polls every 1 second.** [BE][PERF] `lib/hooks/use-time-logs.ts:29` (`refetchInterval: 1000`). Mounted on every authenticated page via `<ActiveTimer />`. ~60 req/min/tab forever, each going through the auth stack. Visible elapsed time is computed client-side from `startedAt` already; the server poll is redundant. Recommendation: gate `refetchInterval` on `data?.id` and bump cadence to 30s, or drop polling entirely.
-5. **`/api/search` and `/api/recipes` filter substrings in JS over full-table scans.** [BE][PERF] Seven unbounded `SELECT *` queries, then `rows.filter(r => r.title.toLowerCase().includes(q.toLowerCase()))`. Replace with `ilike` + per-type `.limit(20)`. — [app/api/search/route.ts:37-156](app/api/search/route.ts#L37-L156), [app/api/recipes/route.ts:15-26](app/api/recipes/route.ts#L15-L26).
+4. ✅ **`useActiveTimer` polls every 1 second.** [BE][PERF] `lib/hooks/use-time-logs.ts:29` (`refetchInterval: 1000`). Mounted on every authenticated page via `<ActiveTimer />`. ~60 req/min/tab forever, each going through the auth stack. Visible elapsed time is computed client-side from `startedAt` already; the server poll is redundant. Recommendation: gate `refetchInterval` on `data?.id` and bump cadence to 30s, or drop polling entirely.
+5. ✅ **`/api/search` and `/api/recipes` filter substrings in JS over full-table scans.** [BE][PERF] Seven unbounded `SELECT *` queries, then `rows.filter(r => r.title.toLowerCase().includes(q.toLowerCase()))`. Replace with `ilike` + per-type `.limit(20)`. — [app/api/search/route.ts:37-156](app/api/search/route.ts#L37-L156), [app/api/recipes/route.ts:15-26](app/api/recipes/route.ts#L15-L26).
 6. **Tenant-isolation gap on `?parentId=…` list endpoints.** [BE] When the optional parent ID is passed, the `userId` clause is *replaced*, not *added*. Single-user mode masks it today. Affects: [app/api/courses/route.ts:34-44](app/api/courses/route.ts#L34-L44), [app/api/projects/route.ts:14-24](app/api/projects/route.ts#L14-L24), [app/api/tasks/route.ts:14-24](app/api/tasks/route.ts#L14-L24), [app/api/assignments/route.ts:14-25](app/api/assignments/route.ts#L14-L25), [app/api/milestones/route.ts:21-25](app/api/milestones/route.ts#L21-L25), [app/api/grade-categories/route.ts:21-25](app/api/grade-categories/route.ts#L21-L25), and DELETE/PATCH on tags/notes/milestones/recurrence-rules/time-logs/grade-categories.
 7. ✅ **Three identical 628 KB PNGs.** [PERF] [public/brand-icon.png](public/brand-icon.png), [app/icon.png](app/icon.png), [app/apple-icon.png](app/apple-icon.png) are the same 950×950 source. Resize to 256/64/180 px → drops ~1.9 MB of static assets to <30 KB. Hard win, no behavior change.
 
@@ -45,15 +49,15 @@ Real bugs or perf cliffs that will fire under realistic conditions.
 ### Frontend / React
 
 - ✅ **B1.** Object-literal queryKey thrash — see headline #3.
-- **B2.** Pomodoro auto-stop double-fires. [components/layout/timer.tsx:28-75](components/layout/timer.tsx#L28-L75) The 1s interval keeps writing `pomodoroRemaining = 0` after expiry; the second effect fires `stopTimer.mutate` on every tick of identity-changed deps. Result: rapid duplicate "Pomodoro complete!" toasts and duplicate stop calls. The interval is not cleared when remaining hits 0.
+- ✅ **B2.** Pomodoro auto-stop double-fires. [components/layout/timer.tsx:28-75](components/layout/timer.tsx#L28-L75) The 1s interval keeps writing `pomodoroRemaining = 0` after expiry; the second effect fires `stopTimer.mutate` on every tick of identity-changed deps. Result: rapid duplicate "Pomodoro complete!" toasts and duplicate stop calls. The interval is not cleared when remaining hits 0.
 - **B3.** `BillsThisPeriod` "next 14 days" window frozen at first paint. [components/dashboard/bills-this-period.tsx:26-46](components/dashboard/bills-this-period.tsx#L26-L46) `useMemo` captures `new Date()` and only recomputes when `paySchedule` changes. Past midnight, the window is stale until something else triggers a re-render.
 - **B4.** Notes seed-once ref breaks on metadata refresh. [app/(app)/movies/[id]/page.tsx:80-88](app/\(app\)/movies/[id]/page.tsx#L80-L88) `initialNotesRef.current` is set once and never reset. After a `refreshMedia` mutation invalidates and refetches, the ref-guard prevents re-seeding.
 
 ### Backend / data layer
 
-- **B5.** `useActiveTimer` 1s polling — see headline #4.
-- **B6.** `/api/search` JS-side full-table scans — see headline #5.
-- **B7.** `/api/recipes` repeats the same anti-pattern with the tag filter. [app/api/recipes/route.ts:64-66](app/api/recipes/route.ts#L64-L66) Should be a SQL `EXISTS` against `taggings`/`tags`.
+- ✅ **B5.** `useActiveTimer` 1s polling — see headline #4.
+- ✅ **B6.** `/api/search` JS-side full-table scans — see headline #5.
+- ✅ **B7.** `/api/recipes` repeats the same anti-pattern with the tag filter. [app/api/recipes/route.ts:64-66](app/api/recipes/route.ts#L64-L66) Should be a SQL `EXISTS` against `taggings`/`tags`.
 - **B8.** `/api/dashboard/grades` is a 2N+1. [app/api/dashboard/grades/route.ts:55-88](app/api/dashboard/grades/route.ts#L55-L88) N active courses → 2 awaited subqueries each. Replace with a single LEFT JOIN.
 - **B9.** `/api/all-items` does sequential awaits, not `Promise.all`. [app/api/all-items/route.ts:10-40](app/api/all-items/route.ts#L10-L40)
 - **B10.** Unbounded list endpoints (no `LIMIT`). Will get slow even on a single user. — `recipes`, `all-items`, `movies`, `inbox`, `notes`, `tags`, `workspaces`, `event-categories`, `bill-categories`, `courses`, `projects`, `tasks`, `assignments`, `milestones`, `calendar-items` (milestone branch).
@@ -155,9 +159,9 @@ Low-priority cleanup. Address opportunistically.
 - ✅ **A.** ~~Kill the Supabase auth stack~~ → kept stack, updated AGENTS.md. Done in headline #1.
 - **B.** Move authenticated tree off `"use client"` — Server Component refactor. Visible: no skeleton flash for first paint, but `PageTransition` needs to change too. See headline #2.
 - **C.** Drop `unoptimized` on TMDB images. Vercel: faster. Local dev: slower. See B15.
-- **D.** Gate `useActiveTimer` polling. Multi-tab caveat: another tab won't see the timer being stopped from this tab until navigation.
+- ✅ **D.** ~~Gate `useActiveTimer` polling~~ → polling removed entirely. Multi-tab sync via window focus.
 - **E.** Set `staleTime` on QueryClient. See S23.
-- **F.** Switch `/api/search` to SQL `ilike`. Ranking changes slightly (truncation cap is the only delta).
+- ✅ **F.** ~~Switch `/api/search` to SQL `ilike`~~ → done in headline #5. Per-type `.limit(5)`, no relevance ranking change beyond the truncation cap.
 - **G.** Move auto-complete sweeps to cron. 1-day lag on status flips.
 - **H.** Tighten `userId` filters on `?parentId=` endpoints. No effect for legitimate user.
 - **I.** Drop `recurrenceRules.ownerId/ownerType` placeholder columns. Migration; no consumer breaks.
