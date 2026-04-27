@@ -45,7 +45,6 @@ export function SearchPaletteTmdbRow({
             fill
             sizes="48px"
             className="object-cover"
-            unoptimized
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-muted-foreground">

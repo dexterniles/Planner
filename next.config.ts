@@ -28,6 +28,7 @@ const nextConfig: NextConfig = {
         pathname: "/t/p/**",
       },
     ],
+    minimumCacheTTL: 2592000, // 30 days; TMDB poster URLs are immutable
   },
   async headers() {
     return [

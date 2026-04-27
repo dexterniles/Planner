@@ -23,8 +23,11 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ✅ **B2** — pomodoro auto-stop double-fire (closed alongside #4). `firedRef` guarantees single fire per session; local interval clears at 0 so no further ticks.
 - ✅ **Headline #5** — `/api/search` and `/api/recipes` SQL filtering shipped. JS-side `.includes()` filters replaced with Postgres `ilike`; `escapeLike` helper added; per-type `.limit(5)` on search; recipes `tagId` uses correlated `EXISTS` subquery.
 - ✅ **B6 / B7** — `/api/search` and `/api/recipes` JS-side full-table scans (closed via headline #5).
+- ✅ **Headline #6** — TMDB image optimization shipped. `unoptimized` removed from all 4 sites; `images.minimumCacheTTL` bumped to 30 days for immutable TMDB poster URLs.
+- ✅ **B15** — `unoptimized` on every TMDB image (closed via headline #6).
+- ✅ **C** — drop `unoptimized` on TMDB images (behavioral, confirmed).
 
-**Next up:** #6 (TMDB image optimization), #2 (dashboard server-component refactor — biggest, last).
+**Next up:** #2 (dashboard server-component refactor — biggest, last).
 
 ---
 
@@ -68,7 +71,7 @@ Real bugs or perf cliffs that will fire under realistic conditions.
 
 - **B13.** Authenticated tree fully client-rendered — see headline #2.
 - ✅ **B14.** Three identical 628 KB PNGs — see headline #7.
-- **B15.** `unoptimized` on every TMDB image despite `remotePatterns` configured. [next.config.ts:23-31](next.config.ts#L23-L31), [components/movies/movie-tile.tsx:31](components/movies/movie-tile.tsx#L31), [components/layout/search-palette-tmdb-row.tsx:48](components/layout/search-palette-tmdb-row.tsx#L48), [app/(app)/movies/[id]/page.tsx:198](app/\(app\)/movies/[id]/page.tsx#L198). [BEHAVIORAL] Drop `unoptimized` and the Vercel optimizer takes over (~40-60% bytes saved on the movies grid). Slower on local dev, faster in prod.
+- ✅ **B15.** `unoptimized` on every TMDB image despite `remotePatterns` configured. [next.config.ts:23-31](next.config.ts#L23-L31), [components/movies/movie-tile.tsx:31](components/movies/movie-tile.tsx#L31), [components/layout/search-palette-tmdb-row.tsx:48](components/layout/search-palette-tmdb-row.tsx#L48), [app/(app)/movies/[id]/page.tsx:198](app/\(app\)/movies/[id]/page.tsx#L198). [BEHAVIORAL] Drop `unoptimized` and the Vercel optimizer takes over (~40-60% bytes saved on the movies grid). Slower on local dev, faster in prod.
 - ✅ **B16.** Auth double-verification per request. [PERF][BEHAVIORAL] Middleware calls `supabase.auth.getUser()`, then every route handler calls it again via `requireAuthGuard`. Either trust a header from middleware, wrap with `React.cache()`, or pick the auth-stack fate first (headline #1).
 
 ---
@@ -158,7 +161,7 @@ Low-priority cleanup. Address opportunistically.
 
 - ✅ **A.** ~~Kill the Supabase auth stack~~ → kept stack, updated AGENTS.md. Done in headline #1.
 - **B.** Move authenticated tree off `"use client"` — Server Component refactor. Visible: no skeleton flash for first paint, but `PageTransition` needs to change too. See headline #2.
-- **C.** Drop `unoptimized` on TMDB images. Vercel: faster. Local dev: slower. See B15.
+- ✅ **C.** ~~Drop `unoptimized` on TMDB images~~ → done in headline #6. Optimizer engaged; 30-day cache TTL set.
 - ✅ **D.** ~~Gate `useActiveTimer` polling~~ → polling removed entirely. Multi-tab sync via window focus.
 - **E.** Set `staleTime` on QueryClient. See S23.
 - ✅ **F.** ~~Switch `/api/search` to SQL `ilike`~~ → done in headline #5. Per-type `.limit(5)`, no relevance ranking change beyond the truncation cap.

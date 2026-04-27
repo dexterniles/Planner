@@ -195,7 +195,6 @@ export default function MovieDetailPage({
               priority
               sizes="100vw"
               className="object-cover"
-              unoptimized
             />
           ) : (
             <div
@@ -216,7 +215,6 @@ export default function MovieDetailPage({
                 fill
                 sizes="(min-width: 640px) 120px, 100px"
                 className="object-cover"
-                unoptimized
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">

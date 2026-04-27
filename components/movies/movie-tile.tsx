@@ -28,7 +28,6 @@ export function MovieTile({ item }: MovieTileProps) {
             fill
             sizes="(min-width: 1280px) 10vw, (min-width: 1024px) 12vw, (min-width: 768px) 17vw, (min-width: 640px) 25vw, 33vw"
             className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
-            unoptimized
           />
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3 text-center text-muted-foreground">
