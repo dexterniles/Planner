@@ -32,8 +32,9 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ✅ **Backlog batch 4** — backend correctness pass shipped. B8 (grades 2N+1 → 3 queries via inArray), B9 (`/api/all-items` Promise.all), B12 (inbox PATCH Zod-validated via new `lib/validations/inbox.ts`), S11 (calendar milestone SQL date filter), S16 (5 parallel COUNTs collapsed to one `db.execute`), S18 (regex+NaN+range guards on month/year/day, status filter casts replaced with `z.enum().safeParse()`), S20 (date-string validators tightened with empty-string allowance for optional fields per regression caught by reviewer), S21 (bills bulk-recurrence wrapped in transaction). Plus S18b day-rollover fix using round-trip date check.
 - ✅ **Backlog batch 10** — code-quality nits. N2 (narrating comments trimmed in `lib/auto-complete-events.ts`, `lib/auth/require-auth.ts`, `app/api/auth/logout/route.ts`), N4 (month-view dot row uses stable `${sourceType}-${sourceId}` key). N6 deferred per audit (documented false positives).
 - ✅ **Backlog batch 6** — a11y / UX polish. S6 (notes save bails on `updateMedia.isPending` to prevent rapid-blur race), S8 (`ConfirmProvider` captures `document.activeElement` on open and restores via `requestAnimationFrame` after close), S9 (`RatingStars` left-half buttons get `tabIndex={-1}` — keyboard tab stops 10 → 5), N5 (`RecipeDialog` wired to `zodResolver` via string-mirror `recipeFormSchema`).
+- ✅ **Backlog batch 5+9 combined** — TanStack mutation pass shipped. S23: `QueryClient` defaults set to `staleTime: 30_000` and `refetchOnWindowFocus: false` (behavioral E confirmed). S17: dashboard invalidation gaps closed across bills/time-logs/assignments mutations; recurrence-rule mutations now invalidate events/bills too. S7: optimistic updates with `onMutate`/`onError` rollback added to `useUpdateBill`, `useUpdateAssignment`, `useUpdateMilestone`, `useUpdateTask`, `useUpdateMedia`. Decimal-as-string coercion fix applied post-review for `amount`/`paidAmount` (bills) and `pointsEarned`/`pointsPossible` (assignments) so optimistic shape matches Drizzle's decimal-string cache shape.
 
-**Next up:** Combined 5+9 (TanStack mutation pass — needs sign-off on E for `staleTime` defaults), batch 7 (bundle/perf), batch 8 (schema/migrations), then headline #2 (server-component refactor).
+**Next up:** Batch 7 (bundle/perf: S25/S26/S27/S28), batch 8 (schema/migrations: S15/S14/S10), then headline #2 (server-component refactor).
 
 ---
 
@@ -94,7 +95,7 @@ Won't crash but will degrade UX or invite future bugs.
 - **S4.** Dashboard runs chrono `parseDate` per inbox item per render. [app/(app)/page.tsx:188-189](app/\(app\)/page.tsx#L188-L189) Memoize the parsed-dates array.
 - ✅ **S5.** `pay-schedule-settings` form effect overwrites user input on background refetch. [components/bills/pay-schedule-settings.tsx:39-47](components/bills/pay-schedule-settings.tsx#L39-L47) If the user types and a refetch fires, their value is wiped.
 - ✅ **S6.** `MovieDetailPage` notes-save races with rapid blur. [app/(app)/movies/[id]/page.tsx:90-102](app/\(app\)/movies/[id]/page.tsx#L90-L102) No mutex; an older request can complete second and stomp the newer save.
-- **S7.** Mutations missing optimistic updates — task toggle, mark-paid, ratings round-trip then re-paint. Most visible in [components/projects/milestone-list.tsx:37-53](components/projects/milestone-list.tsx#L37-L53), [components/dashboard/bills-this-period.tsx:61-68](components/dashboard/bills-this-period.tsx#L61-L68), [app/(app)/movies/[id]/page.tsx:104-120](app/\(app\)/movies/[id]/page.tsx#L104-L120).
+- ✅ **S7.** Mutations missing optimistic updates — task toggle, mark-paid, ratings round-trip then re-paint. Most visible in [components/projects/milestone-list.tsx:37-53](components/projects/milestone-list.tsx#L37-L53), [components/dashboard/bills-this-period.tsx:61-68](components/dashboard/bills-this-period.tsx#L61-L68), [app/(app)/movies/[id]/page.tsx:104-120](app/\(app\)/movies/[id]/page.tsx#L104-L120).
 - ✅ **S8.** `confirm-dialog` doesn't restore focus to trigger. [components/ui/confirm-dialog.tsx:40-89](components/ui/confirm-dialog.tsx#L40-L89) After delete, focus falls to `document.body`. Save the previously-focused element on open.
 - ✅ **S9.** `RatingStars` is 10 tab stops per widget. [components/ui/rating-stars.tsx:84-101](components/ui/rating-stars.tsx#L84-L101) Two transparent halves per star × 5 stars. Use a single hidden range input or hide half-step from keyboard.
 
@@ -114,7 +115,7 @@ Won't crash but will degrade UX or invite future bugs.
   - `taggings(tag_id)`
   - `grade_categories(course_id)`
 - ✅ **S16.** `/api/dashboard/stats` could be one query with `FILTER` aggregates. [app/api/dashboard/stats/route.ts:30-84](app/api/dashboard/stats/route.ts#L30-L84) Five parallel COUNTs → single round-trip with subselects.
-- **S17.** TanStack invalidation gaps:
+- ✅ **S17.** TanStack invalidation gaps:
   - `useUpdateBill`/`useCreateBill` don't invalidate `["dashboard","stats"]` — counters go stale.
   - `useStartTimer`/`useStopTimer` don't invalidate dashboard hours-this-week.
   - `useUpdateAssignment` doesn't invalidate `["dashboard","grades"]`.
@@ -127,7 +128,7 @@ Won't crash but will degrade UX or invite future bugs.
 
 ### Performance / Next 16
 
-- **S23.** `QueryClient` constructed with no defaults. [components/providers.tsx:11](components/providers.tsx#L11) Default `staleTime: 0` + `refetchOnWindowFocus: true` means every tab focus refetches every visible query. Set `staleTime: 30_000`, `refetchOnWindowFocus: false`. [BEHAVIORAL — flag for the multi-tab story.]
+- ✅ **S23.** `QueryClient` constructed with no defaults. [components/providers.tsx:11](components/providers.tsx#L11) Default `staleTime: 0` + `refetchOnWindowFocus: true` means every tab focus refetches every visible query. Set `staleTime: 30_000`, `refetchOnWindowFocus: false`. [BEHAVIORAL — flag for the multi-tab story.]
 - **S24.** `BillsThisPeriod` fetches up to 500 rows to render 5. [components/dashboard/bills-this-period.tsx:23](components/dashboard/bills-this-period.tsx#L23) Add a `/api/bills/upcoming?periodStart=…&periodEnd=…` endpoint matching the `/api/events/upcoming` pattern.
 - **S25.** `parseDate` (chrono-node, ~5 MB) shipped to every dashboard visitor. [lib/parse-date.ts:1](lib/parse-date.ts#L1) Use `import { parse } from "chrono-node/locales/en"` or lazy-load via `dynamic(... { ssr: false })`. Hundreds of KB saved.
 - **S26.** `EB_Garamond` loaded as 6 font files. [app/layout.tsx:18-23](app/layout.tsx#L18-L23) `weight: ["400", "500", "600"] × style: ["normal", "italic"]`. Audit actual usage and drop unused weights/styles.
@@ -169,7 +170,7 @@ Low-priority cleanup. Address opportunistically.
 - **B.** Move authenticated tree off `"use client"` — Server Component refactor. Visible: no skeleton flash for first paint, but `PageTransition` needs to change too. See headline #2.
 - ✅ **C.** ~~Drop `unoptimized` on TMDB images~~ → done in headline #6. Optimizer engaged; 30-day cache TTL set.
 - ✅ **D.** ~~Gate `useActiveTimer` polling~~ → polling removed entirely. Multi-tab sync via window focus.
-- **E.** Set `staleTime` on QueryClient. See S23.
+- ✅ **E.** ~~Set `staleTime` on QueryClient~~ → done in batch 5+9. `staleTime: 30_000` and `refetchOnWindowFocus: false`.
 - ✅ **F.** ~~Switch `/api/search` to SQL `ilike`~~ → done in headline #5. Per-type `.limit(5)`, no relevance ranking change beyond the truncation cap.
 - **G.** Move auto-complete sweeps to cron. 1-day lag on status flips.
 - ✅ **H.** ~~Tighten `userId` filters on `?parentId=` endpoints~~ → done as part of headline #1.

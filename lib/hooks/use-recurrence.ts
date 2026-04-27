@@ -18,6 +18,8 @@ export function useCreateRecurrenceRule() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
     },
   });
 }
@@ -35,6 +37,8 @@ export function useDeleteRecurrenceRule() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
     },
   });
 }

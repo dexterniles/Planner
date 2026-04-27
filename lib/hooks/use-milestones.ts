@@ -1,10 +1,13 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type {
   CreateMilestoneInput,
   UpdateMilestoneInput,
 } from "@/lib/validations/milestone";
+
+type MilestoneCacheItem = { id: string; updatedAt?: string } & Record<string, unknown>;
 
 export function useMilestones(projectId: string) {
   return useQuery({
@@ -53,8 +56,39 @@ export function useUpdateMilestone() {
       if (!res.ok) throw new Error("Failed to update milestone");
       return res.json();
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["milestones"] }),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["milestones"] }); // prevent in-flight refetch from clobbering the patch
+      const itemSnapshot = queryClient.getQueryData<MilestoneCacheItem>(["milestones", id]);
+      const listSnapshots = queryClient.getQueriesData<MilestoneCacheItem[]>({
+        queryKey: ["milestones"],
+      });
+      const now = new Date().toISOString();
+      queryClient.setQueryData<MilestoneCacheItem>(["milestones", id], (old) =>
+        old ? { ...old, ...data, updatedAt: now } : old,
+      );
+      queryClient.setQueriesData<MilestoneCacheItem[]>(
+        { queryKey: ["milestones"] },
+        (old) =>
+          Array.isArray(old)
+            ? old.map((row) =>
+                row.id === id ? { ...row, ...data, updatedAt: now } : row,
+              )
+            : old,
+      );
+      return { id, itemSnapshot, listSnapshots };
+    },
+    onError: (_err, _vars, context) => {
+      if (!context) return;
+      queryClient.setQueryData(["milestones", context.id], context.itemSnapshot);
+      for (const [key, data] of context.listSnapshots) {
+        queryClient.setQueryData(key as QueryKey, data);
+      }
+      toast.error("Failed to update milestone");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["milestones"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 

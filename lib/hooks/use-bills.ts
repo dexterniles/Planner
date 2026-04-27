@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type {
   CreateBillInput,
   UpdateBillInput,
@@ -13,6 +14,8 @@ interface BillFilters {
   categoryId?: string;
   limit?: number;
 }
+
+type BillCacheItem = { id: string; updatedAt?: string } & Record<string, unknown>;
 
 export function useBills(filters: BillFilters = {}) {
   const params = new URLSearchParams();
@@ -68,7 +71,10 @@ export function useCreateBill() {
       if (!res.ok) throw new Error("Failed to create bill");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bills"] }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 
@@ -90,7 +96,44 @@ export function useUpdateBill() {
       if (!res.ok) throw new Error("Failed to update bill");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bills"] }),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["bills"] });
+      const itemSnapshot = queryClient.getQueryData<BillCacheItem>(["bills", id]);
+      const listSnapshots = queryClient.getQueriesData<BillCacheItem[]>({ queryKey: ["bills"] });
+      const now = new Date().toISOString();
+      const { amount, paidAmount, ...rest } = data;
+      const patch: Partial<BillCacheItem> = {
+        ...rest,
+        ...(amount !== undefined && { amount: amount.toFixed(2) }),
+        ...(paidAmount !== undefined && {
+          paidAmount: paidAmount === null ? null : paidAmount.toFixed(2),
+        }),
+        updatedAt: now,
+      };
+      queryClient.setQueryData<BillCacheItem>(["bills", id], (old) =>
+        old ? { ...old, ...patch } : old,
+      );
+      queryClient.setQueriesData<BillCacheItem[]>(
+        { queryKey: ["bills"] },
+        (old) =>
+          Array.isArray(old)
+            ? old.map((row) => (row.id === id ? { ...row, ...patch } : row))
+            : old,
+      );
+      return { id, itemSnapshot, listSnapshots };
+    },
+    onError: (_err, _vars, context) => {
+      if (!context) return;
+      queryClient.setQueryData(["bills", context.id], context.itemSnapshot);
+      for (const [key, data] of context.listSnapshots) {
+        queryClient.setQueryData(key as QueryKey, data);
+      }
+      toast.error("Failed to update bill");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 
@@ -102,7 +145,10 @@ export function useDeleteBill() {
       if (!res.ok) throw new Error("Failed to delete bill");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bills"] }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 
@@ -118,6 +164,9 @@ export function useBulkMarkPaid() {
       if (!res.ok) throw new Error("Failed to bulk mark paid");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bills"] }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["bills"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }

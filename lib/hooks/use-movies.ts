@@ -1,6 +1,7 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type {
   AddMediaInput,
   MediaStatus,
@@ -110,7 +111,42 @@ export function useUpdateMedia() {
       if (!res.ok) throw new Error("Update failed");
       return (await res.json()) as MediaItem;
     },
-    onSuccess: () => {
+    onMutate: async ({ id, data }) => {
+      await qc.cancelQueries({ queryKey: ["media"] }); // prevent in-flight refetch from clobbering the patch
+      const itemSnapshot = qc.getQueryData<MediaItem>(["media", "item", id]);
+      const listSnapshots = qc.getQueriesData<MediaItem[]>({ queryKey: ["media"] });
+      const now = new Date().toISOString();
+      const patch: Partial<MediaItem> = {
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.rating !== undefined
+          ? { rating: data.rating === null ? null : data.rating.toFixed(1) }
+          : {}),
+        ...(data.watchedAt !== undefined ? { watchedAt: data.watchedAt } : {}),
+        ...(data.notes !== undefined ? { notes: data.notes } : {}),
+      };
+      qc.setQueryData<MediaItem>(["media", "item", id], (old) =>
+        old ? { ...old, ...patch, updatedAt: now } : old,
+      );
+      qc.setQueriesData<MediaItem[]>(
+        { queryKey: ["media"] },
+        (old) =>
+          Array.isArray(old)
+            ? old.map((row) =>
+                row.id === id ? { ...row, ...patch, updatedAt: now } : row,
+              )
+            : old,
+      );
+      return { id, itemSnapshot, listSnapshots };
+    },
+    onError: (_err, _vars, context) => {
+      if (!context) return;
+      qc.setQueryData(["media", "item", context.id], context.itemSnapshot);
+      for (const [key, data] of context.listSnapshots) {
+        qc.setQueryData(key as QueryKey, data);
+      }
+      toast.error("Failed to update item");
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["media"] });
     },
   });

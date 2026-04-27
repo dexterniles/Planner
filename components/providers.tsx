@@ -8,7 +8,17 @@ import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { SearchPaletteProvider } from "@/components/layout/search-palette-context";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 30_000,
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
 
   return (
     <QueryClientProvider client={queryClient}>

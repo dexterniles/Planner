@@ -1,10 +1,13 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type {
   CreateAssignmentInput,
   UpdateAssignmentInput,
 } from "@/lib/validations/assignment";
+
+type AssignmentCacheItem = { id: string; updatedAt?: string } & Record<string, unknown>;
 
 export function useAssignments(courseId?: string) {
   return useQuery({
@@ -30,8 +33,10 @@ export function useCreateAssignment() {
       if (!res.ok) throw new Error("Failed to create assignment");
       return res.json();
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["assignments"] }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 
@@ -53,8 +58,48 @@ export function useUpdateAssignment() {
       if (!res.ok) throw new Error("Failed to update assignment");
       return res.json();
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["assignments"] }),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["assignments"] });
+      const itemSnapshot = queryClient.getQueryData<AssignmentCacheItem>(["assignments", id]);
+      const listSnapshots = queryClient.getQueriesData<AssignmentCacheItem[]>({
+        queryKey: ["assignments"],
+      });
+      const now = new Date().toISOString();
+      const { pointsEarned, pointsPossible, ...rest } = data;
+      const patch: Partial<AssignmentCacheItem> = {
+        ...rest,
+        ...(pointsEarned !== undefined && {
+          pointsEarned: pointsEarned === null ? null : pointsEarned.toFixed(2),
+        }),
+        ...(pointsPossible !== undefined && {
+          pointsPossible: pointsPossible === null ? null : pointsPossible.toFixed(2),
+        }),
+        updatedAt: now,
+      };
+      queryClient.setQueryData<AssignmentCacheItem>(["assignments", id], (old) =>
+        old ? { ...old, ...patch } : old,
+      );
+      queryClient.setQueriesData<AssignmentCacheItem[]>(
+        { queryKey: ["assignments"] },
+        (old) =>
+          Array.isArray(old)
+            ? old.map((row) => (row.id === id ? { ...row, ...patch } : row))
+            : old,
+      );
+      return { id, itemSnapshot, listSnapshots };
+    },
+    onError: (_err, _vars, context) => {
+      if (!context) return;
+      queryClient.setQueryData(["assignments", context.id], context.itemSnapshot);
+      for (const [key, data] of context.listSnapshots) {
+        queryClient.setQueryData(key as QueryKey, data);
+      }
+      toast.error("Failed to update assignment");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }
 
@@ -66,7 +111,9 @@ export function useDeleteAssignment() {
       if (!res.ok) throw new Error("Failed to delete assignment");
       return res.json();
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["assignments"] }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
   });
 }

@@ -41,8 +41,9 @@ export function useStartTimer() {
       if (!res.ok) throw new Error("Failed to start timer");
       return res.json();
     },
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["time-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }
@@ -59,8 +60,9 @@ export function useStopTimer() {
       if (!res.ok) throw new Error("Failed to stop timer");
       return res.json();
     },
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["time-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }
@@ -73,8 +75,9 @@ export function useDeleteTimeLog() {
       if (!res.ok) throw new Error("Failed to delete time log");
       return res.json();
     },
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["time-logs"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }
