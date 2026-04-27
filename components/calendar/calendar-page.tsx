@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,35 +15,89 @@ import {
 } from "@/components/calendar/calendar-utils";
 
 type View = "month" | "week" | "day";
+const VIEWS: View[] = ["month", "week", "day"];
 const STORAGE_KEY = "planner:calendar-view";
 
+function toIsoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function parseUrlDate(value: string | null): Date {
+  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const parsed = new Date(value + "T12:00:00");
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return new Date();
+}
+
 export function CalendarPage() {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setViewState] = useState<View>("month");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const rawView = searchParams.get("view");
+  const view: View = VIEWS.includes(rawView as View)
+    ? (rawView as View)
+    : "month";
+  const currentDate = parseUrlDate(searchParams.get("date"));
   const [ready, setReady] = useState(false);
 
-  // Hydrate from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "month" || stored === "week" || stored === "day") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is unavailable during SSR; hydrate on mount
-        setViewState(stored);
+  const updateUrl = useCallback(
+    (next: { view?: View | null; date?: string | null }) => {
+      const params = new URLSearchParams(searchParams);
+      if (next.view !== undefined) {
+        if (next.view === null || next.view === "month") params.delete("view");
+        else params.set("view", next.view);
       }
-    } catch {
-      // localStorage unavailable — ignore
-    }
-    setReady(true);
-  }, []);
+      if (next.date !== undefined) {
+        if (next.date === null) params.delete("date");
+        else params.set("date", next.date);
+      }
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
-  const setView = useCallback((next: View) => {
-    setViewState(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      // ignore
+  // localStorage hydration: if URL has no view param, fall back to saved preference.
+  useEffect(() => {
+    if (rawView === null) {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === "week" || stored === "day") {
+          updateUrl({ view: stored });
+        }
+      } catch {
+        // localStorage unavailable — ignore
+      }
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- gate page-transition class until after localStorage hydration
+    setReady(true);
+  }, [rawView, updateUrl]);
+
+  const setView = useCallback(
+    (next: View) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // ignore
+      }
+      updateUrl({ view: next });
+    },
+    [updateUrl],
+  );
+
+  const setCurrentDate = useCallback(
+    (next: Date) => {
+      const today = new Date();
+      const isToday = isSameDay(next, today);
+      updateUrl({ date: isToday ? null : toIsoDate(next) });
+    },
+    [updateUrl],
+  );
 
   const navigate = useCallback(
     (delta: number) => {
@@ -56,7 +111,7 @@ export function CalendarPage() {
       }
       setCurrentDate(next);
     },
-    [currentDate, view],
+    [currentDate, view, setCurrentDate],
   );
 
   // Keyboard navigation: left/right arrows when not in input
@@ -80,14 +135,23 @@ export function CalendarPage() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [navigate]);
+  }, [navigate, setCurrentDate]);
 
   const selectDay = useCallback(
     (date: Date) => {
-      setCurrentDate(date);
-      setView("day");
+      try {
+        localStorage.setItem(STORAGE_KEY, "day");
+      } catch {
+        // ignore
+      }
+      const today = new Date();
+      const isToday = isSameDay(date, today);
+      updateUrl({
+        view: "day",
+        date: isToday ? null : toIsoDate(date),
+      });
     },
-    [setView],
+    [updateUrl],
   );
 
   const today = new Date();

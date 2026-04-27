@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PartyPopper, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +15,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { useCurrentDate } from "@/lib/hooks/use-current-date";
 
 type TimeFilter = "upcoming" | "past" | "all";
+const TIME_VALUES: TimeFilter[] = ["upcoming", "past", "all"];
 
 interface CategoryRow {
   id: string;
@@ -22,10 +24,25 @@ interface CategoryRow {
 }
 
 export function EventsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<EventCardData | null>(null);
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("upcoming");
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  const rawTime = searchParams.get("time");
+  const timeFilter: TimeFilter = TIME_VALUES.includes(rawTime as TimeFilter)
+    ? (rawTime as TimeFilter)
+    : "upcoming";
+  const categoryFilter = searchParams.get("category");
+
+  const setParam = (key: string, value: string, defaultValue: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (!value || value === defaultValue) params.delete(key);
+    else params.set(key, value);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   const { data: events, isLoading } = useEvents({
     ...(categoryFilter && { categoryId: categoryFilter }),
@@ -85,10 +102,10 @@ export function EventsPage() {
         <div className="space-y-3">
           {/* Time filter segmented control */}
           <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
-            {(["upcoming", "past", "all"] as const).map((t) => (
+            {TIME_VALUES.map((t) => (
               <button
                 key={t}
-                onClick={() => setTimeFilter(t)}
+                onClick={() => setParam("time", t, "upcoming")}
                 className={cn(
                   "px-3 py-1 text-[12.5px] font-medium capitalize rounded-[5px] transition-colors duration-150",
                   timeFilter === t
@@ -104,7 +121,7 @@ export function EventsPage() {
           {/* Category filter strip */}
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setCategoryFilter(null)}
+              onClick={() => setParam("category", "", "")}
               className={cn(
                 "px-3 py-1 text-xs font-medium rounded-full border transition-all",
                 categoryFilter === null
@@ -121,7 +138,7 @@ export function EventsPage() {
               return (
                 <button
                   key={cat.id}
-                  onClick={() => setCategoryFilter(active ? null : cat.id)}
+                  onClick={() => setParam("category", active ? "" : cat.id, "")}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border transition-all",
                     active

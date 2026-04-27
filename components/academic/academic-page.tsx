@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Plus, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCourses } from "@/lib/hooks/use-courses";
@@ -11,13 +12,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/layout/page-header";
 
 export function AcademicPage() {
+  const searchParams = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Record<string, unknown> | null>(null);
 
   const { data: workspaces, isLoading: loadingWorkspaces } = useWorkspaces();
-  const academicWorkspace = workspaces?.find(
-    (w: { type: string }) => w.type === "academic",
-  );
+  const requested = searchParams.get("workspace");
+  const academicWorkspace =
+    workspaces?.find(
+      (w: { id: string; type: string }) =>
+        w.id === requested && w.type === "academic",
+    ) ?? workspaces?.find((w: { type: string }) => w.type === "academic");
 
   const { data: courses, isLoading: loadingCourses } = useCourses(
     academicWorkspace?.id,

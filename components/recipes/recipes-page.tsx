@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ChefHat, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,12 +20,25 @@ interface TagRow {
 }
 
 export function RecipesPage() {
-  const [query, setQuery] = useState("");
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const query = searchParams.get("q") ?? "";
+  const tagFilter = searchParams.get("tag");
+
+  const setParam = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (!value) params.delete(key);
+    else params.set(key, value);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const trimmed = query.trim();
   const { data: recipes, isLoading } = useRecipes({
-    ...(query.trim() && { q: query.trim() }),
+    ...(trimmed && { q: trimmed }),
     ...(tagFilter && { tagId: tagFilter }),
   });
   const { data: tags } = useTags();
@@ -54,7 +68,7 @@ export function RecipesPage() {
             />
             <Input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => setParam("q", e.target.value)}
               placeholder="Search recipes..."
               className="pl-9"
             />
@@ -63,7 +77,7 @@ export function RecipesPage() {
           {tagList.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setTagFilter(null)}
+                onClick={() => setParam("tag", "")}
                 className={cn(
                   "px-3 py-1 text-xs font-medium rounded-full border transition-all",
                   tagFilter === null
@@ -78,7 +92,7 @@ export function RecipesPage() {
                 return (
                   <button
                     key={tag.id}
-                    onClick={() => setTagFilter(active ? null : tag.id)}
+                    onClick={() => setParam("tag", active ? "" : tag.id)}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border transition-all",
                       active

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Plus, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useProjects } from "@/lib/hooks/use-projects";
@@ -23,13 +24,17 @@ type Project = {
 };
 
 export function ProjectsPage() {
+  const searchParams = useSearchParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const { data: workspaces, isLoading: loadingWorkspaces } = useWorkspaces();
-  const projectsWorkspace = workspaces?.find(
-    (w: { type: string }) => w.type === "projects",
-  );
+  const requested = searchParams.get("workspace");
+  const projectsWorkspace =
+    workspaces?.find(
+      (w: { id: string; type: string }) =>
+        w.id === requested && w.type === "projects",
+    ) ?? workspaces?.find((w: { type: string }) => w.type === "projects");
 
   const { data: projects, isLoading: loadingProjects } = useProjects(
     projectsWorkspace?.id,

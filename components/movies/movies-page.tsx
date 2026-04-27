@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Film, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,6 +47,7 @@ const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
   { value: "watched_recent", label: "Watched · newest" },
 ];
 
+const SORT_VALUES = SORT_OPTIONS.map((o) => o.value);
 const ALL_GENRES = "__all__";
 
 function sortItems(items: MediaItem[], sortBy: SortKey): MediaItem[] {
@@ -77,10 +79,34 @@ function sortItems(items: MediaItem[], sortBy: SortKey): MediaItem[] {
 
 export function MoviesPage() {
   const { setOpen: setSearchOpen } = useSearchPalette();
-  const [statusFilter, setStatusFilter] = useState<MediaStatus | "all">("all");
-  const [typeFilter, setTypeFilter] = useState<MediaType | "all">("all");
-  const [sortBy, setSortBy] = useState<SortKey>("recent");
-  const [genreFilter, setGenreFilter] = useState<string>(ALL_GENRES);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const rawStatus = searchParams.get("status");
+  const statusFilter: MediaStatus | "all" =
+    rawStatus === "watchlist" || rawStatus === "watching" || rawStatus === "watched"
+      ? rawStatus
+      : "all";
+  const rawType = searchParams.get("type");
+  const typeFilter: MediaType | "all" =
+    rawType === "movie" || rawType === "tv" ? rawType : "all";
+  const rawSort = searchParams.get("sort");
+  const sortBy: SortKey = SORT_VALUES.includes(rawSort as SortKey)
+    ? (rawSort as SortKey)
+    : "recent";
+  const genreFilter = searchParams.get("genre") ?? ALL_GENRES;
+
+  const setParam = (key: string, value: string, defaultValue: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (value === defaultValue) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   const { data: items, isLoading } = useMediaList({
     status: statusFilter,
@@ -122,7 +148,7 @@ export function MoviesPage() {
           {STATUS_TABS.map((t) => (
             <button
               key={t.value}
-              onClick={() => setStatusFilter(t.value)}
+              onClick={() => setParam("status", t.value, "all")}
               className={cn(
                 "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors duration-150",
                 statusFilter === t.value
@@ -139,7 +165,7 @@ export function MoviesPage() {
           {TYPE_TABS.map((t) => (
             <button
               key={t.value}
-              onClick={() => setTypeFilter(t.value)}
+              onClick={() => setParam("type", t.value, "all")}
               className={cn(
                 "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors duration-150",
                 typeFilter === t.value
@@ -154,7 +180,10 @@ export function MoviesPage() {
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {availableGenres.length > 0 && (
-            <Select value={genreFilter} onValueChange={(v) => setGenreFilter(v ?? ALL_GENRES)}>
+            <Select
+              value={genreFilter}
+              onValueChange={(v) => setParam("genre", v ?? ALL_GENRES, ALL_GENRES)}
+            >
               <SelectTrigger size="sm" className="flex-1 sm:flex-none sm:min-w-[140px]">
                 <SelectValue>
                   {(value) =>
@@ -172,7 +201,10 @@ export function MoviesPage() {
               </SelectContent>
             </Select>
           )}
-          <Select value={sortBy} onValueChange={(v) => setSortBy((v as SortKey) ?? "recent")}>
+          <Select
+            value={sortBy}
+            onValueChange={(v) => setParam("sort", (v as SortKey) ?? "recent", "recent")}
+          >
             <SelectTrigger size="sm" className="flex-1 sm:flex-none sm:min-w-[180px]">
               <SelectValue>
                 {(value) =>

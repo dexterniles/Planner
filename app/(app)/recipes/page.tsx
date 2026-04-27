@@ -7,7 +7,15 @@ import { getRecipes } from "@/lib/server/data/recipes";
 import { getTags } from "@/lib/server/data/tags";
 import { RecipesPage } from "@/components/recipes/recipes-page";
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; tag?: string }>;
+}) {
+  const sp = await searchParams;
+  const q = sp.q?.trim() || undefined;
+  const tagId = sp.tag || undefined;
+
   const auth = await getServerAuth();
   if (!auth.ok) redirect("/login");
   const { userId } = auth;
@@ -15,8 +23,8 @@ export default async function Page() {
   const queryClient = getQueryClient();
 
   await Promise.all([
-    prefetch(queryClient, ["recipes", undefined, undefined], () =>
-      getRecipes(userId, {}),
+    prefetch(queryClient, ["recipes", q, tagId], () =>
+      getRecipes(userId, { search: q, tagId }),
     ),
     prefetch(queryClient, ["tags"], () => getTags(userId)),
   ]);

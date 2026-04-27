@@ -7,7 +7,14 @@ import { getWorkspaces } from "@/lib/server/data/workspaces";
 import { getCourses } from "@/lib/server/data/courses";
 import { AcademicPage } from "@/components/academic/academic-page";
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ workspace?: string }>;
+}) {
+  const sp = await searchParams;
+  const requestedWorkspace = sp.workspace;
+
   const auth = await getServerAuth();
   if (!auth.ok) redirect("/login");
   const { userId } = auth;
@@ -20,7 +27,10 @@ export default async function Page() {
     JSON.parse(JSON.stringify(workspaces)),
   );
 
-  const academicWorkspace = workspaces.find((w) => w.type === "academic");
+  const academicWorkspace =
+    workspaces.find(
+      (w) => w.id === requestedWorkspace && w.type === "academic",
+    ) ?? workspaces.find((w) => w.type === "academic");
 
   await prefetch(queryClient, ["courses", academicWorkspace?.id], () =>
     getCourses(userId, { workspaceId: academicWorkspace?.id }),
