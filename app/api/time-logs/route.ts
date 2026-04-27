@@ -1,9 +1,10 @@
 import { db } from "@/lib/db";
 import { timeLogs } from "@/lib/db/schema";
 import { startTimeLogSchema } from "@/lib/validations/time-log";
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getTimeLogs } from "@/lib/server/data/time-logs";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -14,29 +15,11 @@ export async function GET(request: Request) {
   const loggableId = searchParams.get("loggableId");
   const limit = parseInt(searchParams.get("limit") ?? "50", 10);
 
-  let result;
-  if (loggableType && loggableId) {
-    result = await db
-      .select()
-      .from(timeLogs)
-      .where(
-        and(
-          eq(timeLogs.userId, userId),
-          eq(timeLogs.loggableType, loggableType as "course" | "project" | "assignment" | "task"),
-          eq(timeLogs.loggableId, loggableId),
-        ),
-      )
-      .orderBy(desc(timeLogs.startedAt))
-      .limit(limit);
-  } else {
-    result = await db
-      .select()
-      .from(timeLogs)
-      .where(eq(timeLogs.userId, userId))
-      .orderBy(desc(timeLogs.startedAt))
-      .limit(limit);
-  }
-
+  const result = await getTimeLogs(userId, {
+    loggableType: loggableType ?? undefined,
+    loggableId: loggableId ?? undefined,
+    limit,
+  });
   return NextResponse.json(result);
 }
 

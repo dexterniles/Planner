@@ -4,6 +4,7 @@ import { createMilestoneSchema } from "@/lib/validations/milestone";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getMilestones } from "@/lib/server/data/milestones";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -19,24 +20,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const result = await db
-    .select({
-      id: milestones.id,
-      projectId: milestones.projectId,
-      title: milestones.title,
-      description: milestones.description,
-      targetDate: milestones.targetDate,
-      completedAt: milestones.completedAt,
-      createdAt: milestones.createdAt,
-      updatedAt: milestones.updatedAt,
-    })
-    .from(milestones)
-    .innerJoin(projects, eq(milestones.projectId, projects.id))
-    .where(
-      and(eq(projects.userId, userId), eq(milestones.projectId, projectId)),
-    )
-    .orderBy(milestones.targetDate);
-
+  const result = await getMilestones(userId, { projectId });
   return NextResponse.json(result);
 }
 

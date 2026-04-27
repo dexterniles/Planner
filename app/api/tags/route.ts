@@ -1,20 +1,14 @@
 import { db } from "@/lib/db";
 import { tags } from "@/lib/db/schema";
 import { createTagSchema } from "@/lib/validations/tag";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getTags } from "@/lib/server/data/tags";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
-  const { userId } = auth;
-  const result = await db
-    .select()
-    .from(tags)
-    .where(eq(tags.userId, userId))
-    .orderBy(tags.name);
-
+  const result = await getTags(auth.userId);
   return NextResponse.json(result);
 }
 

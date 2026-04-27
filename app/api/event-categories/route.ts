@@ -1,20 +1,14 @@
 import { db } from "@/lib/db";
 import { eventCategories } from "@/lib/db/schema";
 import { createEventCategorySchema } from "@/lib/validations/event";
-import { asc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getEventCategories } from "@/lib/server/data/events";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
-  const { userId } = auth;
-  const result = await db
-    .select()
-    .from(eventCategories)
-    .where(eq(eventCategories.userId, userId))
-    .orderBy(asc(eventCategories.sortOrder), asc(eventCategories.name));
-
+  const result = await getEventCategories(auth.userId);
   return NextResponse.json(result);
 }
 

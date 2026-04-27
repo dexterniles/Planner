@@ -1,10 +1,9 @@
 import { db } from "@/lib/db";
-import { recipes, taggings, tags } from "@/lib/db/schema";
+import { recipes } from "@/lib/db/schema";
 import { createRecipeSchema } from "@/lib/validations/recipe";
-import { and, desc, eq, exists, ilike, inArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
-import { escapeLike } from "@/lib/utils";
+import { getRecipes } from "@/lib/server/data/recipes";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -14,68 +13,10 @@ export async function GET(request: Request) {
   const search = searchParams.get("q")?.trim() ?? "";
   const tagId = searchParams.get("tagId");
 
-  const conditions = [eq(recipes.userId, userId)];
-  if (search) {
-    conditions.push(ilike(recipes.title, `%${escapeLike(search)}%`));
-  }
-  if (tagId) {
-    conditions.push(
-      exists(
-        db
-          .select({ one: sql`1` })
-          .from(taggings)
-          .where(
-            and(
-              eq(taggings.taggableId, recipes.id),
-              eq(taggings.taggableType, "recipe"),
-              eq(taggings.tagId, tagId),
-            ),
-          ),
-      ),
-    );
-  }
-
-  const filtered = await db
-    .select()
-    .from(recipes)
-    .where(and(...conditions))
-    .orderBy(desc(recipes.updatedAt));
-
-  const recipeIds = filtered.map((r) => r.id);
-  const taggingRows = recipeIds.length
-    ? await db
-        .select({
-          taggableId: taggings.taggableId,
-          tagId: tags.id,
-          tagName: tags.name,
-          tagColor: tags.color,
-        })
-        .from(taggings)
-        .innerJoin(tags, eq(taggings.tagId, tags.id))
-        .where(
-          and(
-            eq(taggings.taggableType, "recipe"),
-            inArray(taggings.taggableId, recipeIds),
-            eq(tags.userId, userId),
-          ),
-        )
-    : [];
-
-  const tagsByRecipe = new Map<
-    string,
-    { id: string; name: string; color: string | null }[]
-  >();
-  for (const t of taggingRows) {
-    const list = tagsByRecipe.get(t.taggableId) ?? [];
-    list.push({ id: t.tagId, name: t.tagName, color: t.tagColor });
-    tagsByRecipe.set(t.taggableId, list);
-  }
-
-  const result = filtered.map((r) => ({
-    ...r,
-    tags: tagsByRecipe.get(r.id) ?? [],
-  }));
-
+  const result = await getRecipes(userId, {
+    search,
+    tagId: tagId ?? undefined,
+  });
   return NextResponse.json(result);
 }
 

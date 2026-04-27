@@ -4,6 +4,7 @@ import { updateBillSchema } from "@/lib/validations/bill";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getBillById } from "@/lib/server/data/bills";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -12,11 +13,7 @@ export async function GET(request: Request, { params }: Params) {
   if (!auth.ok) return auth.response;
   const { userId } = auth;
   const { id } = await params;
-  const [bill] = await db
-    .select()
-    .from(bills)
-    .where(and(eq(bills.id, id), eq(bills.userId, userId)));
-
+  const bill = await getBillById(userId, id);
   if (!bill) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

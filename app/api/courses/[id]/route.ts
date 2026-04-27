@@ -4,6 +4,7 @@ import { updateCourseSchema } from "@/lib/validations/course";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getCourseById } from "@/lib/server/data/courses";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -13,11 +14,7 @@ export async function GET(request: Request, { params }: Params) {
   const { userId } = auth;
   const { id } = await params;
 
-  const [course] = await db
-    .select()
-    .from(courses)
-    .where(and(eq(courses.id, id), eq(courses.userId, userId)));
-
+  const course = await getCourseById(userId, id);
   if (!course) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

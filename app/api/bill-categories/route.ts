@@ -1,20 +1,14 @@
 import { db } from "@/lib/db";
 import { billCategories } from "@/lib/db/schema";
 import { createBillCategorySchema } from "@/lib/validations/bill";
-import { asc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getBillCategories } from "@/lib/server/data/bills";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
-  const { userId } = auth;
-  const result = await db
-    .select()
-    .from(billCategories)
-    .where(eq(billCategories.userId, userId))
-    .orderBy(asc(billCategories.sortOrder), asc(billCategories.name));
-
+  const result = await getBillCategories(auth.userId);
   return NextResponse.json(result);
 }
 

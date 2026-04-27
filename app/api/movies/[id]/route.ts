@@ -4,6 +4,7 @@ import { updateMediaSchema } from "@/lib/validations/media";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getMediaById } from "@/lib/server/data/movies";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -12,10 +13,7 @@ export async function GET(request: Request, { params }: Params) {
   if (!auth.ok) return auth.response;
   const { userId } = auth;
   const { id } = await params;
-  const [row] = await db
-    .select()
-    .from(mediaItems)
-    .where(and(eq(mediaItems.id, id), eq(mediaItems.userId, userId)));
+  const row = await getMediaById(userId, id);
   if (!row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

@@ -1,9 +1,9 @@
 import { db } from "@/lib/db";
 import { notes } from "@/lib/db/schema";
 import { createNoteSchema } from "@/lib/validations/note";
-import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getNotes, type NoteParentType } from "@/lib/server/data/notes";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -20,29 +20,11 @@ export async function GET(request: Request) {
     );
   }
 
-  const conditions = [
-    eq(notes.userId, userId),
-    eq(
-      notes.parentType,
-      parentType as
-        | "course"
-        | "project"
-        | "assignment"
-        | "task"
-        | "session"
-        | "daily_log"
-        | "standalone"
-        | "event",
-    ),
-  ];
-  if (parentId) conditions.push(eq(notes.parentId, parentId));
-
-  const result = await db
-    .select()
-    .from(notes)
-    .where(and(...conditions))
-    .orderBy(desc(notes.updatedAt));
-
+  const result = await getNotes(
+    userId,
+    parentType as NoteParentType,
+    parentId ?? undefined,
+  );
   return NextResponse.json(result);
 }
 

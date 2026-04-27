@@ -1,9 +1,9 @@
 import { db } from "@/lib/db";
 import { assignments } from "@/lib/db/schema";
 import { createAssignmentSchema } from "@/lib/validations/assignment";
-import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getAssignments } from "@/lib/server/data/assignments";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -12,23 +12,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const courseId = searchParams.get("courseId");
 
-  const result = courseId
-    ? await db
-        .select()
-        .from(assignments)
-        .where(
-          and(
-            eq(assignments.userId, userId),
-            eq(assignments.courseId, courseId),
-          ),
-        )
-        .orderBy(assignments.dueDate)
-    : await db
-        .select()
-        .from(assignments)
-        .where(eq(assignments.userId, userId))
-        .orderBy(assignments.dueDate);
-
+  const result = await getAssignments(userId, {
+    courseId: courseId ?? undefined,
+  });
   return NextResponse.json(result);
 }
 

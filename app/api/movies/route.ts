@@ -7,8 +7,9 @@ import {
   type MediaType,
 } from "@/lib/validations/media";
 import { tmdbBuildAddPayload } from "@/lib/tmdb/client";
-import { and, desc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { getMediaList } from "@/lib/server/data/movies";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -18,20 +19,7 @@ export async function GET(request: Request) {
   const status = searchParams.get("status") as MediaStatus | null;
   const mediaType = searchParams.get("mediaType") as MediaType | null;
 
-  const conditions = [eq(mediaItems.userId, userId)];
-  if (status === "watchlist" || status === "watching" || status === "watched") {
-    conditions.push(eq(mediaItems.status, status));
-  }
-  if (mediaType === "movie" || mediaType === "tv") {
-    conditions.push(eq(mediaItems.mediaType, mediaType));
-  }
-
-  const rows = await db
-    .select()
-    .from(mediaItems)
-    .where(and(...conditions))
-    .orderBy(desc(mediaItems.createdAt));
-
+  const rows = await getMediaList(userId, { status, mediaType });
   return NextResponse.json(rows);
 }
 

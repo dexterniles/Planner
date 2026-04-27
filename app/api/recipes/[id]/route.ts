@@ -1,16 +1,10 @@
 import { db } from "@/lib/db";
-import {
-  recipes,
-  recipeIngredients,
-  recipeSteps,
-  recipeEquipment,
-  taggings,
-  tags,
-} from "@/lib/db/schema";
+import { recipes, taggings } from "@/lib/db/schema";
 import { updateRecipeSchema } from "@/lib/validations/recipe";
-import { and, asc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getRecipeById } from "@/lib/server/data/recipes";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -20,55 +14,11 @@ export async function GET(request: Request, { params }: Params) {
   const { userId } = auth;
   const { id } = await params;
 
-  const [recipe] = await db
-    .select()
-    .from(recipes)
-    .where(and(eq(recipes.id, id), eq(recipes.userId, userId)));
-
-  if (!recipe) {
+  const detail = await getRecipeById(userId, id);
+  if (!detail) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-
-  const [ingredients, steps, equipment, tagRows] = await Promise.all([
-    db
-      .select()
-      .from(recipeIngredients)
-      .where(eq(recipeIngredients.recipeId, id))
-      .orderBy(asc(recipeIngredients.sortOrder)),
-    db
-      .select()
-      .from(recipeSteps)
-      .where(eq(recipeSteps.recipeId, id))
-      .orderBy(asc(recipeSteps.sortOrder)),
-    db
-      .select()
-      .from(recipeEquipment)
-      .where(eq(recipeEquipment.recipeId, id))
-      .orderBy(asc(recipeEquipment.sortOrder)),
-    db
-      .select({
-        id: tags.id,
-        name: tags.name,
-        color: tags.color,
-      })
-      .from(taggings)
-      .innerJoin(tags, eq(taggings.tagId, tags.id))
-      .where(
-        and(
-          eq(taggings.taggableType, "recipe"),
-          eq(taggings.taggableId, id),
-          eq(tags.userId, userId),
-        ),
-      ),
-  ]);
-
-  return NextResponse.json({
-    ...recipe,
-    ingredients,
-    steps,
-    equipment,
-    tags: tagRows,
-  });
+  return NextResponse.json(detail);
 }
 
 export async function PATCH(request: Request, { params }: Params) {

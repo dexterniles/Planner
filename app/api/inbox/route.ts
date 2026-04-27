@@ -1,20 +1,14 @@
 import { db } from "@/lib/db";
 import { inboxItems } from "@/lib/db/schema";
 import { createInboxItemSchema } from "@/lib/validations/inbox";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getInbox } from "@/lib/server/data/inbox";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
-  const { userId } = auth;
-  const result = await db
-    .select()
-    .from(inboxItems)
-    .where(eq(inboxItems.userId, userId))
-    .orderBy(inboxItems.capturedAt);
-
+  const result = await getInbox(auth.userId);
   return NextResponse.json(result);
 }
 

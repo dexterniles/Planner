@@ -1,19 +1,14 @@
 import { db } from "@/lib/db";
 import { workspaces } from "@/lib/db/schema";
 import { createWorkspaceSchema } from "@/lib/validations/workspace";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getWorkspaces } from "@/lib/server/data/workspaces";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
   if (!auth.ok) return auth.response;
-  const { userId } = auth;
-  const result = await db
-    .select()
-    .from(workspaces)
-    .where(eq(workspaces.userId, userId))
-    .orderBy(workspaces.sortOrder);
+  const result = await getWorkspaces(auth.userId);
   return NextResponse.json(result);
 }
 

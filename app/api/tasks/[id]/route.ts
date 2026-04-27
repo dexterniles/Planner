@@ -4,6 +4,7 @@ import { updateTaskSchema } from "@/lib/validations/task";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getTaskById } from "@/lib/server/data/tasks";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -12,11 +13,7 @@ export async function GET(request: Request, { params }: Params) {
   if (!auth.ok) return auth.response;
   const { userId } = auth;
   const { id } = await params;
-  const [task] = await db
-    .select()
-    .from(tasks)
-    .where(and(eq(tasks.id, id), eq(tasks.userId, userId)));
-
+  const task = await getTaskById(userId, id);
   if (!task) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

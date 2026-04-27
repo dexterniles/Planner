@@ -1,9 +1,9 @@
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
 import { createProjectSchema } from "@/lib/validations/project";
-import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getProjects } from "@/lib/server/data/projects";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -12,23 +12,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId");
 
-  const result = workspaceId
-    ? await db
-        .select()
-        .from(projects)
-        .where(
-          and(
-            eq(projects.userId, userId),
-            eq(projects.workspaceId, workspaceId),
-          ),
-        )
-        .orderBy(projects.name)
-    : await db
-        .select()
-        .from(projects)
-        .where(eq(projects.userId, userId))
-        .orderBy(projects.name);
-
+  const result = await getProjects(userId, {
+    workspaceId: workspaceId ?? undefined,
+  });
   return NextResponse.json(result);
 }
 

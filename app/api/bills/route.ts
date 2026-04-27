@@ -1,10 +1,10 @@
 import { db } from "@/lib/db";
 import { bills, recurrenceRules } from "@/lib/db/schema";
 import { createBillSchema, billStatusValues } from "@/lib/validations/bill";
-import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 import { z } from "zod";
+import { getBills } from "@/lib/server/data/bills";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -17,22 +17,15 @@ export async function GET(request: Request) {
   const categoryId = searchParams.get("categoryId");
   const limit = parseInt(searchParams.get("limit") ?? "500", 10);
 
-  const conditions: SQL[] = [eq(bills.userId, userId)];
-  if (from) conditions.push(gte(bills.dueDate, from));
-  if (to) conditions.push(lte(bills.dueDate, to));
   const statusParse = z.enum(billStatusValues).safeParse(status);
-  if (statusParse.success) {
-    conditions.push(eq(bills.status, statusParse.data));
-  }
-  if (categoryId) conditions.push(eq(bills.categoryId, categoryId));
 
-  const result = await db
-    .select()
-    .from(bills)
-    .where(and(...conditions))
-    .orderBy(asc(bills.dueDate))
-    .limit(limit);
-
+  const result = await getBills(userId, {
+    from: from ?? undefined,
+    to: to ?? undefined,
+    status: statusParse.success ? statusParse.data : undefined,
+    categoryId: categoryId ?? undefined,
+    limit,
+  });
   return NextResponse.json(result);
 }
 

@@ -4,6 +4,7 @@ import { createGradeCategorySchema } from "@/lib/validations/grade-category";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getGradeCategories } from "@/lib/server/data/grade-categories";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -19,21 +20,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const result = await db
-    .select({
-      id: gradeCategories.id,
-      courseId: gradeCategories.courseId,
-      name: gradeCategories.name,
-      weight: gradeCategories.weight,
-      dropLowestN: gradeCategories.dropLowestN,
-    })
-    .from(gradeCategories)
-    .innerJoin(courses, eq(gradeCategories.courseId, courses.id))
-    .where(
-      and(eq(courses.userId, userId), eq(gradeCategories.courseId, courseId)),
-    )
-    .orderBy(gradeCategories.name);
-
+  const result = await getGradeCategories(userId, courseId);
   return NextResponse.json(result);
 }
 

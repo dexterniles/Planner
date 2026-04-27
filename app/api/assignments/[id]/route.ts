@@ -4,6 +4,7 @@ import { updateAssignmentSchema } from "@/lib/validations/assignment";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getAssignmentById } from "@/lib/server/data/assignments";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -12,11 +13,7 @@ export async function GET(request: Request, { params }: Params) {
   if (!auth.ok) return auth.response;
   const { userId } = auth;
   const { id } = await params;
-  const [assignment] = await db
-    .select()
-    .from(assignments)
-    .where(and(eq(assignments.id, id), eq(assignments.userId, userId)));
-
+  const assignment = await getAssignmentById(userId, id);
   if (!assignment) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

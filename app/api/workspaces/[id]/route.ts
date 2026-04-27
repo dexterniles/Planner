@@ -4,6 +4,7 @@ import { updateWorkspaceSchema } from "@/lib/validations/workspace";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { getWorkspaceById } from "@/lib/server/data/workspaces";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -12,11 +13,7 @@ export async function GET(request: Request, { params }: Params) {
   if (!auth.ok) return auth.response;
   const { userId } = auth;
   const { id } = await params;
-  const [workspace] = await db
-    .select()
-    .from(workspaces)
-    .where(and(eq(workspaces.id, id), eq(workspaces.userId, userId)));
-
+  const workspace = await getWorkspaceById(userId, id);
   if (!workspace) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

@@ -1,10 +1,10 @@
 import { db } from "@/lib/db";
-import { events, eventCategories } from "@/lib/db/schema";
+import { events } from "@/lib/db/schema";
 import { createEventSchema, eventStatusValues } from "@/lib/validations/event";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
-import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getEvents } from "@/lib/server/data/events";
 
 export async function GET(request: Request) {
   const auth = await requireAuthGuard(request);
@@ -17,42 +17,15 @@ export async function GET(request: Request) {
   const status = searchParams.get("status");
   const limit = parseInt(searchParams.get("limit") ?? "500", 10);
 
-  const conditions: SQL[] = [eq(events.userId, userId)];
-  if (from) conditions.push(gte(events.startsAt, new Date(from)));
-  if (to) conditions.push(lte(events.startsAt, new Date(to)));
-  if (categoryId) conditions.push(eq(events.categoryId, categoryId));
   const statusParse = z.enum(eventStatusValues).safeParse(status);
-  if (statusParse.success) {
-    conditions.push(eq(events.status, statusParse.data));
-  }
 
-  const result = await db
-    .select({
-      id: events.id,
-      userId: events.userId,
-      title: events.title,
-      description: events.description,
-      categoryId: events.categoryId,
-      categoryName: eventCategories.name,
-      categoryColor: eventCategories.color,
-      startsAt: events.startsAt,
-      endsAt: events.endsAt,
-      allDay: events.allDay,
-      location: events.location,
-      url: events.url,
-      attendees: events.attendees,
-      status: events.status,
-      color: events.color,
-      recurrenceRuleId: events.recurrenceRuleId,
-      createdAt: events.createdAt,
-      updatedAt: events.updatedAt,
-    })
-    .from(events)
-    .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
-    .where(and(...conditions))
-    .orderBy(asc(events.startsAt))
-    .limit(limit);
-
+  const result = await getEvents(userId, {
+    from: from ?? undefined,
+    to: to ?? undefined,
+    categoryId: categoryId ?? undefined,
+    status: statusParse.success ? statusParse.data : undefined,
+    limit,
+  });
   return NextResponse.json(result);
 }
 
