@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useTasks } from "@/lib/hooks/use-tasks";
 import { useMilestones } from "@/lib/hooks/use-milestones";
 import { useTimeLogs } from "@/lib/hooks/use-time-logs";
+import { formatDaysUntil } from "@/lib/format";
 
 interface ProjectSnapshotProps {
   projectId: string;
@@ -21,20 +22,6 @@ interface Milestone {
 
 interface TimeLog {
   durationSeconds: number | null;
-}
-
-function formatDaysUntil(dateStr: string | null): string {
-  if (!dateStr) return "No date";
-  const target = new Date(dateStr);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const days = Math.round((target.getTime() - now.getTime()) / 86400000);
-  if (days < 0) return `${Math.abs(days)}d late`;
-  if (days === 0) return "Today";
-  if (days === 1) return "Tomorrow";
-  if (days < 7) return `${days}d`;
-  if (days < 30) return `${Math.floor(days / 7)}w`;
-  return target.toLocaleDateString();
 }
 
 export function ProjectSnapshot({ projectId }: ProjectSnapshotProps) {
@@ -90,7 +77,7 @@ export function ProjectSnapshot({ projectId }: ProjectSnapshotProps) {
                 {nextMilestone.title}
               </span>
               <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
-                {formatDaysUntil(nextMilestone.targetDate)}
+                {formatDaysUntil(nextMilestone.targetDate, { overdueLabel: "late" })}
               </span>
             </span>
           ) : (

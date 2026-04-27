@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { useAllItems } from "@/lib/hooks/use-all-items";
+import { getItemLink } from "@/lib/utils";
 
 interface Item {
   id: string;
@@ -24,11 +25,6 @@ function isToday(dateStr: string | null): boolean {
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate()
   );
-}
-
-function getItemLink(item: Item): string {
-  if (item.type === "assignment") return `/academic/${item.parentId}`;
-  return `/projects/${item.parentId}`;
 }
 
 export function TodaysFocus() {

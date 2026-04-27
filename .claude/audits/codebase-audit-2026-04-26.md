@@ -26,8 +26,9 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ✅ **Headline #6** — TMDB image optimization shipped. `unoptimized` removed from all 4 sites; `images.minimumCacheTTL` bumped to 30 days for immutable TMDB poster URLs.
 - ✅ **B15** — `unoptimized` on every TMDB image (closed via headline #6).
 - ✅ **C** — drop `unoptimized` on TMDB images (behavioral, confirmed).
+- ✅ **Backlog batch 1** — N7 (utility lift to `lib/utils.ts`/`lib/grades.ts`/`lib/format.ts`), N8 (cargo-cult `useMemo`), N11 (dead SQL view + `scripts/create-view.ts`), N12 (5 unused SVGs), N13 (TS target ES2022), N14 (`NEXT_PUBLIC_APP_VERSION` env), S22 (409 on already-stopped timer).
 
-**Next up:** #2 (dashboard server-component refactor — biggest, last).
+**Next up:** Backlog batch 2 (clock-drift cluster: B3, S2, S3, N10), then headline #2 (server-component refactor) at the end of the roadmap.
 
 ---
 
@@ -117,7 +118,7 @@ Won't crash but will degrade UX or invite future bugs.
 - **S19.** TMDB client: short revalidate on metadata, no retry/rate-limit. [lib/tmdb/client.ts:34](lib/tmdb/client.ts#L34) — 60s revalidate is short for `/movie/{id}` and `/tv/{id}`; bump to 24h since data is snapshotted to DB anyway. Letterboxd import will burn 429s without backoff.
 - **S20.** Drizzle / Zod drift on date strings. [lib/validations/event.ts:14](lib/validations/event.ts#L14) accepts any non-empty string for `startsAt`; route does `new Date(startsAt)`; bad input → "Invalid Date" inserted into `notNull` column → Postgres throws. Same for `endsAt`, `paidAt`, `dueDate`. Use `z.string().datetime()` or refine.
 - **S21.** Bills bulk-recurrence creation skips a transaction. [app/api/bills/route.ts:78-105](app/api/bills/route.ts#L78-L105) Inserts rule, then bills batch — failure orphans the rule.
-- **S22.** `time_logs/[id]/stop` returns 400 not 409 for "already stopped". [app/api/time-logs/[id]/stop/route.ts:24-28](app/api/time-logs/[id]/stop/route.ts#L24-L28)
+- ✅ **S22.** `time_logs/[id]/stop` returns 400 not 409 for "already stopped". [app/api/time-logs/[id]/stop/route.ts:24-28](app/api/time-logs/[id]/stop/route.ts#L24-L28)
 
 ### Performance / Next 16
 
@@ -140,20 +141,20 @@ Low-priority cleanup. Address opportunistically.
 - **N4.** Index keys (`key={i}`) on a few semi-dynamic lists. [components/calendar/month-view.tsx:201](components/calendar/month-view.tsx#L201) is the most fragile; the others are over constants.
 - **N5.** [components/recipes/recipe-dialog.tsx:54-69](components/recipes/recipe-dialog.tsx#L54-L69) doesn't use `zodResolver` — runs schema imperatively in `onSubmit`. Inline errors don't show.
 - **N6.** `set-state-in-effect` lint warnings in [components/layout/timer.tsx](components/layout/timer.tsx) and [lib/hooks/use-count-up.ts](lib/hooks/use-count-up.ts) are false positives in their current form, but the patterns could be cleaner (derived state vs mirrored state).
-- **N7.** Duplicated utilities — lift to `lib/utils`:
+- ✅ **N7.** Duplicated utilities — lift to `lib/utils`:
   - `formatDuration`: [components/layout/timer.tsx:14-20](components/layout/timer.tsx#L14-L20), [components/time-log-history.tsx:24-31](components/time-log-history.tsx#L24-L31)
   - `gradeColor`: [components/academic/grade-projector.tsx:47-52](components/academic/grade-projector.tsx#L47-L52), [components/academic/course-snapshot.tsx:31-36](components/academic/course-snapshot.tsx#L31-L36)
   - `computeCategoryPercent`: same two files
   - `formatDaysUntil`: [components/dashboard/upcoming-milestones.tsx:18-30](components/dashboard/upcoming-milestones.tsx#L18-L30), [components/projects/project-snapshot.tsx:26-38](components/projects/project-snapshot.tsx#L26-L38)
   - `getItemLink`: [app/(app)/page.tsx:52-55](app/\(app\)/page.tsx#L52-L55), [components/dashboard/todays-focus.tsx:29-32](components/dashboard/todays-focus.tsx#L29-L32)
   - `toLocalDateTimeInput`: [components/projects/task-dialog.tsx:48-54](components/projects/task-dialog.tsx#L48-L54), [components/academic/assignment-dialog.tsx:63-69](components/academic/assignment-dialog.tsx#L63-L69)
-- **N8.** Cargo-cult `useMemo` returning the same reference — [app/(app)/recipes/page.tsx:34](app/\(app\)/recipes/page.tsx#L34).
+- ✅ **N8.** Cargo-cult `useMemo` returning the same reference — [app/(app)/recipes/page.tsx:34](app/\(app\)/recipes/page.tsx#L34).
 - **N9.** Topbar `dateLabel` rebuilt every render — [components/layout/topbar.tsx:25-30](components/layout/topbar.tsx#L25-L30). Cheap, but consider memo.
 - **N10.** [components/notes-list.tsx:43-66](components/notes-list.tsx#L43-L66) — relative timestamps frozen at render. After an hour on the page, "5m ago" still says 5m.
-- **N11.** [scripts/create-view.ts](scripts/create-view.ts) duplicates SQL in `lib/db/schema.ts:625-665`. One is dead.
-- **N12.** Unused boilerplate in `public/`: [public/file.svg](public/file.svg), [public/globe.svg](public/globe.svg), [public/next.svg](public/next.svg), [public/vercel.svg](public/vercel.svg), [public/window.svg](public/window.svg). Grep clean.
-- **N13.** [tsconfig.json:3](tsconfig.json#L3) — `target: "ES2017"`. Bump to ES2022 to drop polyfilling on modern browsers / Node 22.
-- **N14.** [components/layout/sidebar.tsx:23](components/layout/sidebar.tsx#L23) — imports `package.json` for the version display. Use `process.env.npm_package_version` at build time.
+- ✅ **N11.** [scripts/create-view.ts](scripts/create-view.ts) duplicates SQL in `lib/db/schema.ts:625-665`. One is dead.
+- ✅ **N12.** Unused boilerplate in `public/`: [public/file.svg](public/file.svg), [public/globe.svg](public/globe.svg), [public/next.svg](public/next.svg), [public/vercel.svg](public/vercel.svg), [public/window.svg](public/window.svg). Grep clean.
+- ✅ **N13.** [tsconfig.json:3](tsconfig.json#L3) — `target: "ES2017"`. Bump to ES2022 to drop polyfilling on modern browsers / Node 22.
+- ✅ **N14.** [components/layout/sidebar.tsx:23](components/layout/sidebar.tsx#L23) — imports `package.json` for the version display. Use `process.env.npm_package_version` at build time.
 
 ---
 

@@ -25,7 +25,7 @@ export async function POST(request: Request, { params }: Params) {
   if (existing.endedAt) {
     return NextResponse.json(
       { error: "Timer already stopped" },
-      { status: 400 },
+      { status: 409 },
     );
   }
 

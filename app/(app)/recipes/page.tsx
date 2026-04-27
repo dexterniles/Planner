@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ChefHat, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ export default function RecipesPage() {
 
   const tagList = (tags ?? []) as TagRow[];
 
-  const visible = useMemo(() => (recipes ?? []) as RecipeRow[], [recipes]);
+  const visible = (recipes ?? []) as RecipeRow[];
 
   return (
     <div>

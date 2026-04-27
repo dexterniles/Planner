@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
-import pkg from "../../package.json";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -210,7 +209,7 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
           </a>
           {!isCollapsed && (
             <span className="ml-auto font-mono text-[10.5px] text-sidebar-foreground/40">
-              v{pkg.version}
+              v{process.env.NEXT_PUBLIC_APP_VERSION}
             </span>
           )}
         </div>

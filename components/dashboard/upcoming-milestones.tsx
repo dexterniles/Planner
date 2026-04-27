@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Flag } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useUpcomingMilestones } from "@/lib/hooks/use-dashboard";
+import { formatDaysUntil } from "@/lib/format";
 
 interface Milestone {
   id: string;
@@ -13,20 +14,6 @@ interface Milestone {
   projectId: string;
   projectName: string;
   projectColor: string | null;
-}
-
-function formatDaysUntil(dateStr: string | null): string {
-  if (!dateStr) return "No date";
-  const target = new Date(dateStr);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  const days = Math.round((target.getTime() - now.getTime()) / 86400000);
-  if (days < 0) return `${Math.abs(days)}d overdue`;
-  if (days === 0) return "Today";
-  if (days === 1) return "Tomorrow";
-  if (days < 7) return `In ${days}d`;
-  if (days < 30) return `In ${Math.floor(days / 7)}w`;
-  return target.toLocaleDateString();
 }
 
 export function UpcomingMilestones() {
@@ -63,7 +50,7 @@ export function UpcomingMilestones() {
                 </p>
               </div>
               <span className="whitespace-nowrap font-mono text-[11.5px] text-muted-foreground">
-                {formatDaysUntil(ms.targetDate)}
+                {formatDaysUntil(ms.targetDate, { prefix: "In " })}
               </span>
             </Link>
           ))}

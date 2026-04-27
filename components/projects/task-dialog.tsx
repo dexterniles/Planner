@@ -28,6 +28,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { RecurrencePicker } from "@/components/recurrence-picker";
+import { toLocalDateTimeInput } from "@/lib/utils";
 import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
@@ -43,15 +44,6 @@ const PRIORITY_OPTIONS = [
   { value: "high", label: "High" },
   { value: "urgent", label: "Urgent" },
 ] as const;
-
-/** Format an ISO datetime as local time for a datetime-local input. */
-function toLocalDateTimeInput(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 interface TaskDialogProps {
   open: boolean;

@@ -4,6 +4,7 @@ import { Clock, Timer, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTimeLogs, useDeleteTimeLog } from "@/lib/hooks/use-time-logs";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { formatDurationLong } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface TimeLogHistoryProps {
@@ -19,15 +20,6 @@ interface TimeLog {
   wasPomodoro: boolean;
   pomodoroIntervalMinutes: number | null;
   notes: string | null;
-}
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
 }
 
 export function TimeLogHistory({
@@ -71,7 +63,7 @@ export function TimeLogHistory({
           <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Time Logged</h3>
           {completedLogs.length > 0 && (
             <p className="text-sm text-muted-foreground">
-              Total: {formatDuration(totalSeconds)} across{" "}
+              Total: {formatDurationLong(totalSeconds)} across{" "}
               {completedLogs.length} session{completedLogs.length !== 1 ? "s" : ""}
             </p>
           )}
@@ -97,7 +89,7 @@ export function TimeLogHistory({
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium font-mono tabular-nums">
-                    {formatDuration(log.durationSeconds ?? 0)}
+                    {formatDurationLong(log.durationSeconds ?? 0)}
                   </span>
                   {log.wasPomodoro && (
                     <span className="text-xs text-primary">Pomodoro</span>

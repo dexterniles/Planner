@@ -29,6 +29,7 @@ import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { BillsThisPeriod } from "@/components/dashboard/bills-this-period";
 import { GradeSnapshot } from "@/components/dashboard/grade-snapshot";
 import { PageHeader } from "@/components/layout/page-header";
+import { getItemLink } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface InboxItem {
@@ -47,11 +48,6 @@ interface AllItem {
   parentId: string;
   parentName: string;
   parentColor: string | null;
-}
-
-function getItemLink(item: AllItem): string {
-  if (item.type === "assignment") return `/academic/${item.parentId}`;
-  return `/projects/${item.parentId}`;
 }
 
 export default function DashboardPage() {
