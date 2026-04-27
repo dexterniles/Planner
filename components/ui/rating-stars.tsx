@@ -86,6 +86,7 @@ export function RatingStars({
               <>
                 <button
                   type="button"
+                  tabIndex={-1}
                   className="absolute left-0 top-0 h-full w-1/2 cursor-pointer"
                   onMouseEnter={() => setHover(star - 0.5)}
                   onClick={() => handleClick(star, true)}

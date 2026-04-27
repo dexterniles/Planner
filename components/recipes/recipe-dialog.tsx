@@ -2,10 +2,9 @@
 
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import {
-  createRecipeSchema,
-  type CreateRecipeInput,
-} from "@/lib/validations/recipe";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { type CreateRecipeInput } from "@/lib/validations/recipe";
 import { useCreateRecipe, useUpdateRecipe } from "@/lib/hooks/use-recipes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,15 +35,26 @@ interface RecipeDialogProps {
   };
 }
 
-type FormValues = {
-  title: string;
-  description: string;
-  prepTimeMinutes: string;
-  cookTimeMinutes: string;
-  portions: string;
-  notes: string;
-  sourceUrl: string;
-};
+const recipeFormSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(300),
+  description: z.string(),
+  prepTimeMinutes: z
+    .string()
+    .refine((s) => s === "" || /^\d+$/.test(s), "Must be a whole number"),
+  cookTimeMinutes: z
+    .string()
+    .refine((s) => s === "" || /^\d+$/.test(s), "Must be a whole number"),
+  portions: z
+    .string()
+    .refine(
+      (s) => /^\d+$/.test(s) && Number(s) >= 1,
+      "Must be at least 1",
+    ),
+  notes: z.string(),
+  sourceUrl: z.string().max(1000),
+});
+
+type FormValues = z.infer<typeof recipeFormSchema>;
 
 export function RecipeDialog({ open, onOpenChange, recipe }: RecipeDialogProps) {
   const isEditing = !!recipe;
@@ -57,6 +67,7 @@ export function RecipeDialog({ open, onOpenChange, recipe }: RecipeDialogProps) 
     reset,
     formState: { errors },
   } = useForm<FormValues>({
+    resolver: zodResolver(recipeFormSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -92,23 +103,17 @@ export function RecipeDialog({ open, onOpenChange, recipe }: RecipeDialogProps) 
       cookTimeMinutes: data.cookTimeMinutes
         ? parseInt(data.cookTimeMinutes, 10)
         : null,
-      portions: data.portions ? Math.max(1, parseInt(data.portions, 10)) : 1,
+      portions: parseInt(data.portions, 10),
       notes: data.notes.trim() || null,
       sourceUrl: data.sourceUrl.trim() || null,
     };
 
-    const parsed = createRecipeSchema.safeParse(payload);
-    if (!parsed.success) {
-      toast.error("Check the form for errors");
-      return;
-    }
-
     try {
       if (isEditing) {
-        await updateRecipe.mutateAsync({ id: recipe.id, data: parsed.data });
+        await updateRecipe.mutateAsync({ id: recipe.id, data: payload });
         toast.success("Recipe updated");
       } else {
-        await createRecipe.mutateAsync(parsed.data);
+        await createRecipe.mutateAsync(payload);
         toast.success("Recipe created");
       }
       onOpenChange(false);
@@ -129,7 +134,7 @@ export function RecipeDialog({ open, onOpenChange, recipe }: RecipeDialogProps) 
             <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
-              {...register("title", { required: "Title is required" })}
+              {...register("title")}
               placeholder="e.g. Sunday Sauce"
               autoFocus
             />

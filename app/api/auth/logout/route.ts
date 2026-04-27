@@ -6,7 +6,6 @@ async function handle(request: Request) {
   await supabase.auth.signOut();
 
   const url = new URL("/login", request.url);
-  // If the middleware bounced an allowlist failure, surface that to the user.
   if (new URL(request.url).searchParams.has("forbidden")) {
     url.searchParams.set("forbidden", "1");
   }

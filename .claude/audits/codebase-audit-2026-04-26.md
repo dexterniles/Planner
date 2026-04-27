@@ -30,8 +30,10 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ✅ **Backlog batch 2** — clock-drift cluster closed via shared `useCurrentDate(intervalMs)` hook in `lib/hooks/use-current-date.ts`. Wired into `bills-this-period.tsx` (B3), `events/page.tsx` (S2), `week-view.tsx` + `month-view.tsx` (S3), `notes-list.tsx` (N10), and `day-view.tsx` (`NowIndicator` line + `isSameDay` check, caught by reviewer).
 - ✅ **Backlog batch 3** — form-seed-from-server cluster closed. B4: `handleRefresh` busts `initialNotesRef` so refresh metadata re-seeds notes. S5: pay-schedule effect converted to seed-once with explicit reset in `handleRemove`. Bonus: lint count dropped 13 → 12 (one `set-state-in-effect` resolved naturally).
 - ✅ **Backlog batch 4** — backend correctness pass shipped. B8 (grades 2N+1 → 3 queries via inArray), B9 (`/api/all-items` Promise.all), B12 (inbox PATCH Zod-validated via new `lib/validations/inbox.ts`), S11 (calendar milestone SQL date filter), S16 (5 parallel COUNTs collapsed to one `db.execute`), S18 (regex+NaN+range guards on month/year/day, status filter casts replaced with `z.enum().safeParse()`), S20 (date-string validators tightened with empty-string allowance for optional fields per regression caught by reviewer), S21 (bills bulk-recurrence wrapped in transaction). Plus S18b day-rollover fix using round-trip date check.
+- ✅ **Backlog batch 10** — code-quality nits. N2 (narrating comments trimmed in `lib/auto-complete-events.ts`, `lib/auth/require-auth.ts`, `app/api/auth/logout/route.ts`), N4 (month-view dot row uses stable `${sourceType}-${sourceId}` key). N6 deferred per audit (documented false positives).
+- ✅ **Backlog batch 6** — a11y / UX polish. S6 (notes save bails on `updateMedia.isPending` to prevent rapid-blur race), S8 (`ConfirmProvider` captures `document.activeElement` on open and restores via `requestAnimationFrame` after close), S9 (`RatingStars` left-half buttons get `tabIndex={-1}` — keyboard tab stops 10 → 5), N5 (`RecipeDialog` wired to `zodResolver` via string-mirror `recipeFormSchema`).
 
-**Next up:** Pick from remaining backlog batches (5: cache hygiene; 6: a11y/UX polish; 7: bundle/perf; 8-10: schema/optimistic/quality), or jump to headline #2 (server-component refactor).
+**Next up:** Combined 5+9 (TanStack mutation pass — needs sign-off on E for `staleTime` defaults), batch 7 (bundle/perf), batch 8 (schema/migrations), then headline #2 (server-component refactor).
 
 ---
 
@@ -91,10 +93,10 @@ Won't crash but will degrade UX or invite future bugs.
 - ✅ **S3.** `WeekView` / `MonthView` "today highlight" doesn't update across midnight. [components/calendar/week-view.tsx:34](components/calendar/week-view.tsx#L34), [components/calendar/month-view.tsx:111](components/calendar/month-view.tsx#L111). `DayView` `NowIndicator` also caught and fixed.
 - **S4.** Dashboard runs chrono `parseDate` per inbox item per render. [app/(app)/page.tsx:188-189](app/\(app\)/page.tsx#L188-L189) Memoize the parsed-dates array.
 - ✅ **S5.** `pay-schedule-settings` form effect overwrites user input on background refetch. [components/bills/pay-schedule-settings.tsx:39-47](components/bills/pay-schedule-settings.tsx#L39-L47) If the user types and a refetch fires, their value is wiped.
-- **S6.** `MovieDetailPage` notes-save races with rapid blur. [app/(app)/movies/[id]/page.tsx:90-102](app/\(app\)/movies/[id]/page.tsx#L90-L102) No mutex; an older request can complete second and stomp the newer save.
+- ✅ **S6.** `MovieDetailPage` notes-save races with rapid blur. [app/(app)/movies/[id]/page.tsx:90-102](app/\(app\)/movies/[id]/page.tsx#L90-L102) No mutex; an older request can complete second and stomp the newer save.
 - **S7.** Mutations missing optimistic updates — task toggle, mark-paid, ratings round-trip then re-paint. Most visible in [components/projects/milestone-list.tsx:37-53](components/projects/milestone-list.tsx#L37-L53), [components/dashboard/bills-this-period.tsx:61-68](components/dashboard/bills-this-period.tsx#L61-L68), [app/(app)/movies/[id]/page.tsx:104-120](app/\(app\)/movies/[id]/page.tsx#L104-L120).
-- **S8.** `confirm-dialog` doesn't restore focus to trigger. [components/ui/confirm-dialog.tsx:40-89](components/ui/confirm-dialog.tsx#L40-L89) After delete, focus falls to `document.body`. Save the previously-focused element on open.
-- **S9.** `RatingStars` is 10 tab stops per widget. [components/ui/rating-stars.tsx:84-101](components/ui/rating-stars.tsx#L84-L101) Two transparent halves per star × 5 stars. Use a single hidden range input or hide half-step from keyboard.
+- ✅ **S8.** `confirm-dialog` doesn't restore focus to trigger. [components/ui/confirm-dialog.tsx:40-89](components/ui/confirm-dialog.tsx#L40-L89) After delete, focus falls to `document.body`. Save the previously-focused element on open.
+- ✅ **S9.** `RatingStars` is 10 tab stops per widget. [components/ui/rating-stars.tsx:84-101](components/ui/rating-stars.tsx#L84-L101) Two transparent halves per star × 5 stars. Use a single hidden range input or hide half-step from keyboard.
 
 ### Backend / data layer
 
@@ -139,10 +141,10 @@ Won't crash but will degrade UX or invite future bugs.
 Low-priority cleanup. Address opportunistically.
 
 - ✅ **N1.** Dead code: [lib/auth/remember-me.ts](lib/auth/remember-me.ts) constants are unused (`grep -rn` clean).
-- **N2.** Defense-in-depth narrating comments scattered across `lib/auth/*`, `lib/auto-complete-events.ts`, several `app/api/*` routes — violates project rule "no narrating comments."
+- ✅ **N2.** Defense-in-depth narrating comments scattered across `lib/auth/*`, `lib/auto-complete-events.ts`, several `app/api/*` routes — violates project rule "no narrating comments."
 - ✅ **N3.** Defensive checks for impossible states: every route's `if (__guard) return __guard` after an already-passed guard call; `lib/auth/recipe-ownership.ts` re-checks ownership after `requireAuthGuard` already enforced single-user.
-- **N4.** Index keys (`key={i}`) on a few semi-dynamic lists. [components/calendar/month-view.tsx:201](components/calendar/month-view.tsx#L201) is the most fragile; the others are over constants.
-- **N5.** [components/recipes/recipe-dialog.tsx:54-69](components/recipes/recipe-dialog.tsx#L54-L69) doesn't use `zodResolver` — runs schema imperatively in `onSubmit`. Inline errors don't show.
+- ✅ **N4.** Index keys (`key={i}`) on a few semi-dynamic lists. [components/calendar/month-view.tsx:201](components/calendar/month-view.tsx#L201) is the most fragile; the others are over constants.
+- ✅ **N5.** [components/recipes/recipe-dialog.tsx:54-69](components/recipes/recipe-dialog.tsx#L54-L69) doesn't use `zodResolver` — runs schema imperatively in `onSubmit`. Inline errors don't show.
 - **N6.** `set-state-in-effect` lint warnings in [components/layout/timer.tsx](components/layout/timer.tsx) and [lib/hooks/use-count-up.ts](lib/hooks/use-count-up.ts) are false positives in their current form, but the patterns could be cleaner (derived state vs mirrored state).
 - ✅ **N7.** Duplicated utilities — lift to `lib/utils`:
   - `formatDuration`: [components/layout/timer.tsx:14-20](components/layout/timer.tsx#L14-L20), [components/time-log-history.tsx:24-31](components/time-log-history.tsx#L24-L31)

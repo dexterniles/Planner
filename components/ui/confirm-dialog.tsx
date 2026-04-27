@@ -41,8 +41,13 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [opts, setOpts] = useState<ConfirmOptions | null>(null);
   const resolverRef = useRef<((value: boolean) => void) | null>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   const confirm = useCallback<ConfirmFn>((options) => {
+    previouslyFocusedRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     setOpts(options);
     setOpen(true);
     return new Promise<boolean>((resolve) => {
@@ -54,6 +59,11 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     resolverRef.current?.(result);
     resolverRef.current = null;
     setOpen(false);
+    const target = previouslyFocusedRef.current;
+    previouslyFocusedRef.current = null;
+    if (target) {
+      requestAnimationFrame(() => target.focus());
+    }
   };
 
   const destructive = opts?.destructive ?? false;

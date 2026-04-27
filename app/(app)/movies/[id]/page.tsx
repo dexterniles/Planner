@@ -90,6 +90,7 @@ export default function MovieDetailPage({
 
   const saveNotes = async () => {
     if (!item) return;
+    if (updateMedia.isPending) return;
     const trimmed = notes.trim();
     if (trimmed === (item.notes ?? "").trim()) return;
     try {

@@ -187,7 +187,7 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
 
               {/* Mobile: color dots only */}
               <div className="mt-1 flex flex-wrap gap-0.5 md:hidden">
-                {dayItems.slice(0, 4).map((dayItem, idx) => {
+                {dayItems.slice(0, 4).map((dayItem) => {
                   const meta =
                     dayItem.item.sourceType === "event"
                       ? getEventCategoryMeta(
@@ -199,7 +199,7 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
                     dayItem.item.color ?? meta?.defaultColor ?? "#888";
                   return (
                     <span
-                      key={idx}
+                      key={`${dayItem.item.sourceType}-${dayItem.item.sourceId}`}
                       className="h-1.5 w-1.5 rounded-full"
                       style={{ backgroundColor: color }}
                     />

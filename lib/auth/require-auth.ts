@@ -4,11 +4,7 @@ import {
   AUTH_USER_EMAIL_HEADER,
 } from "@/lib/supabase/middleware";
 
-// Pattern A: returns a discriminated union so callers get userId/email
-// directly and don't need a second auth lookup. The verified id/email come
-// from request headers stamped by middleware on a successful getUser().
-// If those headers are absent (request that never passed through middleware),
-// fail closed.
+// Trusts headers stamped by proxy.ts after a verified getUser(); fails closed if absent.
 
 const ALLOWED_EMAIL = process.env.ALLOWED_ADMIN_EMAIL?.toLowerCase();
 
