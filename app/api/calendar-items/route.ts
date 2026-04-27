@@ -10,18 +10,18 @@ import {
   eventCategories,
   bills,
   billCategories,
-  SINGLE_USER_ID,
 } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, or, isNull, isNotNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
-  const month = searchParams.get("month"); // YYYY-MM
-  const from = searchParams.get("from"); // ISO date
-  const to = searchParams.get("to"); // ISO date
+  const month = searchParams.get("month");
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
 
   let startDate: Date;
   let endDate: Date;
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     const year = parseInt(yearStr, 10);
     const mon = parseInt(monthStr, 10);
     startDate = new Date(year, mon - 1, 1);
-    endDate = new Date(year, mon, 1); // first of next month
+    endDate = new Date(year, mon, 1);
   } else {
     return NextResponse.json(
       { error: "Provide either ?month=YYYY-MM or ?from=...&to=..." },
@@ -42,7 +42,6 @@ export async function GET(request: Request) {
     );
   }
 
-  // Convert range to YYYY-MM-DD for bill (date) column comparisons
   const startStr = startDate.toISOString().slice(0, 10);
   const endStr = endDate.toISOString().slice(0, 10);
 
@@ -66,7 +65,7 @@ export async function GET(request: Request) {
       .innerJoin(courses, eq(assignments.courseId, courses.id))
       .where(
         and(
-          eq(assignments.userId, SINGLE_USER_ID),
+          eq(assignments.userId, userId),
           gte(assignments.dueDate, startDate),
           lte(assignments.dueDate, endDate),
         ),
@@ -90,7 +89,7 @@ export async function GET(request: Request) {
       .innerJoin(projects, eq(tasks.projectId, projects.id))
       .where(
         and(
-          eq(tasks.userId, SINGLE_USER_ID),
+          eq(tasks.userId, userId),
           gte(tasks.dueDate, startDate),
           lte(tasks.dueDate, endDate),
         ),
@@ -112,7 +111,7 @@ export async function GET(request: Request) {
       })
       .from(milestones)
       .innerJoin(projects, eq(milestones.projectId, projects.id))
-      .where(eq(projects.userId, SINGLE_USER_ID)),
+      .where(eq(projects.userId, userId)),
     db
       .select({
         sourceType: sql<string>`'event'`.as("source_type"),
@@ -134,7 +133,7 @@ export async function GET(request: Request) {
       .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
       .where(
         and(
-          eq(events.userId, SINGLE_USER_ID),
+          eq(events.userId, userId),
           or(
             and(
               gte(events.startsAt, startDate),
@@ -152,7 +151,6 @@ export async function GET(request: Request) {
           ),
         ),
       ),
-    // Bills with due_date in range
     db
       .select({
         sourceType: sql<string>`'bill'`.as("source_type"),
@@ -173,7 +171,7 @@ export async function GET(request: Request) {
       .leftJoin(billCategories, eq(bills.categoryId, billCategories.id))
       .where(
         and(
-          eq(bills.userId, SINGLE_USER_ID),
+          eq(bills.userId, userId),
           gte(bills.dueDate, startStr),
           lte(bills.dueDate, endStr),
         ),

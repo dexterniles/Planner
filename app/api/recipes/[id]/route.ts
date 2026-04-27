@@ -6,7 +6,6 @@ import {
   recipeEquipment,
   taggings,
   tags,
-  SINGLE_USER_ID,
 } from "@/lib/db/schema";
 import { updateRecipeSchema } from "@/lib/validations/recipe";
 import { and, asc, eq } from "drizzle-orm";
@@ -15,15 +14,16 @@ import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
 
   const [recipe] = await db
     .select()
     .from(recipes)
-    .where(and(eq(recipes.id, id), eq(recipes.userId, SINGLE_USER_ID)));
+    .where(and(eq(recipes.id, id), eq(recipes.userId, userId)));
 
   if (!recipe) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -57,7 +57,7 @@ export async function GET(_request: Request, { params }: Params) {
         and(
           eq(taggings.taggableType, "recipe"),
           eq(taggings.taggableId, id),
-          eq(tags.userId, SINGLE_USER_ID),
+          eq(tags.userId, userId),
         ),
       ),
   ]);
@@ -72,8 +72,9 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const body = await request.json();
   const parsed = updateRecipeSchema.safeParse(body);
@@ -84,7 +85,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const [updated] = await db
     .update(recipes)
     .set(parsed.data)
-    .where(and(eq(recipes.id, id), eq(recipes.userId, SINGLE_USER_ID)))
+    .where(and(eq(recipes.id, id), eq(recipes.userId, userId)))
     .returning();
 
   if (!updated) {
@@ -93,13 +94,20 @@ export async function PATCH(request: Request, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function DELETE(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
 
-  // Cascade-delete via FK handles ingredients/steps/equipment.
-  // Manually clear taggings rows since they're polymorphic.
+  const [target] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(eq(recipes.id, id), eq(recipes.userId, userId)));
+  if (!target) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   await db
     .delete(taggings)
     .where(
@@ -108,7 +116,7 @@ export async function DELETE(_request: Request, { params }: Params) {
 
   const [deleted] = await db
     .delete(recipes)
-    .where(and(eq(recipes.id, id), eq(recipes.userId, SINGLE_USER_ID)))
+    .where(and(eq(recipes.id, id), eq(recipes.userId, userId)))
     .returning();
 
   if (!deleted) {

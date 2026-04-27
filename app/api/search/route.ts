@@ -10,14 +10,14 @@ import {
   bills,
   billCategories,
   recipes,
-  SINGLE_USER_ID,
 } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
 
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
         category: sql<string | null>`null`.as("category"),
       })
       .from(courses)
-      .where(eq(courses.userId, SINGLE_USER_ID))
+      .where(eq(courses.userId, userId))
       .then((rows) =>
         rows.filter(
           (r) =>
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
         category: sql<string | null>`null`.as("category"),
       })
       .from(projects)
-      .where(eq(projects.userId, SINGLE_USER_ID))
+      .where(eq(projects.userId, userId))
       .then((rows) =>
         rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
       ),
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
       })
       .from(assignments)
       .innerJoin(courses, eq(assignments.courseId, courses.id))
-      .where(eq(assignments.userId, SINGLE_USER_ID))
+      .where(eq(assignments.userId, userId))
       .then((rows) =>
         rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
       ),
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
       })
       .from(tasks)
       .innerJoin(projects, eq(tasks.projectId, projects.id))
-      .where(eq(tasks.userId, SINGLE_USER_ID))
+      .where(eq(tasks.userId, userId))
       .then((rows) =>
         rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
       ),
@@ -114,7 +114,7 @@ export async function GET(request: Request) {
       })
       .from(events)
       .leftJoin(eventCategories, eq(events.categoryId, eventCategories.id))
-      .where(eq(events.userId, SINGLE_USER_ID))
+      .where(eq(events.userId, userId))
       .then((rows) =>
         rows.filter(
           (r) =>
@@ -134,7 +134,7 @@ export async function GET(request: Request) {
       })
       .from(bills)
       .leftJoin(billCategories, eq(bills.categoryId, billCategories.id))
-      .where(eq(bills.userId, SINGLE_USER_ID))
+      .where(eq(bills.userId, userId))
       .then((rows) =>
         rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
       ),
@@ -149,7 +149,7 @@ export async function GET(request: Request) {
         category: sql<string | null>`null`.as("category"),
       })
       .from(recipes)
-      .where(eq(recipes.userId, SINGLE_USER_ID))
+      .where(eq(recipes.userId, userId))
       .then((rows) =>
         rows.filter((r) => r.title.toLowerCase().includes(q.toLowerCase())),
       ),

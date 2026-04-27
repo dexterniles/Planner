@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { bills, SINGLE_USER_ID } from "@/lib/db/schema";
+import { bills } from "@/lib/db/schema";
 import { updateBillSchema } from "@/lib/validations/bill";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -7,14 +7,15 @@ import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const [bill] = await db
     .select()
     .from(bills)
-    .where(and(eq(bills.id, id), eq(bills.userId, SINGLE_USER_ID)));
+    .where(and(eq(bills.id, id), eq(bills.userId, userId)));
 
   if (!bill) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -23,8 +24,9 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const body = await request.json();
   const parsed = updateBillSchema.safeParse(body);
@@ -44,11 +46,9 @@ export async function PATCH(request: Request, { params }: Params) {
   }
   if (status !== undefined) {
     updateData.status = status;
-    // If marking paid and no explicit paidAt, stamp now
     if (status === "paid" && paidAt === undefined) {
       updateData.paidAt = new Date();
     }
-    // If unmarking as paid, clear paidAt
     if (status === "unpaid") {
       updateData.paidAt = null;
     }
@@ -57,7 +57,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const [updated] = await db
     .update(bills)
     .set(updateData)
-    .where(and(eq(bills.id, id), eq(bills.userId, SINGLE_USER_ID)))
+    .where(and(eq(bills.id, id), eq(bills.userId, userId)))
     .returning();
 
   if (!updated) {
@@ -66,13 +66,14 @@ export async function PATCH(request: Request, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function DELETE(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const [deleted] = await db
     .delete(bills)
-    .where(and(eq(bills.id, id), eq(bills.userId, SINGLE_USER_ID)))
+    .where(and(eq(bills.id, id), eq(bills.userId, userId)))
     .returning();
 
   if (!deleted) {

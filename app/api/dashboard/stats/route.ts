@@ -6,24 +6,24 @@ import {
   assignments,
   tasks,
   timeLogs,
-  SINGLE_USER_ID,
 } from "@/lib/db/schema";
 import { and, eq, gte, inArray, isNotNull, lt, not, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 function startOfWeek(): Date {
   const now = new Date();
-  const day = now.getDay(); // 0=Sun, 1=Mon, ...
-  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
+  const day = now.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
   const monday = new Date(now);
   monday.setDate(now.getDate() + diff);
   monday.setHours(0, 0, 0, 0);
   return monday;
 }
 
-export async function GET() {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const weekStart = startOfWeek();
   const now = new Date();
 
@@ -37,13 +37,13 @@ export async function GET() {
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(courses)
-      .where(and(eq(courses.userId, SINGLE_USER_ID), eq(courses.status, "active"))),
+      .where(and(eq(courses.userId, userId), eq(courses.status, "active"))),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(projects)
       .where(
         and(
-          eq(projects.userId, SINGLE_USER_ID),
+          eq(projects.userId, userId),
           inArray(projects.status, ["planning", "active"]),
         ),
       ),
@@ -52,7 +52,7 @@ export async function GET() {
       .from(assignments)
       .where(
         and(
-          eq(assignments.userId, SINGLE_USER_ID),
+          eq(assignments.userId, userId),
           isNotNull(assignments.dueDate),
           lt(assignments.dueDate, now),
           not(inArray(assignments.status, ["submitted", "graded"])),
@@ -63,7 +63,7 @@ export async function GET() {
       .from(tasks)
       .where(
         and(
-          eq(tasks.userId, SINGLE_USER_ID),
+          eq(tasks.userId, userId),
           isNotNull(tasks.dueDate),
           lt(tasks.dueDate, now),
           not(inArray(tasks.status, ["done", "cancelled"])),
@@ -76,7 +76,7 @@ export async function GET() {
       .from(timeLogs)
       .where(
         and(
-          eq(timeLogs.userId, SINGLE_USER_ID),
+          eq(timeLogs.userId, userId),
           gte(timeLogs.startedAt, weekStart),
           isNotNull(timeLogs.durationSeconds),
         ),

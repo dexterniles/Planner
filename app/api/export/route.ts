@@ -11,14 +11,14 @@ import {
   timeLogs,
   tags,
   inboxItems,
-  SINGLE_USER_ID,
 } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") ?? "json";
 
@@ -26,24 +26,38 @@ export async function GET(request: Request) {
     workspaceRows,
     courseRows,
     assignmentRows,
-    gradeCategoryRows,
     projectRows,
     taskRows,
-    milestoneRows,
     timeLogRows,
     tagRows,
     inboxRows,
   ] = await Promise.all([
-    db.select().from(workspaces).where(eq(workspaces.userId, SINGLE_USER_ID)),
-    db.select().from(courses).where(eq(courses.userId, SINGLE_USER_ID)),
-    db.select().from(assignments).where(eq(assignments.userId, SINGLE_USER_ID)),
-    db.select().from(gradeCategories),
-    db.select().from(projects).where(eq(projects.userId, SINGLE_USER_ID)),
-    db.select().from(tasks).where(eq(tasks.userId, SINGLE_USER_ID)),
-    db.select().from(milestones),
-    db.select().from(timeLogs).where(eq(timeLogs.userId, SINGLE_USER_ID)),
-    db.select().from(tags).where(eq(tags.userId, SINGLE_USER_ID)),
-    db.select().from(inboxItems).where(eq(inboxItems.userId, SINGLE_USER_ID)),
+    db.select().from(workspaces).where(eq(workspaces.userId, userId)),
+    db.select().from(courses).where(eq(courses.userId, userId)),
+    db.select().from(assignments).where(eq(assignments.userId, userId)),
+    db.select().from(projects).where(eq(projects.userId, userId)),
+    db.select().from(tasks).where(eq(tasks.userId, userId)),
+    db.select().from(timeLogs).where(eq(timeLogs.userId, userId)),
+    db.select().from(tags).where(eq(tags.userId, userId)),
+    db.select().from(inboxItems).where(eq(inboxItems.userId, userId)),
+  ]);
+
+  const courseIds = courseRows.map((c) => c.id);
+  const projectIds = projectRows.map((p) => p.id);
+
+  const [gradeCategoryRows, milestoneRows] = await Promise.all([
+    courseIds.length
+      ? db
+          .select()
+          .from(gradeCategories)
+          .where(inArray(gradeCategories.courseId, courseIds))
+      : Promise.resolve([] as (typeof gradeCategories.$inferSelect)[]),
+    projectIds.length
+      ? db
+          .select()
+          .from(milestones)
+          .where(inArray(milestones.projectId, projectIds))
+      : Promise.resolve([] as (typeof milestones.$inferSelect)[]),
   ]);
 
   const data = {
@@ -61,7 +75,6 @@ export async function GET(request: Request) {
   };
 
   if (format === "csv") {
-    // Flatten into a simplified CSV of items
     const rows = [
       ["type", "name", "status", "due_date", "parent", "created_at"],
       ...assignmentRows.map((a) => {

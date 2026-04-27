@@ -1,13 +1,14 @@
 import { db } from "@/lib/db";
-import { bills, SINGLE_USER_ID } from "@/lib/db/schema";
+import { bills } from "@/lib/db/schema";
 import { bulkMarkPaidSchema } from "@/lib/validations/bill";
 import { and, eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function POST(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = bulkMarkPaidSchema.safeParse(body);
   if (!parsed.success) {
@@ -20,10 +21,7 @@ export async function POST(request: Request) {
     .update(bills)
     .set({ status: "paid", paidAt: now })
     .where(
-      and(
-        eq(bills.userId, SINGLE_USER_ID),
-        inArray(bills.id, parsed.data.ids),
-      ),
+      and(eq(bills.userId, userId), inArray(bills.id, parsed.data.ids)),
     )
     .returning({ id: bills.id });
 

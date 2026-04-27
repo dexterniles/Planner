@@ -1,12 +1,13 @@
 import { db } from "@/lib/db";
-import { assignments, tasks, courses, projects, SINGLE_USER_ID } from "@/lib/db/schema";
+import { assignments, tasks, courses, projects } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
-export async function GET() {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const assignmentRows = await db
     .select({
       id: assignments.id,
@@ -21,7 +22,7 @@ export async function GET() {
     })
     .from(assignments)
     .innerJoin(courses, eq(assignments.courseId, courses.id))
-    .where(eq(assignments.userId, SINGLE_USER_ID));
+    .where(eq(assignments.userId, userId));
 
   const taskRows = await db
     .select({
@@ -37,7 +38,7 @@ export async function GET() {
     })
     .from(tasks)
     .innerJoin(projects, eq(tasks.projectId, projects.id))
-    .where(eq(tasks.userId, SINGLE_USER_ID));
+    .where(eq(tasks.userId, userId));
 
   const allItems = [...assignmentRows, ...taskRows].sort((a, b) => {
     if (!a.dueDate && !b.dueDate) return 0;

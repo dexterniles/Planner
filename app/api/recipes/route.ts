@@ -1,13 +1,14 @@
 import { db } from "@/lib/db";
-import { recipes, taggings, tags, SINGLE_USER_ID } from "@/lib/db/schema";
+import { recipes, taggings, tags } from "@/lib/db/schema";
 import { createRecipeSchema } from "@/lib/validations/recipe";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("q")?.trim().toLowerCase() ?? "";
   const tagId = searchParams.get("tagId");
@@ -15,17 +16,14 @@ export async function GET(request: Request) {
   const rows = await db
     .select()
     .from(recipes)
-    .where(eq(recipes.userId, SINGLE_USER_ID))
+    .where(eq(recipes.userId, userId))
     .orderBy(desc(recipes.updatedAt));
 
   let filtered = rows;
   if (search) {
-    filtered = filtered.filter((r) =>
-      r.title.toLowerCase().includes(search),
-    );
+    filtered = filtered.filter((r) => r.title.toLowerCase().includes(search));
   }
 
-  // Fetch all taggings for these recipes in one query
   const recipeIds = filtered.map((r) => r.id);
   const taggingRows = recipeIds.length
     ? await db
@@ -41,7 +39,7 @@ export async function GET(request: Request) {
           and(
             eq(taggings.taggableType, "recipe"),
             inArray(taggings.taggableId, recipeIds),
-            eq(tags.userId, SINGLE_USER_ID),
+            eq(tags.userId, userId),
           ),
         )
     : [];
@@ -69,8 +67,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = createRecipeSchema.safeParse(body);
   if (!parsed.success) {
@@ -81,7 +80,7 @@ export async function POST(request: Request) {
     .insert(recipes)
     .values({
       ...parsed.data,
-      userId: SINGLE_USER_ID,
+      userId,
     })
     .returning();
 

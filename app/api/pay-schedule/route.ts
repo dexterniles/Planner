@@ -1,24 +1,26 @@
 import { db } from "@/lib/db";
-import { paySchedule, SINGLE_USER_ID } from "@/lib/db/schema";
+import { paySchedule } from "@/lib/db/schema";
 import { upsertPayScheduleSchema } from "@/lib/validations/bill";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
-export async function GET() {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const [existing] = await db
     .select()
     .from(paySchedule)
-    .where(eq(paySchedule.userId, SINGLE_USER_ID));
+    .where(eq(paySchedule.userId, userId));
 
   return NextResponse.json(existing ?? null);
 }
 
 export async function PUT(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = upsertPayScheduleSchema.safeParse(body);
   if (!parsed.success) {
@@ -28,28 +30,29 @@ export async function PUT(request: Request) {
   const [existing] = await db
     .select()
     .from(paySchedule)
-    .where(eq(paySchedule.userId, SINGLE_USER_ID));
+    .where(eq(paySchedule.userId, userId));
 
   if (existing) {
     const [updated] = await db
       .update(paySchedule)
       .set(parsed.data)
-      .where(eq(paySchedule.id, existing.id))
+      .where(and(eq(paySchedule.id, existing.id), eq(paySchedule.userId, userId)))
       .returning();
     return NextResponse.json(updated);
   }
 
   const [created] = await db
     .insert(paySchedule)
-    .values({ ...parsed.data, userId: SINGLE_USER_ID })
+    .values({ ...parsed.data, userId })
     .returning();
 
   return NextResponse.json(created, { status: 201 });
 }
 
-export async function DELETE() {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
-  await db.delete(paySchedule).where(eq(paySchedule.userId, SINGLE_USER_ID));
+export async function DELETE(request: Request) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
+  await db.delete(paySchedule).where(eq(paySchedule.userId, userId));
   return NextResponse.json({ success: true });
 }

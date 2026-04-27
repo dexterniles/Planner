@@ -8,11 +8,12 @@ import { userOwnsRecipe } from "@/lib/auth/recipe-ownership";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
-  if (!(await userOwnsRecipe(id))) {
+  if (!(await userOwnsRecipe(id, userId))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -26,10 +27,11 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function POST(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
-  if (!(await userOwnsRecipe(id))) {
+  if (!(await userOwnsRecipe(id, userId))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

@@ -1,13 +1,14 @@
 import { db } from "@/lib/db";
-import { notes, SINGLE_USER_ID } from "@/lib/db/schema";
+import { notes } from "@/lib/db/schema";
 import { createNoteSchema } from "@/lib/validations/note";
 import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const parentType = searchParams.get("parentType");
   const parentId = searchParams.get("parentId");
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
   }
 
   const conditions = [
-    eq(notes.userId, SINGLE_USER_ID),
+    eq(notes.userId, userId),
     eq(
       notes.parentType,
       parentType as
@@ -46,8 +47,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = createNoteSchema.safeParse(body);
   if (!parsed.success) {
@@ -58,7 +60,7 @@ export async function POST(request: Request) {
     .insert(notes)
     .values({
       ...parsed.data,
-      userId: SINGLE_USER_ID,
+      userId,
     })
     .returning();
 

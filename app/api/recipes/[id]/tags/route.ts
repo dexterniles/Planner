@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { taggings, tags, SINGLE_USER_ID } from "@/lib/db/schema";
+import { taggings, tags } from "@/lib/db/schema";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -12,11 +12,12 @@ const attachTagSchema = z.object({
   tagId: z.string().uuid(),
 });
 
-export async function GET(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
-  if (!(await userOwnsRecipe(id))) {
+  if (!(await userOwnsRecipe(id, userId))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -32,7 +33,7 @@ export async function GET(_request: Request, { params }: Params) {
       and(
         eq(taggings.taggableType, "recipe"),
         eq(taggings.taggableId, id),
-        eq(tags.userId, SINGLE_USER_ID),
+        eq(tags.userId, userId),
       ),
     );
 
@@ -40,10 +41,11 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function POST(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
-  if (!(await userOwnsRecipe(id))) {
+  if (!(await userOwnsRecipe(id, userId))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -53,16 +55,14 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  // Verify the tag belongs to the user.
   const [tag] = await db
     .select({ id: tags.id })
     .from(tags)
-    .where(and(eq(tags.id, parsed.data.tagId), eq(tags.userId, SINGLE_USER_ID)));
+    .where(and(eq(tags.id, parsed.data.tagId), eq(tags.userId, userId)));
   if (!tag) {
     return NextResponse.json({ error: "Tag not found" }, { status: 404 });
   }
 
-  // No-op if already attached.
   const [existing] = await db
     .select()
     .from(taggings)

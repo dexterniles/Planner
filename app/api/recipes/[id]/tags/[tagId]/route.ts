@@ -7,11 +7,12 @@ import { userOwnsRecipe } from "@/lib/auth/recipe-ownership";
 
 type Params = { params: Promise<{ id: string; tagId: string }> };
 
-export async function DELETE(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function DELETE(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id, tagId } = await params;
-  if (!(await userOwnsRecipe(id))) {
+  if (!(await userOwnsRecipe(id, userId))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

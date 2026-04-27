@@ -1,11 +1,6 @@
 import { db } from "@/lib/db";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
-import {
-  courses,
-  assignments,
-  gradeCategories,
-  SINGLE_USER_ID,
-} from "@/lib/db/schema";
+import { courses, assignments, gradeCategories } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -49,9 +44,10 @@ function computeCategoryGrade(
   };
 }
 
-export async function GET() {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const activeCourses = await db
     .select({
       id: courses.id,
@@ -60,9 +56,7 @@ export async function GET() {
       color: courses.color,
     })
     .from(courses)
-    .where(
-      and(eq(courses.userId, SINGLE_USER_ID), eq(courses.status, "active")),
-    )
+    .where(and(eq(courses.userId, userId), eq(courses.status, "active")))
     .orderBy(courses.name);
 
   const results = await Promise.all(

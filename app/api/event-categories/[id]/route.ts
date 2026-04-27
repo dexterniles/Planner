@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { eventCategories, SINGLE_USER_ID } from "@/lib/db/schema";
+import { eventCategories } from "@/lib/db/schema";
 import { updateEventCategorySchema } from "@/lib/validations/event";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -8,8 +8,9 @@ import { requireAuthGuard } from "@/lib/auth/require-auth";
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const body = await request.json();
   const parsed = updateEventCategorySchema.safeParse(body);
@@ -21,10 +22,7 @@ export async function PATCH(request: Request, { params }: Params) {
     .update(eventCategories)
     .set(parsed.data)
     .where(
-      and(
-        eq(eventCategories.id, id),
-        eq(eventCategories.userId, SINGLE_USER_ID),
-      ),
+      and(eq(eventCategories.id, id), eq(eventCategories.userId, userId)),
     )
     .returning();
 
@@ -34,17 +32,15 @@ export async function PATCH(request: Request, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function DELETE(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const [deleted] = await db
     .delete(eventCategories)
     .where(
-      and(
-        eq(eventCategories.id, id),
-        eq(eventCategories.userId, SINGLE_USER_ID),
-      ),
+      and(eq(eventCategories.id, id), eq(eventCategories.userId, userId)),
     )
     .returning();
 

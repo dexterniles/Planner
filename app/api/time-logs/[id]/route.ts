@@ -1,18 +1,19 @@
 import { db } from "@/lib/db";
 import { timeLogs } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function DELETE(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function DELETE(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const [deleted] = await db
     .delete(timeLogs)
-    .where(eq(timeLogs.id, id))
+    .where(and(eq(timeLogs.id, id), eq(timeLogs.userId, userId)))
     .returning();
 
   if (!deleted) {

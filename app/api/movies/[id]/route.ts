@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { mediaItems, SINGLE_USER_ID } from "@/lib/db/schema";
+import { mediaItems } from "@/lib/db/schema";
 import { updateMediaSchema } from "@/lib/validations/media";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -7,14 +7,15 @@ import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const [row] = await db
     .select()
     .from(mediaItems)
-    .where(and(eq(mediaItems.id, id), eq(mediaItems.userId, SINGLE_USER_ID)));
+    .where(and(eq(mediaItems.id, id), eq(mediaItems.userId, userId)));
   if (!row) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -22,8 +23,9 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const body = await request.json();
   const parsed = updateMediaSchema.safeParse(body);
@@ -34,7 +36,6 @@ export async function PATCH(request: Request, { params }: Params) {
   const updates: Record<string, unknown> = {};
   if (parsed.data.status !== undefined) {
     updates.status = parsed.data.status;
-    // Auto-stamp watchedAt when transitioning to watched, clear if leaving.
     if (parsed.data.status === "watched") {
       updates.watchedAt = new Date();
     } else {
@@ -48,7 +49,6 @@ export async function PATCH(request: Request, { params }: Params) {
   if (parsed.data.notes !== undefined) {
     updates.notes = parsed.data.notes;
   }
-  // Allow explicit override of watchedAt if provided alongside status.
   if (parsed.data.watchedAt !== undefined) {
     updates.watchedAt = parsed.data.watchedAt
       ? new Date(parsed.data.watchedAt)
@@ -58,7 +58,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const [updated] = await db
     .update(mediaItems)
     .set(updates)
-    .where(and(eq(mediaItems.id, id), eq(mediaItems.userId, SINGLE_USER_ID)))
+    .where(and(eq(mediaItems.id, id), eq(mediaItems.userId, userId)))
     .returning();
 
   if (!updated) {
@@ -67,13 +67,14 @@ export async function PATCH(request: Request, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function DELETE(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const [deleted] = await db
     .delete(mediaItems)
-    .where(and(eq(mediaItems.id, id), eq(mediaItems.userId, SINGLE_USER_ID)))
+    .where(and(eq(mediaItems.id, id), eq(mediaItems.userId, userId)))
     .returning();
   if (!deleted) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

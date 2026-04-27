@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { mediaItems, SINGLE_USER_ID } from "@/lib/db/schema";
+import { mediaItems } from "@/lib/db/schema";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 import {
   addMediaSchema,
@@ -11,13 +11,14 @@ import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") as MediaStatus | null;
   const mediaType = searchParams.get("mediaType") as MediaType | null;
 
-  const conditions = [eq(mediaItems.userId, SINGLE_USER_ID)];
+  const conditions = [eq(mediaItems.userId, userId)];
   if (status === "watchlist" || status === "watching" || status === "watched") {
     conditions.push(eq(mediaItems.status, status));
   }
@@ -35,8 +36,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = addMediaSchema.safeParse(body);
   if (!parsed.success) {
@@ -44,7 +46,6 @@ export async function POST(request: Request) {
   }
   const { mediaType, tmdbId, status } = parsed.data;
 
-  // Fetch full TMDB metadata + external IDs and snapshot.
   let payload;
   try {
     payload = await tmdbBuildAddPayload(mediaType, tmdbId);
@@ -55,14 +56,12 @@ export async function POST(request: Request) {
     );
   }
 
-  // If the title is already in the library, surface the existing row instead
-  // of erroring on the unique index — adds idempotency to the search flow.
   const [existing] = await db
     .select()
     .from(mediaItems)
     .where(
       and(
-        eq(mediaItems.userId, SINGLE_USER_ID),
+        eq(mediaItems.userId, userId),
         eq(mediaItems.mediaType, mediaType),
         eq(mediaItems.tmdbId, tmdbId),
       ),
@@ -74,7 +73,7 @@ export async function POST(request: Request) {
   const [inserted] = await db
     .insert(mediaItems)
     .values({
-      userId: SINGLE_USER_ID,
+      userId,
       mediaType: payload.mediaType,
       tmdbId: payload.tmdbId,
       imdbId: payload.imdbId,

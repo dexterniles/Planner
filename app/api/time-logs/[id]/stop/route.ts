@@ -1,21 +1,22 @@
 import { db } from "@/lib/db";
 import { timeLogs } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const body = await request.json().catch(() => ({}));
 
   const [existing] = await db
     .select()
     .from(timeLogs)
-    .where(eq(timeLogs.id, id));
+    .where(and(eq(timeLogs.id, id), eq(timeLogs.userId, userId)));
 
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -40,7 +41,7 @@ export async function POST(request: Request, { params }: Params) {
       durationSeconds,
       notes: body.notes ?? existing.notes,
     })
-    .where(eq(timeLogs.id, id))
+    .where(and(eq(timeLogs.id, id), eq(timeLogs.userId, userId)))
     .returning();
 
   return NextResponse.json(updated);

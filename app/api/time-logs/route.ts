@@ -1,13 +1,14 @@
 import { db } from "@/lib/db";
-import { timeLogs, SINGLE_USER_ID } from "@/lib/db/schema";
+import { timeLogs } from "@/lib/db/schema";
 import { startTimeLogSchema } from "@/lib/validations/time-log";
 import { eq, and, isNull, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const loggableType = searchParams.get("loggableType");
   const loggableId = searchParams.get("loggableId");
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
       .from(timeLogs)
       .where(
         and(
-          eq(timeLogs.userId, SINGLE_USER_ID),
+          eq(timeLogs.userId, userId),
           eq(timeLogs.loggableType, loggableType as "course" | "project" | "assignment" | "task"),
           eq(timeLogs.loggableId, loggableId),
         ),
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
     result = await db
       .select()
       .from(timeLogs)
-      .where(eq(timeLogs.userId, SINGLE_USER_ID))
+      .where(eq(timeLogs.userId, userId))
       .orderBy(desc(timeLogs.startedAt))
       .limit(limit);
   }
@@ -40,21 +41,19 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = startTimeLogSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  // Stop any currently running timer first
   const running = await db
     .select()
     .from(timeLogs)
-    .where(
-      and(eq(timeLogs.userId, SINGLE_USER_ID), isNull(timeLogs.endedAt)),
-    );
+    .where(and(eq(timeLogs.userId, userId), isNull(timeLogs.endedAt)));
 
   for (const log of running) {
     const duration = Math.floor(
@@ -70,7 +69,7 @@ export async function POST(request: Request) {
     .insert(timeLogs)
     .values({
       ...parsed.data,
-      userId: SINGLE_USER_ID,
+      userId,
       startedAt: new Date(),
     })
     .returning();

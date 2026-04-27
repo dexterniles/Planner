@@ -1,13 +1,14 @@
 import { db } from "@/lib/db";
-import { bills, recurrenceRules, SINGLE_USER_ID } from "@/lib/db/schema";
+import { bills, recurrenceRules } from "@/lib/db/schema";
 import { createBillSchema, type BillStatus } from "@/lib/validations/bill";
 import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   const categoryId = searchParams.get("categoryId");
   const limit = parseInt(searchParams.get("limit") ?? "500", 10);
 
-  const conditions: SQL[] = [eq(bills.userId, SINGLE_USER_ID)];
+  const conditions: SQL[] = [eq(bills.userId, userId)];
   if (from) conditions.push(gte(bills.dueDate, from));
   if (to) conditions.push(lte(bills.dueDate, to));
   if (status) conditions.push(eq(bills.status, status as BillStatus));
@@ -31,7 +32,6 @@ export async function GET(request: Request) {
   return NextResponse.json(result);
 }
 
-/** Add N units to a date string (YYYY-MM-DD), returning a new YYYY-MM-DD. */
 function addInterval(
   dateStr: string,
   frequency: "weekly" | "biweekly" | "monthly",
@@ -49,8 +49,9 @@ function addInterval(
 }
 
 export async function POST(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = createBillSchema.safeParse(body);
   if (!parsed.success) {
@@ -59,7 +60,6 @@ export async function POST(request: Request) {
 
   const { recurrence, amount, paidAmount, paidAt, ...rest } = parsed.data;
 
-  // Non-recurring: single insert
   if (!recurrence) {
     const [bill] = await db
       .insert(bills)
@@ -68,18 +68,17 @@ export async function POST(request: Request) {
         amount: amount.toString(),
         paidAmount: paidAmount != null ? paidAmount.toString() : null,
         paidAt: paidAt ? new Date(paidAt) : null,
-        userId: SINGLE_USER_ID,
+        userId,
       })
       .returning();
     return NextResponse.json(bill, { status: 201 });
   }
 
-  // Recurring: create rule + N materialized instances
   const [rule] = await db
     .insert(recurrenceRules)
     .values({
       ownerType: "bill",
-      ownerId: "00000000-0000-0000-0000-000000000000", // placeholder, not used for bills
+      ownerId: "00000000-0000-0000-0000-000000000000",
       frequency: recurrence.frequency,
       endDate: recurrence.endDate ?? null,
       count: recurrence.count ?? null,
@@ -98,7 +97,7 @@ export async function POST(request: Request) {
       paidAmount: null,
       paidAt: null,
       recurrenceRuleId: rule.id,
-      userId: SINGLE_USER_ID,
+      userId,
     });
   }
 

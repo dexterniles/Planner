@@ -1,13 +1,14 @@
 import { db } from "@/lib/db";
-import { projects, SINGLE_USER_ID } from "@/lib/db/schema";
+import { projects } from "@/lib/db/schema";
 import { createProjectSchema } from "@/lib/validations/project";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get("workspaceId");
 
@@ -15,20 +16,26 @@ export async function GET(request: Request) {
     ? await db
         .select()
         .from(projects)
-        .where(eq(projects.workspaceId, workspaceId))
+        .where(
+          and(
+            eq(projects.userId, userId),
+            eq(projects.workspaceId, workspaceId),
+          ),
+        )
         .orderBy(projects.name)
     : await db
         .select()
         .from(projects)
-        .where(eq(projects.userId, SINGLE_USER_ID))
+        .where(eq(projects.userId, userId))
         .orderBy(projects.name);
 
   return NextResponse.json(result);
 }
 
 export async function POST(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = createProjectSchema.safeParse(body);
   if (!parsed.success) {
@@ -37,7 +44,7 @@ export async function POST(request: Request) {
 
   const [project] = await db
     .insert(projects)
-    .values({ ...parsed.data, userId: SINGLE_USER_ID })
+    .values({ ...parsed.data, userId })
     .returning();
 
   return NextResponse.json(project, { status: 201 });

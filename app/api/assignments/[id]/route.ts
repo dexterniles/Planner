@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { assignments, SINGLE_USER_ID } from "@/lib/db/schema";
+import { assignments } from "@/lib/db/schema";
 import { updateAssignmentSchema } from "@/lib/validations/assignment";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
@@ -7,16 +7,15 @@ import { requireAuthGuard } from "@/lib/auth/require-auth";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const [assignment] = await db
     .select()
     .from(assignments)
-    .where(
-      and(eq(assignments.id, id), eq(assignments.userId, SINGLE_USER_ID)),
-    );
+    .where(and(eq(assignments.id, id), eq(assignments.userId, userId)));
 
   if (!assignment) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -25,8 +24,9 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const body = await request.json();
   const parsed = updateAssignmentSchema.safeParse(body);
@@ -50,9 +50,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const [updated] = await db
     .update(assignments)
     .set(updateData)
-    .where(
-      and(eq(assignments.id, id), eq(assignments.userId, SINGLE_USER_ID)),
-    )
+    .where(and(eq(assignments.id, id), eq(assignments.userId, userId)))
     .returning();
 
   if (!updated) {
@@ -61,15 +59,14 @@ export async function PATCH(request: Request, { params }: Params) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function DELETE(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
   const [deleted] = await db
     .delete(assignments)
-    .where(
-      and(eq(assignments.id, id), eq(assignments.userId, SINGLE_USER_ID)),
-    )
+    .where(and(eq(assignments.id, id), eq(assignments.userId, userId)))
     .returning();
 
   if (!deleted) {

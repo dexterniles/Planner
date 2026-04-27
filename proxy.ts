@@ -3,7 +3,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 const ALLOWED_EMAIL = process.env.ALLOWED_ADMIN_EMAIL?.toLowerCase();
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const { user, response } = await updateSession(request);
 
@@ -34,12 +34,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Run on every path except:
-     *  - /login                  (the login UI itself)
-     *  - /api/auth/*             (login/logout endpoints)
-     *  - Next.js internals + static assets
-     */
-    "/((?!_next/static|_next/image|favicon.ico|login|api/auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|woff2?|ttf)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|login|api/auth|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|woff2?|ttf)$).*)",
   ],
 };

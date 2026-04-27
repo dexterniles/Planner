@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { events, eventCategories, SINGLE_USER_ID } from "@/lib/db/schema";
+import { events, eventCategories } from "@/lib/db/schema";
 import { createEventSchema } from "@/lib/validations/event";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 import type { EventStatus } from "@/lib/validations/event";
@@ -8,8 +8,9 @@ import { and, asc, eq, gte, lte, type SQL } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { searchParams } = new URL(request.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
@@ -17,10 +18,9 @@ export async function GET(request: Request) {
   const status = searchParams.get("status");
   const limit = parseInt(searchParams.get("limit") ?? "500", 10);
 
-  // Transition past events to 'completed' before returning
-  await autoCompletePastEvents();
+  await autoCompletePastEvents(userId);
 
-  const conditions: SQL[] = [eq(events.userId, SINGLE_USER_ID)];
+  const conditions: SQL[] = [eq(events.userId, userId)];
   if (from) conditions.push(gte(events.startsAt, new Date(from)));
   if (to) conditions.push(lte(events.startsAt, new Date(to)));
   if (categoryId) conditions.push(eq(events.categoryId, categoryId));
@@ -57,8 +57,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const body = await request.json();
   const parsed = createEventSchema.safeParse(body);
   if (!parsed.success) {
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
       ...rest,
       startsAt: new Date(startsAt),
       endsAt: endsAt ? new Date(endsAt) : null,
-      userId: SINGLE_USER_ID,
+      userId,
     })
     .returning();
 

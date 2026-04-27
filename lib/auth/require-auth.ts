@@ -1,33 +1,38 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/supabase/server-auth";
+import {
+  AUTH_USER_ID_HEADER,
+  AUTH_USER_EMAIL_HEADER,
+} from "@/lib/supabase/middleware";
+
+// Pattern A: returns a discriminated union so callers get userId/email
+// directly and don't need a second auth lookup. The verified id/email come
+// from request headers stamped by middleware on a successful getUser().
+// If those headers are absent (request that never passed through middleware),
+// fail closed.
 
 const ALLOWED_EMAIL = process.env.ALLOWED_ADMIN_EMAIL?.toLowerCase();
 
-/**
- * Defense-in-depth check for API route handlers. The middleware should
- * already have rejected unauthenticated requests, but this guards against
- * misconfiguration or future regressions.
- *
- * Returns a 401 NextResponse if the request is not authenticated as the
- * allowlisted user, otherwise returns null and the handler should proceed.
- *
- * Usage:
- *   export async function GET() {
- *     const guard = await requireAuthGuard();
- *     if (guard) return guard;
- *     // ... normal logic
- *   }
- */
-export async function requireAuthGuard(): Promise<NextResponse | null> {
-  const user = await getSessionUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export type AuthResult =
+  | { ok: true; userId: string; email: string }
+  | { ok: false; response: NextResponse };
+
+export async function requireAuthGuard(request: Request): Promise<AuthResult> {
+  const userId = request.headers.get(AUTH_USER_ID_HEADER);
+  const email = request.headers.get(AUTH_USER_EMAIL_HEADER);
+
+  if (!userId || !email) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
   }
-  if (
-    ALLOWED_EMAIL &&
-    user.email?.toLowerCase() !== ALLOWED_EMAIL
-  ) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  if (ALLOWED_EMAIL && email.toLowerCase() !== ALLOWED_EMAIL) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+    };
   }
-  return null;
+
+  return { ok: true, userId, email };
 }

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { courses, SINGLE_USER_ID } from "@/lib/db/schema";
+import { courses } from "@/lib/db/schema";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 import {
   ensureSyllabusBucket,
@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
 
-const MAX_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED_MIME = new Set([
   "application/pdf",
   "application/msword",
@@ -20,20 +20,20 @@ const ALLOWED_MIME = new Set([
   "text/markdown",
 ]);
 
-async function getCourseOr404(id: string) {
+async function getCourseOr404(id: string, userId: string) {
   const [course] = await db
     .select()
     .from(courses)
-    .where(and(eq(courses.id, id), eq(courses.userId, SINGLE_USER_ID)));
+    .where(and(eq(courses.id, id), eq(courses.userId, userId)));
   return course ?? null;
 }
 
-/** Returns a short-lived signed URL + metadata for the current syllabus. */
-export async function GET(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function GET(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
-  const course = await getCourseOr404(id);
+  const course = await getCourseOr404(id, userId);
   if (!course) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
   }
@@ -48,7 +48,7 @@ export async function GET(_request: Request, { params }: Params) {
 
   const { data, error } = await supabaseAdmin.storage
     .from(SYLLABUS_BUCKET)
-    .createSignedUrl(course.syllabusFilePath, 60 * 15); // 15 min
+    .createSignedUrl(course.syllabusFilePath, 60 * 15);
   if (error || !data) {
     return NextResponse.json(
       { error: "Failed to create signed URL" },
@@ -64,12 +64,12 @@ export async function GET(_request: Request, { params }: Params) {
   });
 }
 
-/** Multipart upload — replaces any existing syllabus for the course. */
 export async function POST(request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
-  const course = await getCourseOr404(id);
+  const course = await getCourseOr404(id, userId);
   if (!course) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
   }
@@ -100,16 +100,14 @@ export async function POST(request: Request, { params }: Params) {
 
   await ensureSyllabusBucket();
 
-  // If there was a previous syllabus, remove it first (best-effort).
   if (course.syllabusFilePath) {
     await supabaseAdmin.storage
       .from(SYLLABUS_BUCKET)
       .remove([course.syllabusFilePath]);
   }
 
-  // Storage key: <userId>/<courseId>/<timestamp>-<safeName>
   const safeName = file.name.replace(/[^A-Za-z0-9._-]+/g, "_");
-  const key = `${SINGLE_USER_ID}/${id}/${Date.now()}-${safeName}`;
+  const key = `${userId}/${id}/${Date.now()}-${safeName}`;
 
   const buffer = await file.arrayBuffer();
   const { error: uploadErr } = await supabaseAdmin.storage
@@ -133,7 +131,7 @@ export async function POST(request: Request, { params }: Params) {
       syllabusName: file.name,
       syllabusUploadedAt: uploadedAt,
     })
-    .where(and(eq(courses.id, id), eq(courses.userId, SINGLE_USER_ID)));
+    .where(and(eq(courses.id, id), eq(courses.userId, userId)));
 
   return NextResponse.json({
     hasSyllabus: true,
@@ -142,12 +140,12 @@ export async function POST(request: Request, { params }: Params) {
   });
 }
 
-/** Delete the current syllabus and clear DB columns. */
-export async function DELETE(_request: Request, { params }: Params) {
-  const __guard = await requireAuthGuard();
-  if (__guard) return __guard;
+export async function DELETE(request: Request, { params }: Params) {
+  const auth = await requireAuthGuard(request);
+  if (!auth.ok) return auth.response;
+  const { userId } = auth;
   const { id } = await params;
-  const course = await getCourseOr404(id);
+  const course = await getCourseOr404(id, userId);
   if (!course) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
   }
@@ -166,7 +164,7 @@ export async function DELETE(_request: Request, { params }: Params) {
       syllabusName: null,
       syllabusUploadedAt: null,
     })
-    .where(and(eq(courses.id, id), eq(courses.userId, SINGLE_USER_ID)));
+    .where(and(eq(courses.id, id), eq(courses.userId, userId)));
 
   return NextResponse.json({ success: true });
 }

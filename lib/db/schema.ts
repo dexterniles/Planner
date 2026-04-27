@@ -14,7 +14,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-// ─── Hardcoded single-user ID ───────────────────────────────────────────────
+// Seed-only: scripts/seed.ts and scripts/import-letterboxd.ts use this as a
+// stable userId. Route handlers must resolve userId from the auth helper.
 export const SINGLE_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 // ─── Enums ──────────────────────────────────────────────────────────────────

@@ -1,12 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/**
- * Refreshes the Supabase auth session on each request and returns the current
- * user. The response object is updated with refreshed cookies — return that
- * (or a redirect derived from it) from the middleware so cookies persist.
- */
+export const AUTH_USER_ID_HEADER = "x-auth-user-id";
+export const AUTH_USER_EMAIL_HEADER = "x-auth-user-email";
+
 export async function updateSession(request: NextRequest) {
+  request.headers.delete(AUTH_USER_ID_HEADER);
+  request.headers.delete(AUTH_USER_EMAIL_HEADER);
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -30,10 +31,21 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // IMPORTANT: getUser() must be called for the session to be refreshed.
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (user) {
+    request.headers.set(AUTH_USER_ID_HEADER, user.id);
+    if (user.email) {
+      request.headers.set(AUTH_USER_EMAIL_HEADER, user.email);
+    }
+    const refreshed = NextResponse.next({ request });
+    response.cookies.getAll().forEach((cookie) => {
+      refreshed.cookies.set(cookie);
+    });
+    response = refreshed;
+  }
 
   return { user, response };
 }
