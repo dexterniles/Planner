@@ -11,6 +11,7 @@ import { EventDialog } from "@/components/events/event-dialog";
 import { getEventCategoryMeta } from "@/components/events/event-categories";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
+import { useCurrentDate } from "@/lib/hooks/use-current-date";
 
 type TimeFilter = "upcoming" | "past" | "all";
 
@@ -32,7 +33,7 @@ export default function EventsPage() {
   });
   const { data: categories } = useEventCategories();
 
-  const now = useMemo(() => new Date(), []);
+  const now = useCurrentDate();
 
   const filtered = useMemo(() => {
     if (!events) return [];

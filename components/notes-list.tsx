@@ -22,6 +22,7 @@ import {
   useDeleteNote,
 } from "@/lib/hooks/use-notes";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { useCurrentDate } from "@/lib/hooks/use-current-date";
 import { toast } from "sonner";
 
 interface NotesListProps {
@@ -75,6 +76,8 @@ export function NotesList({
   const [draftTitle, setDraftTitle] = useState("");
   const [draftContent, setDraftContent] = useState("");
   const [draftSessionDate, setDraftSessionDate] = useState("");
+
+  useCurrentDate();
 
   const { data: notes, isLoading } = useNotes(parentType, parentId);
   const createNote = useCreateNote();

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCalendarItemsRange } from "@/lib/hooks/use-calendar-items";
+import { useCurrentDate } from "@/lib/hooks/use-current-date";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getEventCategoryMeta } from "@/components/events/event-categories";
 import {
@@ -32,6 +33,7 @@ interface TimedEvent {
 }
 
 export function DayView({ currentDate }: DayViewProps) {
+  useCurrentDate();
   const dayStart = startOfDay(currentDate);
   const dayEnd = endOfDay(currentDate);
 
@@ -172,7 +174,7 @@ function formatHourLabel(hour: number): string {
 }
 
 function NowIndicator() {
-  const now = new Date();
+  const now = useCurrentDate();
   const minutesFromStart =
     (now.getHours() - START_HOUR) * 60 + now.getMinutes();
   if (minutesFromStart < 0 || minutesFromStart > TOTAL_HOURS * 60) return null;

@@ -27,8 +27,9 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ✅ **B15** — `unoptimized` on every TMDB image (closed via headline #6).
 - ✅ **C** — drop `unoptimized` on TMDB images (behavioral, confirmed).
 - ✅ **Backlog batch 1** — N7 (utility lift to `lib/utils.ts`/`lib/grades.ts`/`lib/format.ts`), N8 (cargo-cult `useMemo`), N11 (dead SQL view + `scripts/create-view.ts`), N12 (5 unused SVGs), N13 (TS target ES2022), N14 (`NEXT_PUBLIC_APP_VERSION` env), S22 (409 on already-stopped timer).
+- ✅ **Backlog batch 2** — clock-drift cluster closed via shared `useCurrentDate(intervalMs)` hook in `lib/hooks/use-current-date.ts`. Wired into `bills-this-period.tsx` (B3), `events/page.tsx` (S2), `week-view.tsx` + `month-view.tsx` (S3), `notes-list.tsx` (N10), and `day-view.tsx` (`NowIndicator` line + `isSameDay` check, caught by reviewer).
 
-**Next up:** Backlog batch 2 (clock-drift cluster: B3, S2, S3, N10), then headline #2 (server-component refactor) at the end of the roadmap.
+**Next up:** Backlog batch 3 (form-seed-from-server: B4 + S5), then batch 4 (backend correctness pass: B8/B9/B12/S11/S16/S18/S20/S21), then headline #2 (server-component refactor) at the end of the roadmap.
 
 ---
 
@@ -54,7 +55,7 @@ Real bugs or perf cliffs that will fire under realistic conditions.
 
 - ✅ **B1.** Object-literal queryKey thrash — see headline #3.
 - ✅ **B2.** Pomodoro auto-stop double-fires. [components/layout/timer.tsx:28-75](components/layout/timer.tsx#L28-L75) The 1s interval keeps writing `pomodoroRemaining = 0` after expiry; the second effect fires `stopTimer.mutate` on every tick of identity-changed deps. Result: rapid duplicate "Pomodoro complete!" toasts and duplicate stop calls. The interval is not cleared when remaining hits 0.
-- **B3.** `BillsThisPeriod` "next 14 days" window frozen at first paint. [components/dashboard/bills-this-period.tsx:26-46](components/dashboard/bills-this-period.tsx#L26-L46) `useMemo` captures `new Date()` and only recomputes when `paySchedule` changes. Past midnight, the window is stale until something else triggers a re-render.
+- ✅ **B3.** `BillsThisPeriod` "next 14 days" window frozen at first paint. [components/dashboard/bills-this-period.tsx:26-46](components/dashboard/bills-this-period.tsx#L26-L46) `useMemo` captures `new Date()` and only recomputes when `paySchedule` changes. Past midnight, the window is stale until something else triggers a re-render.
 - **B4.** Notes seed-once ref breaks on metadata refresh. [app/(app)/movies/[id]/page.tsx:80-88](app/\(app\)/movies/[id]/page.tsx#L80-L88) `initialNotesRef.current` is set once and never reset. After a `refreshMedia` mutation invalidates and refetches, the ref-guard prevents re-seeding.
 
 ### Backend / data layer
@@ -84,8 +85,8 @@ Won't crash but will degrade UX or invite future bugs.
 ### Frontend / React
 
 - **S1.** `BillsPage` recomputes `stats` on every render. [app/(app)/bills/page.tsx:82, 113-163](app/\(app\)/bills/page.tsx#L82) `(bills ?? []) as BillCardData[]` creates a fresh array reference each render, busting the `useMemo`. Lint already warns. Same pattern in dashboard.
-- **S2.** `EventsPage` `now` captured in `useMemo([])` — never updates after midnight. [app/(app)/events/page.tsx:35](app/\(app\)/events/page.tsx#L35)
-- **S3.** `WeekView` / `MonthView` "today highlight" doesn't update across midnight. [components/calendar/week-view.tsx:34](components/calendar/week-view.tsx#L34), [components/calendar/month-view.tsx:111](components/calendar/month-view.tsx#L111)
+- ✅ **S2.** `EventsPage` `now` captured in `useMemo([])` — never updates after midnight. [app/(app)/events/page.tsx:35](app/\(app\)/events/page.tsx#L35)
+- ✅ **S3.** `WeekView` / `MonthView` "today highlight" doesn't update across midnight. [components/calendar/week-view.tsx:34](components/calendar/week-view.tsx#L34), [components/calendar/month-view.tsx:111](components/calendar/month-view.tsx#L111). `DayView` `NowIndicator` also caught and fixed.
 - **S4.** Dashboard runs chrono `parseDate` per inbox item per render. [app/(app)/page.tsx:188-189](app/\(app\)/page.tsx#L188-L189) Memoize the parsed-dates array.
 - **S5.** `pay-schedule-settings` form effect overwrites user input on background refetch. [components/bills/pay-schedule-settings.tsx:39-47](components/bills/pay-schedule-settings.tsx#L39-L47) If the user types and a refetch fires, their value is wiped.
 - **S6.** `MovieDetailPage` notes-save races with rapid blur. [app/(app)/movies/[id]/page.tsx:90-102](app/\(app\)/movies/[id]/page.tsx#L90-L102) No mutex; an older request can complete second and stomp the newer save.
@@ -150,7 +151,7 @@ Low-priority cleanup. Address opportunistically.
   - `toLocalDateTimeInput`: [components/projects/task-dialog.tsx:48-54](components/projects/task-dialog.tsx#L48-L54), [components/academic/assignment-dialog.tsx:63-69](components/academic/assignment-dialog.tsx#L63-L69)
 - ✅ **N8.** Cargo-cult `useMemo` returning the same reference — [app/(app)/recipes/page.tsx:34](app/\(app\)/recipes/page.tsx#L34).
 - **N9.** Topbar `dateLabel` rebuilt every render — [components/layout/topbar.tsx:25-30](components/layout/topbar.tsx#L25-L30). Cheap, but consider memo.
-- **N10.** [components/notes-list.tsx:43-66](components/notes-list.tsx#L43-L66) — relative timestamps frozen at render. After an hour on the page, "5m ago" still says 5m.
+- ✅ **N10.** [components/notes-list.tsx:43-66](components/notes-list.tsx#L43-L66) — relative timestamps frozen at render. After an hour on the page, "5m ago" still says 5m.
 - ✅ **N11.** [scripts/create-view.ts](scripts/create-view.ts) duplicates SQL in `lib/db/schema.ts:625-665`. One is dead.
 - ✅ **N12.** Unused boilerplate in `public/`: [public/file.svg](public/file.svg), [public/globe.svg](public/globe.svg), [public/next.svg](public/next.svg), [public/vercel.svg](public/vercel.svg), [public/window.svg](public/window.svg). Grep clean.
 - ✅ **N13.** [tsconfig.json:3](tsconfig.json#L3) — `target: "ES2017"`. Bump to ES2022 to drop polyfilling on modern browsers / Node 22.

@@ -17,11 +17,13 @@ import type { PayFrequency } from "@/lib/validations/bill";
 import type { BillCardData } from "@/components/bills/bill-card";
 import { toast } from "sonner";
 import { useMemo } from "react";
+import { useCurrentDate } from "@/lib/hooks/use-current-date";
 
 export function BillsThisPeriod() {
   const { data: paySchedule } = usePaySchedule();
   const { data: allBills } = useBills({ limit: 500 });
   const updateBill = useUpdateBill();
+  const now = useCurrentDate();
 
   const { start, end, label } = useMemo(() => {
     if (paySchedule) {
@@ -35,7 +37,6 @@ export function BillsThisPeriod() {
         label: "This pay period",
       };
     }
-    const now = new Date();
     const fut = new Date(now);
     fut.setDate(fut.getDate() + 14);
     return {
@@ -43,7 +44,7 @@ export function BillsThisPeriod() {
       end: toISODate(fut),
       label: "Next 14 days",
     };
-  }, [paySchedule]);
+  }, [paySchedule, now]);
 
   const periodBills = useMemo(() => {
     const list = (allBills ?? []) as BillCardData[];

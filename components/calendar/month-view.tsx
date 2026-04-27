@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCalendarItems } from "@/lib/hooks/use-calendar-items";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getEventCategoryMeta } from "@/components/events/event-categories";
+import { useCurrentDate } from "@/lib/hooks/use-current-date";
 import {
   type CalendarItem,
   formatMonth,
@@ -108,7 +109,7 @@ export function MonthView({ currentDate, onSelectDay }: MonthViewProps) {
     }
   }
 
-  const today = new Date();
+  const today = useCurrentDate();
   const isCurrentMonth =
     today.getFullYear() === year && today.getMonth() === month;
 

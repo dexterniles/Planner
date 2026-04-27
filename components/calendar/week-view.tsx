@@ -5,6 +5,7 @@ import { useCalendarItemsRange } from "@/lib/hooks/use-calendar-items";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { getEventCategoryMeta } from "@/components/events/event-categories";
+import { useCurrentDate } from "@/lib/hooks/use-current-date";
 import {
   type CalendarItem,
   endOfWeek,
@@ -31,7 +32,7 @@ export function WeekView({ currentDate, onSelectDay }: WeekViewProps) {
     weekEnd.toISOString(),
   );
 
-  const today = new Date();
+  const today = useCurrentDate();
 
   if (isLoading) {
     return (
