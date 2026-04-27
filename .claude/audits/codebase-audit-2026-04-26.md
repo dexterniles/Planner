@@ -33,8 +33,9 @@ Three parallel read-only audits. No code changed; this is a punch list to work t
 - ✅ **Backlog batch 10** — code-quality nits. N2 (narrating comments trimmed in `lib/auto-complete-events.ts`, `lib/auth/require-auth.ts`, `app/api/auth/logout/route.ts`), N4 (month-view dot row uses stable `${sourceType}-${sourceId}` key). N6 deferred per audit (documented false positives).
 - ✅ **Backlog batch 6** — a11y / UX polish. S6 (notes save bails on `updateMedia.isPending` to prevent rapid-blur race), S8 (`ConfirmProvider` captures `document.activeElement` on open and restores via `requestAnimationFrame` after close), S9 (`RatingStars` left-half buttons get `tabIndex={-1}` — keyboard tab stops 10 → 5), N5 (`RecipeDialog` wired to `zodResolver` via string-mirror `recipeFormSchema`).
 - ✅ **Backlog batch 5+9 combined** — TanStack mutation pass shipped. S23: `QueryClient` defaults set to `staleTime: 30_000` and `refetchOnWindowFocus: false` (behavioral E confirmed). S17: dashboard invalidation gaps closed across bills/time-logs/assignments mutations; recurrence-rule mutations now invalidate events/bills too. S7: optimistic updates with `onMutate`/`onError` rollback added to `useUpdateBill`, `useUpdateAssignment`, `useUpdateMilestone`, `useUpdateTask`, `useUpdateMedia`. Decimal-as-string coercion fix applied post-review for `amount`/`paidAmount` (bills) and `pointsEarned`/`pointsPossible` (assignments) so optimistic shape matches Drizzle's decimal-string cache shape.
+- ✅ **Backlog batch 7** — bundle/perf shipped. S25: chrono-node import switched to `chrono-node/en` (locale-only) — chrono chunk dropped ~109 KB raw (~62%). S26: `EB_Garamond` config trimmed from 6 font files to 2 (`weight: ["400", "500"]`, no italic) — confirmed via grep that no `font-serif` is paired with `font-semibold`/`bold`/`italic` anywhere. S27: `experimental.optimizePackageImports: ["@base-ui/react"]` added to `next.config.ts`. S28: `PageTransition` no longer remounts on navigation — class-restart pattern via `useRef`/`useEffect` with `void el.offsetWidth` reflow.
 
-**Next up:** Batch 7 (bundle/perf: S25/S26/S27/S28), batch 8 (schema/migrations: S15/S14/S10), then headline #2 (server-component refactor).
+**Next up:** Batch 8 (schema/migrations: S15/S14/S10), then headline #2 (server-component refactor).
 
 ---
 
@@ -130,10 +131,10 @@ Won't crash but will degrade UX or invite future bugs.
 
 - ✅ **S23.** `QueryClient` constructed with no defaults. [components/providers.tsx:11](components/providers.tsx#L11) Default `staleTime: 0` + `refetchOnWindowFocus: true` means every tab focus refetches every visible query. Set `staleTime: 30_000`, `refetchOnWindowFocus: false`. [BEHAVIORAL — flag for the multi-tab story.]
 - **S24.** `BillsThisPeriod` fetches up to 500 rows to render 5. [components/dashboard/bills-this-period.tsx:23](components/dashboard/bills-this-period.tsx#L23) Add a `/api/bills/upcoming?periodStart=…&periodEnd=…` endpoint matching the `/api/events/upcoming` pattern.
-- **S25.** `parseDate` (chrono-node, ~5 MB) shipped to every dashboard visitor. [lib/parse-date.ts:1](lib/parse-date.ts#L1) Use `import { parse } from "chrono-node/locales/en"` or lazy-load via `dynamic(... { ssr: false })`. Hundreds of KB saved.
-- **S26.** `EB_Garamond` loaded as 6 font files. [app/layout.tsx:18-23](app/layout.tsx#L18-L23) `weight: ["400", "500", "600"] × style: ["normal", "italic"]`. Audit actual usage and drop unused weights/styles.
-- **S27.** `optimizePackageImports` not configured for `@base-ui/react`. [next.config.ts](next.config.ts) Many UI primitives import from it. Worth measuring before/after.
-- **S28.** `PageTransition` `key={pathname}` remounts the whole subtree on every navigation. [components/layout/page-transition.tsx:9](components/layout/page-transition.tsx#L9) Every TanStack consumer tears down and re-mounts → loading skeletons even when data is fresh. Use a CSS-only transition or the View Transitions API.
+- ✅ **S25.** `parseDate` (chrono-node, ~5 MB) shipped to every dashboard visitor. [lib/parse-date.ts:1](lib/parse-date.ts#L1) Use `import { parse } from "chrono-node/locales/en"` or lazy-load via `dynamic(... { ssr: false })`. Hundreds of KB saved.
+- ✅ **S26.** `EB_Garamond` loaded as 6 font files. [app/layout.tsx:18-23](app/layout.tsx#L18-L23) `weight: ["400", "500", "600"] × style: ["normal", "italic"]`. Audit actual usage and drop unused weights/styles.
+- ✅ **S27.** `optimizePackageImports` not configured for `@base-ui/react`. [next.config.ts](next.config.ts) Many UI primitives import from it. Worth measuring before/after.
+- ✅ **S28.** `PageTransition` `key={pathname}` remounts the whole subtree on every navigation. [components/layout/page-transition.tsx:9](components/layout/page-transition.tsx#L9) Every TanStack consumer tears down and re-mounts → loading skeletons even when data is fresh. Use a CSS-only transition or the View Transitions API.
 
 ---
 

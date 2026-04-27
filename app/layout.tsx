@@ -18,8 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 const ebGaramond = EB_Garamond({
   variable: "--font-serif",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {

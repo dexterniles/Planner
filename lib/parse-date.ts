@@ -1,4 +1,4 @@
-import * as chrono from "chrono-node";
+import { parse as chronoParse } from "chrono-node/en";
 
 export interface ParsedDateResult {
   date: Date;
@@ -55,7 +55,7 @@ function formatPreview(date: Date): string {
 export function parseDate(text: string): ParsedDateResult | null {
   if (!text || text.length < 3) return null;
 
-  const results = chrono.parse(text, new Date(), { forwardDate: true });
+  const results = chronoParse(text, new Date(), { forwardDate: true });
   if (results.length === 0) return null;
 
   const result = results[0];
