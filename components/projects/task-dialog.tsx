@@ -32,6 +32,7 @@ import {
 import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toLocalDateTimeInput } from "@/lib/utils";
 import { toast } from "sonner";
+import type { RecurrencePayload } from "@/lib/validations/recurrence";
 
 const STATUS_OPTIONS = [
   { value: "not_started", label: "Not Started" },
@@ -127,6 +128,7 @@ export function TaskDialog({
       priority: task?.priority ?? "medium",
       parentTaskId: task?.parentTaskId ?? parentTaskId ?? null,
       notes: task?.notes ?? "",
+      recurrence: null,
     },
   });
 
@@ -140,6 +142,7 @@ export function TaskDialog({
       priority: task?.priority ?? "medium",
       parentTaskId: task?.parentTaskId ?? parentTaskId ?? null,
       notes: task?.notes ?? "",
+      recurrence: null,
     });
   }, [
     task,
@@ -154,6 +157,7 @@ export function TaskDialog({
   const currentStatus = watch("status");
   const currentPriority = watch("priority");
   const currentProjectId = watch("projectId");
+  const currentRecurrence = watch("recurrence") ?? null;
 
   const onSubmit = async (data: CreateTaskInput) => {
     try {
@@ -164,7 +168,7 @@ export function TaskDialog({
           : data.dueDate,
       };
       if (isEditing) {
-        const { projectId: _omitted, ...updateData } = payload;
+        const { projectId: _omitted, recurrence: _r, ...updateData } = payload;
         await updateTask.mutateAsync({ id: task.id, data: updateData });
         toast.success("Task updated");
       } else {
@@ -324,11 +328,19 @@ export function TaskDialog({
             />
           </div>
 
-          {isEditing && (
+          {isEditing ? (
             <RecurrencePicker
               ownerType="task"
               ownerId={task.id}
               recurrenceRuleId={task.recurrenceRuleId}
+            />
+          ) : (
+            <RecurrencePicker
+              draft
+              value={currentRecurrence as RecurrencePayload | null}
+              onChange={(val) =>
+                setValue("recurrence", val, { shouldDirty: true })
+              }
             />
           )}
 

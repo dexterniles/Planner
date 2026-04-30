@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { tasks } from "@/lib/db/schema";
+import { tasks, recurrenceRules } from "@/lib/db/schema";
 import { createTaskSchema } from "@/lib/validations/task";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
@@ -28,16 +28,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { dueDate, ...rest } = parsed.data;
+  const { dueDate, recurrence, ...rest } = parsed.data;
 
-  const [task] = await db
-    .insert(tasks)
-    .values({
-      ...rest,
-      dueDate: dueDate ? new Date(dueDate) : null,
-      userId,
-    })
-    .returning();
+  if (!recurrence) {
+    const [task] = await db
+      .insert(tasks)
+      .values({
+        ...rest,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        userId,
+      })
+      .returning();
+    return NextResponse.json(task, { status: 201 });
+  }
+
+  const task = await db.transaction(async (tx) => {
+    const [rule] = await tx
+      .insert(recurrenceRules)
+      .values({
+        frequency: recurrence.frequency,
+        interval: recurrence.interval ?? 1,
+        daysOfWeek: recurrence.daysOfWeek ?? null,
+        endDate: recurrence.endDate ?? null,
+        count: recurrence.count ?? null,
+      })
+      .returning();
+
+    const [inserted] = await tx
+      .insert(tasks)
+      .values({
+        ...rest,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        recurrenceRuleId: rule.id,
+        userId,
+      })
+      .returning();
+    return inserted;
+  });
 
   return NextResponse.json(task, { status: 201 });
 }

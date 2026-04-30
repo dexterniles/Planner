@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { recurrencePayloadSchema } from "./recurrence";
 
 const optionalDatetimeString = z
   .string()
@@ -6,7 +7,7 @@ const optionalDatetimeString = z
     message: "Invalid datetime",
   });
 
-export const createAssignmentSchema = z.object({
+const assignmentObjectSchema = z.object({
   courseId: z.string().uuid(),
   title: z.string().min(1, "Title is required").max(300),
   description: z.string().nullable().optional(),
@@ -18,11 +19,20 @@ export const createAssignmentSchema = z.object({
   pointsEarned: z.number().min(0).nullable().optional(),
   pointsPossible: z.number().min(0).nullable().optional(),
   notes: z.string().nullable().optional(),
+  recurrence: recurrencePayloadSchema.nullable().optional(),
 });
 
-export const updateAssignmentSchema = createAssignmentSchema
+export const createAssignmentSchema = assignmentObjectSchema.refine(
+  (data) => !data.recurrence || (data.dueDate && data.dueDate !== ""),
+  {
+    message: "Recurring assignments need a due date",
+    path: ["dueDate"],
+  },
+);
+
+export const updateAssignmentSchema = assignmentObjectSchema
   .partial()
-  .omit({ courseId: true });
+  .omit({ courseId: true, recurrence: true });
 
 export type CreateAssignmentInput = z.infer<typeof createAssignmentSchema>;
 export type UpdateAssignmentInput = z.infer<typeof updateAssignmentSchema>;

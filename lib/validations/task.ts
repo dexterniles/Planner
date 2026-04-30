@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { recurrencePayloadSchema } from "./recurrence";
 
 const optionalDatetimeString = z
   .string()
@@ -6,7 +7,7 @@ const optionalDatetimeString = z
     message: "Invalid datetime",
   });
 
-export const createTaskSchema = z.object({
+const taskObjectSchema = z.object({
   projectId: z.string().uuid(),
   title: z.string().min(1, "Title is required").max(300),
   description: z.string().nullable().optional(),
@@ -15,11 +16,20 @@ export const createTaskSchema = z.object({
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
   parentTaskId: z.string().uuid().nullable().optional(),
   notes: z.string().nullable().optional(),
+  recurrence: recurrencePayloadSchema.nullable().optional(),
 });
 
-export const updateTaskSchema = createTaskSchema
+export const createTaskSchema = taskObjectSchema.refine(
+  (data) => !data.recurrence || (data.dueDate && data.dueDate !== ""),
+  {
+    message: "Recurring tasks need a due date",
+    path: ["dueDate"],
+  },
+);
+
+export const updateTaskSchema = taskObjectSchema
   .partial()
-  .omit({ projectId: true });
+  .omit({ projectId: true, recurrence: true });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;

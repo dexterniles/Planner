@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { assignments } from "@/lib/db/schema";
+import { assignments, recurrenceRules } from "@/lib/db/schema";
 import { createAssignmentSchema } from "@/lib/validations/assignment";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
@@ -28,18 +28,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { dueDate, ...rest } = parsed.data;
+  const { dueDate, recurrence, ...rest } = parsed.data;
 
-  const [assignment] = await db
-    .insert(assignments)
-    .values({
-      ...rest,
-      dueDate: dueDate ? new Date(dueDate) : null,
-      pointsEarned: rest.pointsEarned?.toString() ?? null,
-      pointsPossible: rest.pointsPossible?.toString() ?? null,
-      userId,
-    })
-    .returning();
+  if (!recurrence) {
+    const [assignment] = await db
+      .insert(assignments)
+      .values({
+        ...rest,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        pointsEarned: rest.pointsEarned?.toString() ?? null,
+        pointsPossible: rest.pointsPossible?.toString() ?? null,
+        userId,
+      })
+      .returning();
+    return NextResponse.json(assignment, { status: 201 });
+  }
+
+  const assignment = await db.transaction(async (tx) => {
+    const [rule] = await tx
+      .insert(recurrenceRules)
+      .values({
+        frequency: recurrence.frequency,
+        interval: recurrence.interval ?? 1,
+        daysOfWeek: recurrence.daysOfWeek ?? null,
+        endDate: recurrence.endDate ?? null,
+        count: recurrence.count ?? null,
+      })
+      .returning();
+
+    const [inserted] = await tx
+      .insert(assignments)
+      .values({
+        ...rest,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        pointsEarned: rest.pointsEarned?.toString() ?? null,
+        pointsPossible: rest.pointsPossible?.toString() ?? null,
+        recurrenceRuleId: rule.id,
+        userId,
+      })
+      .returning();
+    return inserted;
+  });
 
   return NextResponse.json(assignment, { status: 201 });
 }

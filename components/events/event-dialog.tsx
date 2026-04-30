@@ -32,6 +32,7 @@ import { STATUS_LABELS } from "./event-categories";
 import { EventCategoryPicker } from "./event-category-picker";
 import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toast } from "sonner";
+import type { RecurrencePayload } from "@/lib/validations/recurrence";
 
 interface EventPrefill {
   title?: string;
@@ -123,12 +124,14 @@ export function EventDialog({
       attendees: "",
       status: "confirmed",
       color: "",
+      recurrence: null,
     },
   });
 
   const allDay = watch("allDay");
   const currentCategoryId = watch("categoryId") ?? null;
   const currentStatus = watch("status") ?? "confirmed";
+  const currentRecurrence = watch("recurrence") ?? null;
 
   useEffect(() => {
     const isAllDay = event?.allDay ?? false;
@@ -153,6 +156,7 @@ export function EventDialog({
       attendees: event?.attendees ?? "",
       status: event?.status ?? "confirmed",
       color: event?.color ?? "",
+      recurrence: null,
     });
   }, [event, open, prefill, reset]);
 
@@ -175,7 +179,8 @@ export function EventDialog({
       };
 
       if (isEditing) {
-        await updateEvent.mutateAsync({ id: event.id, data: payload });
+        const { recurrence: _r, ...updateData } = payload;
+        await updateEvent.mutateAsync({ id: event.id, data: updateData });
         toast.success("Event updated");
       } else {
         const created = await createEvent.mutateAsync(payload);
@@ -326,12 +331,19 @@ export function EventDialog({
             />
           </div>
 
-          {/* Recurrence picker — only when editing (needs an id) */}
-          {isEditing && (
+          {isEditing ? (
             <RecurrencePicker
               ownerType="event"
               ownerId={event.id}
               recurrenceRuleId={event.recurrenceRuleId}
+            />
+          ) : (
+            <RecurrencePicker
+              draft
+              value={currentRecurrence as RecurrencePayload | null}
+              onChange={(val) =>
+                setValue("recurrence", val, { shouldDirty: true })
+              }
             />
           )}
 

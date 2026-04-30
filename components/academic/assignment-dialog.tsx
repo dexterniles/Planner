@@ -34,6 +34,7 @@ import {
 import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toLocalDateTimeInput } from "@/lib/utils";
 import { toast } from "sonner";
+import type { RecurrencePayload } from "@/lib/validations/recurrence";
 
 interface AssignmentDialogProps {
   open: boolean;
@@ -94,6 +95,7 @@ export function AssignmentDialog({
         ? Number(assignment.pointsPossible)
         : undefined,
       notes: assignment?.notes ?? "",
+      recurrence: null,
     },
   });
 
@@ -112,11 +114,13 @@ export function AssignmentDialog({
         ? Number(assignment.pointsPossible)
         : undefined,
       notes: assignment?.notes ?? "",
+      recurrence: null,
     });
   }, [assignment, open, courseId, reset]);
 
   const currentStatus = watch("status");
   const currentCategory = watch("categoryId");
+  const currentRecurrence = watch("recurrence") ?? null;
 
   const onSubmit = async (data: CreateAssignmentInput) => {
     try {
@@ -129,7 +133,7 @@ export function AssignmentDialog({
           : data.dueDate,
       };
       if (isEditing) {
-        const { courseId: _omitted, ...updateData } = payload;
+        const { courseId: _omitted, recurrence: _r, ...updateData } = payload;
         await updateAssignment.mutateAsync({
           id: assignment.id,
           data: updateData,
@@ -300,11 +304,19 @@ export function AssignmentDialog({
             />
           </div>
 
-          {isEditing && (
+          {isEditing ? (
             <RecurrencePicker
               ownerType="assignment"
               ownerId={assignment.id}
               recurrenceRuleId={assignment.recurrenceRuleId}
+            />
+          ) : (
+            <RecurrencePicker
+              draft
+              value={currentRecurrence as RecurrencePayload | null}
+              onChange={(val) =>
+                setValue("recurrence", val, { shouldDirty: true })
+              }
             />
           )}
 

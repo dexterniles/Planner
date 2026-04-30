@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { events } from "@/lib/db/schema";
+import { events, recurrenceRules } from "@/lib/db/schema";
 import { createEventSchema, eventStatusValues } from "@/lib/validations/event";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
 import { NextResponse } from "next/server";
@@ -39,17 +39,45 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { startsAt, endsAt, ...rest } = parsed.data;
+  const { startsAt, endsAt, recurrence, ...rest } = parsed.data;
 
-  const [event] = await db
-    .insert(events)
-    .values({
-      ...rest,
-      startsAt: new Date(startsAt),
-      endsAt: endsAt ? new Date(endsAt) : null,
-      userId,
-    })
-    .returning();
+  if (!recurrence) {
+    const [event] = await db
+      .insert(events)
+      .values({
+        ...rest,
+        startsAt: new Date(startsAt),
+        endsAt: endsAt ? new Date(endsAt) : null,
+        userId,
+      })
+      .returning();
+    return NextResponse.json(event, { status: 201 });
+  }
+
+  const event = await db.transaction(async (tx) => {
+    const [rule] = await tx
+      .insert(recurrenceRules)
+      .values({
+        frequency: recurrence.frequency,
+        interval: recurrence.interval ?? 1,
+        daysOfWeek: recurrence.daysOfWeek ?? null,
+        endDate: recurrence.endDate ?? null,
+        count: recurrence.count ?? null,
+      })
+      .returning();
+
+    const [inserted] = await tx
+      .insert(events)
+      .values({
+        ...rest,
+        startsAt: new Date(startsAt),
+        endsAt: endsAt ? new Date(endsAt) : null,
+        recurrenceRuleId: rule.id,
+        userId,
+      })
+      .returning();
+    return inserted;
+  });
 
   return NextResponse.json(event, { status: 201 });
 }

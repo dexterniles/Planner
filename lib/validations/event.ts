@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { recurrencePayloadSchema } from "./recurrence";
 
 export const eventStatusValues = [
   "confirmed",
@@ -31,9 +32,12 @@ export const createEventSchema = z.object({
   attendees: z.string().max(500).nullable().optional(),
   status: z.enum(eventStatusValues).optional(),
   color: z.string().max(20).nullable().optional(),
+  recurrence: recurrencePayloadSchema.nullable().optional(),
 });
 
-export const updateEventSchema = createEventSchema.partial();
+export const updateEventSchema = createEventSchema
+  .partial()
+  .omit({ recurrence: true });
 
 export const createEventCategorySchema = z.object({
   name: z.string().min(1, "Name is required").max(60),
