@@ -72,6 +72,7 @@ export async function POST(request: Request) {
       releaseYear: payload.releaseYear,
       runtime: payload.runtime,
       genres: payload.genres,
+      metadata: payload.metadata,
       status: status ?? "watchlist",
     })
     .returning();

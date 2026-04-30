@@ -548,6 +548,16 @@ export const timeLogs = pgTable(
   ],
 );
 
+export type MediaMetadata = {
+  director?: string | null;
+  createdBy?: string[] | null;
+  composer?: string | null;
+  cast?: Array<{ name: string; character: string; profilePath: string | null }>;
+  tagline?: string | null;
+  episodeCount?: number | null;
+  originalLanguage?: string | null;
+};
+
 export const mediaItems = pgTable(
   "media_items",
   {
@@ -567,6 +577,7 @@ export const mediaItems = pgTable(
     rating: decimal("rating", { precision: 2, scale: 1 }),
     watchedAt: timestamp("watched_at", { withTimezone: true }),
     notes: text("notes"),
+    metadata: jsonb("metadata").$type<MediaMetadata>(),
     ...timestamps,
   },
   (table) => [

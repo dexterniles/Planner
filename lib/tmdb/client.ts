@@ -6,6 +6,8 @@
  * as the v3 API, but the auth model is the modern one.
  */
 
+import type { MediaMetadata } from "@/lib/db/schema";
+
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
 function authHeader(): { Authorization: string } {
@@ -67,6 +69,31 @@ export interface TmdbGenre {
   name: string;
 }
 
+export interface TmdbCastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+  order?: number;
+}
+
+export interface TmdbCrewMember {
+  id: number;
+  name: string;
+  job: string;
+  department?: string;
+}
+
+export interface TmdbCredits {
+  cast?: TmdbCastMember[];
+  crew?: TmdbCrewMember[];
+}
+
+export interface TmdbCreatedBy {
+  id: number;
+  name: string;
+}
+
 export interface TmdbMovieDetails {
   id: number;
   imdb_id: string | null;
@@ -77,6 +104,9 @@ export interface TmdbMovieDetails {
   release_date: string | null;
   runtime: number | null;
   genres: TmdbGenre[];
+  tagline: string | null;
+  original_language: string | null;
+  credits?: TmdbCredits;
 }
 
 export interface TmdbTvDetails {
@@ -87,7 +117,12 @@ export interface TmdbTvDetails {
   backdrop_path: string | null;
   first_air_date: string | null;
   number_of_seasons: number | null;
+  number_of_episodes: number | null;
   genres: TmdbGenre[];
+  tagline: string | null;
+  original_language: string | null;
+  created_by?: TmdbCreatedBy[];
+  credits?: TmdbCredits;
 }
 
 export interface TmdbExternalIds {
@@ -105,11 +140,15 @@ export async function tmdbSearchMulti(query: string): Promise<TmdbSearchResponse
 }
 
 export async function tmdbMovie(id: number): Promise<TmdbMovieDetails> {
-  return tmdbFetch<TmdbMovieDetails>(`/movie/${id}`);
+  return tmdbFetch<TmdbMovieDetails>(`/movie/${id}`, {
+    append_to_response: "credits",
+  });
 }
 
 export async function tmdbTv(id: number): Promise<TmdbTvDetails> {
-  return tmdbFetch<TmdbTvDetails>(`/tv/${id}`);
+  return tmdbFetch<TmdbTvDetails>(`/tv/${id}`, {
+    append_to_response: "credits",
+  });
 }
 
 export async function tmdbExternalIds(
@@ -133,6 +172,56 @@ export interface TmdbAddPayload {
   /** Minutes for movies, season count for TV. */
   runtime: number | null;
   genres: string[];
+  metadata: MediaMetadata;
+}
+
+function extractMetadata(
+  details: TmdbMovieDetails | TmdbTvDetails,
+  mediaType: TmdbMediaType,
+): MediaMetadata {
+  const crew = details.credits?.crew ?? [];
+  const cast = details.credits?.cast ?? [];
+
+  const director =
+    mediaType === "movie"
+      ? (crew.find((c) => c.job === "Director")?.name ?? null)
+      : null;
+
+  const createdBy =
+    mediaType === "tv"
+      ? ((details as TmdbTvDetails).created_by?.map((c) => c.name) ?? null)
+      : null;
+
+  const composer =
+    crew.find((c) => c.job === "Original Music Composer")?.name ??
+    crew.find((c) => c.job === "Music")?.name ??
+    null;
+
+  const topCast = cast.slice(0, 5).map((c) => ({
+    name: c.name,
+    character: c.character,
+    profilePath: c.profile_path ?? null,
+  }));
+
+  const taglineRaw = details.tagline?.trim() ?? "";
+  const tagline = taglineRaw.length > 0 ? taglineRaw : null;
+
+  const episodeCount =
+    mediaType === "tv"
+      ? ((details as TmdbTvDetails).number_of_episodes ?? null)
+      : null;
+
+  const originalLanguage = details.original_language ?? null;
+
+  return {
+    director,
+    createdBy,
+    composer,
+    cast: topCast,
+    tagline,
+    episodeCount,
+    originalLanguage,
+  };
 }
 
 /**
@@ -162,6 +251,7 @@ export async function tmdbBuildAddPayload(
       releaseYear: Number.isFinite(yr) ? yr : null,
       runtime: details.runtime ?? null,
       genres: details.genres.map((g) => g.name),
+      metadata: extractMetadata(details, "movie"),
     };
   }
   const [details, ext] = await Promise.all([
@@ -182,6 +272,7 @@ export async function tmdbBuildAddPayload(
     releaseYear: Number.isFinite(yr) ? yr : null,
     runtime: details.number_of_seasons ?? null,
     genres: details.genres.map((g) => g.name),
+    metadata: extractMetadata(details, "tv"),
   };
 }
 

@@ -41,6 +41,7 @@ export async function POST(request: Request, { params }: Params) {
       releaseYear: payload.releaseYear,
       runtime: payload.runtime,
       genres: payload.genres,
+      metadata: payload.metadata,
     })
     .where(and(eq(mediaItems.id, id), eq(mediaItems.userId, userId)))
     .returning();

@@ -12,6 +12,7 @@ import {
   RefreshCcw,
   Trash2,
   Tv,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -52,6 +53,31 @@ function formatRuntime(
     return m === 0 ? `${h}h` : `${h}h ${m}m`;
   }
   return runtime === 1 ? "1 season" : `${runtime} seasons`;
+}
+
+function formatTvRuntime(
+  seasons: number | null,
+  episodeCount: number | null | undefined,
+): string | null {
+  if (seasons == null && episodeCount == null) return null;
+  if (seasons != null && episodeCount != null) {
+    const seasonLabel = seasons === 1 ? "1 season" : `${seasons} seasons`;
+    const episodeLabel =
+      episodeCount === 1 ? "1 episode" : `${episodeCount} episodes`;
+    return `${seasonLabel} · ${episodeLabel}`;
+  }
+  if (seasons != null) {
+    return seasons === 1 ? "1 season" : `${seasons} seasons`;
+  }
+  return episodeCount === 1 ? "1 episode" : `${episodeCount} episodes`;
+}
+
+function languageDisplayName(code: string): string {
+  try {
+    return new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code;
+  } catch {
+    return code;
+  }
 }
 
 interface MovieDetailPageProps {
@@ -168,12 +194,27 @@ export function MovieDetailPage({ id }: MovieDetailPageProps) {
 
   const TypeIcon = item.mediaType === "tv" ? Tv : Film;
   const rating = item.rating != null ? Number(item.rating) : null;
-  const runtimeLabel = formatRuntime(item.runtime, item.mediaType);
+  const metadata = item.metadata;
+  const runtimeLabel =
+    item.mediaType === "tv"
+      ? formatTvRuntime(item.runtime, metadata?.episodeCount)
+      : formatRuntime(item.runtime, item.mediaType);
   const genres = (item.genres ?? []) as string[];
   const imdbUrl = item.imdbId
     ? `https://www.imdb.com/title/${item.imdbId}/`
     : null;
   const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.tmdbId}`;
+  const originalLanguage = metadata?.originalLanguage ?? null;
+  const showLanguageChip = !!originalLanguage && originalLanguage !== "en";
+  const cast = metadata?.cast ?? [];
+  const directorLabel = item.mediaType === "tv" ? "Created by" : "Director";
+  const directorValue =
+    item.mediaType === "tv"
+      ? (metadata?.createdBy?.length ? metadata.createdBy.join(", ") : null)
+      : (metadata?.director ?? null);
+  const composerValue = metadata?.composer ?? null;
+  const hasCreditsContent =
+    !!directorValue || !!composerValue || cast.length > 0;
 
   return (
     <div>
@@ -233,6 +274,11 @@ export function MovieDetailPage({ id }: MovieDetailPageProps) {
             <h1 className="mt-1 font-serif text-[26px] md:text-[32px] font-medium leading-tight tracking-tight">
               {item.title}
             </h1>
+            {metadata?.tagline && (
+              <p className="mt-1 italic text-[13px] text-muted-foreground">
+                {metadata.tagline}
+              </p>
+            )}
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-muted-foreground">
               {item.releaseYear != null && (
                 <span className="font-mono tabular-nums">{item.releaseYear}</span>
@@ -248,6 +294,11 @@ export function MovieDetailPage({ id }: MovieDetailPageProps) {
                   <span aria-hidden="true">·</span>
                   <span>{genres.join(", ")}</span>
                 </>
+              )}
+              {showLanguageChip && originalLanguage && (
+                <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-[10.5px] uppercase tracking-wide">
+                  {languageDisplayName(originalLanguage)}
+                </span>
               )}
             </div>
           </div>
@@ -349,6 +400,76 @@ export function MovieDetailPage({ id }: MovieDetailPageProps) {
           </p>
         </div>
       )}
+
+      {/* Credits */}
+      <section className="mt-6">
+        <h2 className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+          Credits
+        </h2>
+        {metadata == null ? (
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            Refresh metadata to load credits and cast. Use the more menu above
+            and choose &ldquo;Refresh metadata&rdquo;.
+          </p>
+        ) : !hasCreditsContent ? (
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            No credits available.
+          </p>
+        ) : (
+          <>
+            {(directorValue || composerValue) && (
+              <div className="mt-2 mb-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+                {directorValue && (
+                  <>
+                    <span className="text-muted-foreground">
+                      {directorLabel}
+                    </span>
+                    <span>{directorValue}</span>
+                  </>
+                )}
+                {composerValue && (
+                  <>
+                    <span className="text-muted-foreground">Composer</span>
+                    <span>{composerValue}</span>
+                  </>
+                )}
+              </div>
+            )}
+            {cast.length > 0 && (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {cast.map((member, idx) => (
+                  <div
+                    key={`${member.name}-${idx}`}
+                    className="w-20 shrink-0 text-center"
+                  >
+                    <div className="aspect-[2/3] w-20 overflow-hidden rounded-md bg-muted">
+                      {member.profilePath ? (
+                        <Image
+                          src={`https://image.tmdb.org/t/p/w185${member.profilePath}`}
+                          alt={member.name}
+                          width={80}
+                          height={120}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-muted-foreground">
+                          <User className="h-8 w-8" strokeWidth={1.5} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-1.5 text-[11px] font-medium leading-tight line-clamp-2">
+                      {member.name}
+                    </div>
+                    <div className="text-[10.5px] text-muted-foreground leading-tight line-clamp-2">
+                      {member.character || " "}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </section>
 
       {/* Notes */}
       <div className="mt-6">

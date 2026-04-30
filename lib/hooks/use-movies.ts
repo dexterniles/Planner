@@ -8,6 +8,9 @@ import type {
   MediaType,
   UpdateMediaInput,
 } from "@/lib/validations/media";
+import type { MediaMetadata } from "@/lib/db/schema";
+
+export type { MediaMetadata } from "@/lib/db/schema";
 
 export interface MediaItem {
   id: string;
@@ -26,6 +29,7 @@ export interface MediaItem {
   rating: string | null;
   watchedAt: string | null;
   notes: string | null;
+  metadata: MediaMetadata | null;
   createdAt: string;
   updatedAt: string;
 }
