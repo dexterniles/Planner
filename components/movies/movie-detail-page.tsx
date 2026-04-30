@@ -113,6 +113,20 @@ export function MovieDetailPage({ id }: MovieDetailPageProps) {
     }
   }, [item]);
 
+  // Backfill credits/cast on first open for items added before the metadata column existed.
+  const autoBackfillRef = useRef(false);
+  useEffect(() => {
+    if (
+      item &&
+      item.metadata == null &&
+      !autoBackfillRef.current &&
+      !refreshMedia.isPending
+    ) {
+      autoBackfillRef.current = true;
+      refreshMedia.mutate(id);
+    }
+  }, [item, id, refreshMedia]);
+
   const saveNotes = async () => {
     if (!item) return;
     if (updateMedia.isPending) return;
@@ -408,8 +422,7 @@ export function MovieDetailPage({ id }: MovieDetailPageProps) {
         </h2>
         {metadata == null ? (
           <p className="mt-2 text-[13px] text-muted-foreground">
-            Refresh metadata to load credits and cast. Use the more menu above
-            and choose &ldquo;Refresh metadata&rdquo;.
+            {refreshMedia.isPending ? "Loading credits…" : "Credits unavailable."}
           </p>
         ) : !hasCreditsContent ? (
           <p className="mt-2 text-[13px] text-muted-foreground">
