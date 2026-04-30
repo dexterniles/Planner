@@ -165,6 +165,7 @@ export function AssignmentDialog({
               id="title"
               {...register("title")}
               placeholder="e.g. Homework 3"
+              autoFocus
             />
             {errors.title && (
               <p className="text-sm text-destructive">

@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Download } from "lucide-react";
 import { ColorTile } from "@/components/ui/color-tile";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  POMODORO_STORAGE_KEY,
+  POMODORO_DEFAULT_MINUTES,
+  POMODORO_MIN_MINUTES,
+  POMODORO_MAX_MINUTES,
+} from "@/components/layout/timer";
 import {
   Dialog,
   DialogContent,
@@ -166,6 +172,10 @@ export default function SettingsPage() {
       </section>
 
       <section>
+        <PomodoroLengthSetting />
+      </section>
+
+      <section>
         <div className="mb-4">
           <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Export</h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
@@ -248,6 +258,59 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
+    </div>
+  );
+}
+
+function PomodoroLengthSetting() {
+  const [value, setValue] = useState<string>(String(POMODORO_DEFAULT_MINUTES));
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem(POMODORO_STORAGE_KEY);
+    if (raw) {
+      const n = parseInt(raw, 10);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- read localStorage after hydration
+      if (Number.isFinite(n)) setValue(String(n));
+    }
+  }, []);
+
+  const commit = (next: string) => {
+    setValue(next);
+    const n = parseInt(next, 10);
+    if (!Number.isFinite(n)) return;
+    const clamped = Math.min(
+      POMODORO_MAX_MINUTES,
+      Math.max(POMODORO_MIN_MINUTES, n),
+    );
+    window.localStorage.setItem(POMODORO_STORAGE_KEY, String(clamped));
+  };
+
+  return (
+    <div>
+      <div className="mb-4">
+        <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">
+          Timer
+        </h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">
+          Pomodoro length in minutes ({POMODORO_MIN_MINUTES}–
+          {POMODORO_MAX_MINUTES}). Stored locally.
+        </p>
+      </div>
+      <div className="flex items-end gap-3">
+        <div className="space-y-2">
+          <Label htmlFor="pomodoro-minutes">Pomodoro length</Label>
+          <Input
+            id="pomodoro-minutes"
+            type="number"
+            min={POMODORO_MIN_MINUTES}
+            max={POMODORO_MAX_MINUTES}
+            value={value}
+            onChange={(e) => commit(e.target.value)}
+            className="w-28"
+          />
+        </div>
+        <span className="pb-2 text-[13px] text-muted-foreground">minutes</span>
       </div>
     </div>
   );

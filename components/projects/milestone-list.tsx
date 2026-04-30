@@ -168,7 +168,7 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 gap-0.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
+                  <div className="flex shrink-0 gap-0.5 md:opacity-60 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
                       size="icon-sm"

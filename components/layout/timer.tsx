@@ -12,6 +12,20 @@ import {
 import { formatDuration } from "@/lib/utils";
 import { toast } from "sonner";
 
+export const POMODORO_STORAGE_KEY = "planner:pomodoro-minutes";
+export const POMODORO_DEFAULT_MINUTES = 25;
+export const POMODORO_MIN_MINUTES = 1;
+export const POMODORO_MAX_MINUTES = 120;
+
+function readPomodoroMinutes(): number {
+  if (typeof window === "undefined") return POMODORO_DEFAULT_MINUTES;
+  const raw = window.localStorage.getItem(POMODORO_STORAGE_KEY);
+  if (!raw) return POMODORO_DEFAULT_MINUTES;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) return POMODORO_DEFAULT_MINUTES;
+  return Math.min(POMODORO_MAX_MINUTES, Math.max(POMODORO_MIN_MINUTES, n));
+}
+
 export function ActiveTimer() {
   const { data: activeLog } = useActiveTimer();
   const stopTimer = useStopTimer();
@@ -133,6 +147,14 @@ export function TimerStartButton({
   const startTimer = useStartTimer();
   const stopTimer = useStopTimer();
   const [showOptions, setShowOptions] = useState(false);
+  const [pomodoroMinutes, setPomodoroMinutes] = useState(
+    POMODORO_DEFAULT_MINUTES,
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- read localStorage after hydration
+    setPomodoroMinutes(readPomodoroMinutes());
+  }, []);
 
   const isRunningHere =
     activeLog &&
@@ -140,15 +162,18 @@ export function TimerStartButton({
     activeLog.loggableId === loggableId;
 
   const handleStart = async (pomodoro: boolean) => {
+    const minutes = pomodoro ? readPomodoroMinutes() : null;
     try {
       await startTimer.mutateAsync({
         loggableType,
         loggableId,
         wasPomodoro: pomodoro,
-        pomodoroIntervalMinutes: pomodoro ? 25 : null,
+        pomodoroIntervalMinutes: minutes,
       });
       setShowOptions(false);
-      toast.success(pomodoro ? "Pomodoro started (25 min)" : "Timer started");
+      toast.success(
+        pomodoro ? `Pomodoro started (${minutes} min)` : "Timer started",
+      );
     } catch {
       toast.error("Failed to start timer");
     }
@@ -202,7 +227,7 @@ export function TimerStartButton({
             onClick={() => handleStart(true)}
           >
             <Timer className="h-3.5 w-3.5" />
-            Pomodoro (25 min)
+            Pomodoro ({pomodoroMinutes} min)
           </button>
         </Card>
       )}

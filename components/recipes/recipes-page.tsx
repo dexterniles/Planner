@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { ChefHat, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,9 @@ export function RecipesPage() {
   const query = searchParams.get("q") ?? "";
   const tagFilter = searchParams.get("tag");
 
+  const [inputValue, setInputValue] = useState(query);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const setParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
     if (!value) params.delete(key);
@@ -35,6 +38,18 @@ export function RecipesPage() {
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
+
+  const onSearchChange = (value: string) => {
+    setInputValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setParam("q", value), 250);
+  };
+
+  // Sync local input back when URL changes (back/forward navigation).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror URL state on navigation
+    setInputValue(searchParams.get("q") ?? "");
+  }, [searchParams]);
 
   const trimmed = query.trim();
   const { data: recipes, isLoading } = useRecipes({
@@ -67,8 +82,8 @@ export function RecipesPage() {
               strokeWidth={1.75}
             />
             <Input
-              value={query}
-              onChange={(e) => setParam("q", e.target.value)}
+              value={inputValue}
+              onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search recipes..."
               className="pl-9"
             />

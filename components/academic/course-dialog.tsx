@@ -131,7 +131,7 @@ export function CourseDialog({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Course Name *</Label>
-            <Input id="name" {...register("name")} placeholder="e.g. Data Structures" />
+            <Input id="name" {...register("name")} placeholder="e.g. Data Structures" autoFocus />
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>
             )}

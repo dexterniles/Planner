@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, Check, RotateCcw } from "lucide-react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { BackLink } from "@/components/layout/back-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,17 @@ const statusLabels: Record<string, string> = {
   planned: "Planned",
 };
 
+const COURSE_TAB_VALUES = [
+  "assignments",
+  "categories",
+  "grades",
+  "projections",
+  "notes",
+  "time",
+] as const;
+type CourseTab = (typeof COURSE_TAB_VALUES)[number];
+const DEFAULT_COURSE_TAB: CourseTab = "assignments";
+
 interface CourseDetailPageProps {
   courseId: string;
 }
@@ -32,6 +44,23 @@ interface CourseDetailPageProps {
 export function CourseDetailPage({ courseId }: CourseDetailPageProps) {
   const { data: course, isLoading } = useCourse(courseId);
   const updateCourse = useUpdateCourse();
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const tabParam = searchParams.get("tab");
+  const activeTab: CourseTab = COURSE_TAB_VALUES.includes(tabParam as CourseTab)
+    ? (tabParam as CourseTab)
+    : DEFAULT_COURSE_TAB;
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (value === DEFAULT_COURSE_TAB) params.delete("tab");
+    else params.set("tab", value);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   const handleToggleComplete = async () => {
     if (!course) return;
@@ -175,7 +204,7 @@ export function CourseDetailPage({ courseId }: CourseDetailPageProps) {
 
       <SyllabusCard courseId={courseId} />
 
-      <Tabs defaultValue="assignments">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="categories">Grade Categories</TabsTrigger>

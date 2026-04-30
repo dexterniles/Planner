@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Check,
   ChevronLeft,
@@ -29,7 +30,16 @@ import { PageHeader } from "@/components/layout/page-header";
 import type { PayFrequency } from "@/lib/validations/bill";
 
 type Tab = "all" | "period";
-type StatusFilter = "all" | "unpaid" | "overdue" | "paid";
+type StatusFilter = "all" | "unpaid" | "overdue" | "paid" | "skipped";
+
+const TAB_VALUES = ["all", "period"] as const;
+const STATUS_VALUES = [
+  "all",
+  "unpaid",
+  "overdue",
+  "paid",
+  "skipped",
+] as const;
 
 interface Category {
   id: string;
@@ -38,13 +48,47 @@ interface Category {
 }
 
 export function BillsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BillCardData | null>(null);
-  const [tab, setTab] = useState<Tab>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [periodOffset, setPeriodOffset] = useState(0);
+
+  const tabParam = searchParams.get("tab");
+  const tab: Tab = TAB_VALUES.includes(tabParam as Tab)
+    ? (tabParam as Tab)
+    : "all";
+
+  const statusParam = searchParams.get("status");
+  const statusFilter: StatusFilter = STATUS_VALUES.includes(
+    statusParam as StatusFilter,
+  )
+    ? (statusParam as StatusFilter)
+    : "all";
+
+  const categoryFilter = searchParams.get("category");
+
+  const periodParam = searchParams.get("period");
+  const periodOffset = periodParam ? parseInt(periodParam, 10) || 0 : 0;
+
+  const setParam = (key: string, value: string | null) => {
+    const params = new URLSearchParams(searchParams);
+    if (!value) params.delete(key);
+    else params.set(key, value);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const setTab = (next: Tab) =>
+    setParam("tab", next === "all" ? null : next);
+  const setStatusFilter = (next: StatusFilter) =>
+    setParam("status", next === "all" ? null : next);
+  const setCategoryFilter = (next: string | null) =>
+    setParam("category", next);
+  const setPeriodOffset = (next: number) =>
+    setParam("period", next === 0 ? null : String(next));
 
   const { data: bills, isLoading } = useBills({ limit: 500 });
   const { data: categories } = useBillCategories();
@@ -84,27 +128,22 @@ export function BillsPage() {
     [bills],
   );
 
-  // Bills filtered by current tab + filters
+  // Bills filtered client-side by tab, status, category. Stats read from `allBills` (unfiltered).
   const filtered = useMemo(() => {
     let list = allBills;
 
-    // Tab filter
     if (tab === "period" && payPeriod) {
       const startStr = toISODate(payPeriod.start);
       const endStr = toISODate(payPeriod.end);
       list = list.filter((b) => b.dueDate >= startStr && b.dueDate <= endStr);
     }
 
-    // Status filter
-    if (statusFilter === "unpaid") {
-      list = list.filter((b) => b.status === "unpaid");
-    } else if (statusFilter === "overdue") {
+    if (statusFilter === "overdue") {
       list = list.filter((b) => isOverdue(b.dueDate, b.status));
-    } else if (statusFilter === "paid") {
-      list = list.filter((b) => b.status === "paid");
+    } else if (statusFilter !== "all") {
+      list = list.filter((b) => b.status === statusFilter);
     }
 
-    // Category filter
     if (categoryFilter) {
       list = list.filter((b) => b.categoryId === categoryFilter);
     }
@@ -269,7 +308,7 @@ export function BillsPage() {
 
         {/* Status filter chips */}
         <div className="flex gap-1">
-          {(["all", "unpaid", "overdue", "paid"] as const).map((s) => (
+          {STATUS_VALUES.map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
@@ -329,7 +368,7 @@ export function BillsPage() {
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => setPeriodOffset((o) => o - 1)}
+            onClick={() => setPeriodOffset(periodOffset - 1)}
             aria-label="Previous pay period"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -354,7 +393,7 @@ export function BillsPage() {
           <Button
             variant="ghost"
             size="icon-sm"
-            onClick={() => setPeriodOffset((o) => o + 1)}
+            onClick={() => setPeriodOffset(periodOffset + 1)}
             aria-label="Next pay period"
           >
             <ChevronRight className="h-4 w-4" />

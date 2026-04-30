@@ -186,6 +186,7 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
               id="title"
               {...register("title")}
               placeholder="e.g. Dinner with Alex"
+              autoFocus
             />
             {errors.title && (
               <p className="text-sm text-destructive">{errors.title.message}</p>

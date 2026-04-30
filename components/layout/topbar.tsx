@@ -13,6 +13,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { ActiveTimer } from "./timer";
 import { Sidebar } from "./sidebar";
 import { useSearchPalette } from "./search-palette-context";
+import { useCurrentDate } from "@/lib/hooks/use-current-date";
 
 export function Topbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,7 +23,7 @@ export function Topbar() {
     setOpen(true);
   };
 
-  const today = new Date();
+  const today = useCurrentDate();
   const dateLabel = today.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",

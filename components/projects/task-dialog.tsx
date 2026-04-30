@@ -157,6 +157,7 @@ export function TaskDialog({
               id="title"
               {...register("title")}
               placeholder="e.g. Set up CI/CD pipeline"
+              autoFocus
             />
             {errors.title && (
               <p className="text-sm text-destructive">

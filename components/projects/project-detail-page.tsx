@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { BackLink } from "@/components/layout/back-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,12 +36,40 @@ const priorityColors: Record<string, string> = {
   urgent: "text-destructive",
 };
 
+const PROJECT_TAB_VALUES = [
+  "tasks",
+  "milestones",
+  "notes",
+  "time",
+] as const;
+type ProjectTab = (typeof PROJECT_TAB_VALUES)[number];
+const DEFAULT_PROJECT_TAB: ProjectTab = "tasks";
+
 interface ProjectDetailPageProps {
   projectId: string;
 }
 
 export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
   const { data: project, isLoading } = useProject(projectId);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const tabParam = searchParams.get("tab");
+  const activeTab: ProjectTab = PROJECT_TAB_VALUES.includes(
+    tabParam as ProjectTab,
+  )
+    ? (tabParam as ProjectTab)
+    : DEFAULT_PROJECT_TAB;
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (value === DEFAULT_PROJECT_TAB) params.delete("tab");
+    else params.set("tab", value);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   if (isLoading) {
     return (
@@ -146,7 +175,7 @@ export function ProjectDetailPage({ projectId }: ProjectDetailPageProps) {
       <div className="space-y-6">
       <ProjectSnapshot projectId={projectId} />
 
-      <Tabs defaultValue="tasks">
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="milestones">Milestones</TabsTrigger>

@@ -155,6 +155,7 @@ export function ProjectDialog({
               id="name"
               {...register("name")}
               placeholder="e.g. Portfolio Website"
+              autoFocus
             />
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>

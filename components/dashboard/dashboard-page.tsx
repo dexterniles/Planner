@@ -22,6 +22,7 @@ import {
   useTriageInboxItem,
 } from "@/lib/hooks/use-inbox";
 import { useAllItems } from "@/lib/hooks/use-all-items";
+import { useCurrentDate } from "@/lib/hooks/use-current-date";
 import { StatsRow } from "@/components/dashboard/stats-row";
 import { TodaysFocus } from "@/components/dashboard/todays-focus";
 import { UpcomingMilestones } from "@/components/dashboard/upcoming-milestones";
@@ -50,6 +51,36 @@ interface AllItem {
   parentColor: string | null;
 }
 
+function formatInboxTimestamp(iso: string, now: Date): string {
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+  const startOfDay = (date: Date) => {
+    const x = new Date(date);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const dayDiff = Math.floor(
+    (startOfDay(now).getTime() - startOfDay(d).getTime()) / 86_400_000,
+  );
+
+  if (dayDiff <= 0) return time;
+  if (dayDiff === 1) return `Yesterday ${time}`;
+  if (dayDiff <= 6) {
+    const weekday = d.toLocaleDateString([], { weekday: "short" });
+    return `${weekday} ${time}`;
+  }
+  if (d.getFullYear() === now.getFullYear()) {
+    const md = d.toLocaleDateString([], { month: "short", day: "numeric" });
+    return `${md} ${time}`;
+  }
+  return d.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export function DashboardPage() {
   const [newCapture, setNewCapture] = useState("");
   const parsedCaptureDate = useMemo(
@@ -66,7 +97,7 @@ export function DashboardPage() {
     (item: InboxItem) => !item.triagedAt,
   );
 
-  const now = new Date();
+  const now = useCurrentDate();
   const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const upcomingItems = (allItems ?? [])
     .filter((item: AllItem) => {
@@ -196,10 +227,7 @@ export function DashboardPage() {
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground">
-                    {new Date(item.capturedAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatInboxTimestamp(item.capturedAt, now)}
                   </span>
                   <Button
                     variant="ghost"

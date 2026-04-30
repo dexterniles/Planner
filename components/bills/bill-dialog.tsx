@@ -163,6 +163,7 @@ export function BillDialog({ open, onOpenChange, bill }: BillDialogProps) {
               id="name"
               {...register("name")}
               placeholder="e.g. Rent"
+              autoFocus
             />
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>

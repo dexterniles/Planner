@@ -195,7 +195,7 @@ export function BillCard({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1 shrink-0 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
+      <div className="flex gap-1 shrink-0 md:opacity-60 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
         {bill.status === "unpaid" ? (
           <Button
             variant="ghost"

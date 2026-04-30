@@ -111,6 +111,7 @@ export function MilestoneDialog({
               id="ms-title"
               {...register("title")}
               placeholder="e.g. MVP Launch"
+              autoFocus
             />
             {errors.title && (
               <p className="text-sm text-destructive">
