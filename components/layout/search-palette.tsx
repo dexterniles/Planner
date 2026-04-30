@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Search, FilePlus2, ListTodo, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSearchPalette } from "./search-palette-context";
+import {
+  useSearchPalette,
+  type QuickCreateType,
+} from "./search-palette-context";
 import {
   SearchPaletteLocalRow,
   getLocalResultLink,
@@ -30,13 +33,19 @@ interface LocalGroup {
   rows: LocalSearchResult[];
 }
 
+interface QuickCreateRow {
+  type: QuickCreateType;
+  label: string;
+  icon: React.ReactNode;
+}
+
 interface SelectableEntry {
-  kind: "local" | "tmdb";
+  kind: "local" | "tmdb" | "quick-create";
   index: number;
 }
 
 export function SearchPalette() {
-  const { open, setOpen } = useSearchPalette();
+  const { open, setOpen, requestQuickCreate } = useSearchPalette();
   const [query, setQuery] = useState("");
   const [localResults, setLocalResults] = useState<LocalSearchResult[]>([]);
   const [tmdbResults, setTmdbResults] = useState<SearchResultItem[]>([]);
@@ -47,8 +56,18 @@ export function SearchPalette() {
   const [pendingTmdbKey, setPendingTmdbKey] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const addMedia = useAddMedia();
   const { data: library } = useMediaList();
+
+  const clearAll = useCallback(() => {
+    setQuery("");
+    setLocalResults([]);
+    setTmdbResults([]);
+    setTmdbError(false);
+    setSelectedIndex(0);
+    setPendingTmdbKey(null);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -57,23 +76,19 @@ export function SearchPalette() {
         setOpen(!open);
       }
       if (e.key === "Escape") {
+        if (open) {
+          clearAll();
+        }
         setOpen(false);
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, setOpen]);
+  }, [open, setOpen, clearAll]);
 
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset palette state when opened; deferred TanStack Query refactor
-      setQuery("");
-      setLocalResults([]);
-      setTmdbResults([]);
-      setTmdbError(false);
-      setSelectedIndex(0);
-      setPendingTmdbKey(null);
     }
   }, [open]);
 
@@ -171,6 +186,35 @@ export function SearchPalette() {
     });
   }, [tmdbResults, library]);
 
+  const showQuickCreate =
+    query.length >= 2 &&
+    localResults.length === 0 &&
+    !localPending &&
+    !tmdbPending;
+
+  const quickCreateRows: QuickCreateRow[] = useMemo(() => {
+    if (!showQuickCreate) return [];
+    return [
+      {
+        type: "task",
+        label: `Create task titled "${query}"`,
+        icon: <ListTodo className="h-4 w-4 text-primary" strokeWidth={1.75} />,
+      },
+      {
+        type: "event",
+        label: `Create event titled "${query}"`,
+        icon: (
+          <CalendarPlus className="h-4 w-4 text-primary" strokeWidth={1.75} />
+        ),
+      },
+      {
+        type: "note",
+        label: `Create note titled "${query}"`,
+        icon: <FilePlus2 className="h-4 w-4 text-primary" strokeWidth={1.75} />,
+      },
+    ];
+  }, [showQuickCreate, query]);
+
   const selectable: SelectableEntry[] = useMemo(() => {
     const arr: SelectableEntry[] = [];
     let localIdx = 0;
@@ -183,8 +227,11 @@ export function SearchPalette() {
     for (let i = 0; i < tmdbRows.length; i++) {
       arr.push({ kind: "tmdb", index: i });
     }
+    for (let i = 0; i < quickCreateRows.length; i++) {
+      arr.push({ kind: "quick-create", index: i });
+    }
     return arr;
-  }, [localGroups, tmdbRows]);
+  }, [localGroups, tmdbRows, quickCreateRows]);
 
   const flatLocalRows = useMemo(
     () => localGroups.flatMap((g) => g.rows),
@@ -229,6 +276,19 @@ export function SearchPalette() {
     [addMedia, pendingTmdbKey, router, setOpen],
   );
 
+  const handleQuickCreate = useCallback(
+    (type: QuickCreateType) => {
+      const title = query.trim();
+      if (!title) return;
+      requestQuickCreate(type, title);
+      setOpen(false);
+      if (pathname !== "/") {
+        router.push("/");
+      }
+    },
+    [query, requestQuickCreate, setOpen, pathname, router],
+  );
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -243,7 +303,7 @@ export function SearchPalette() {
       if (entry.kind === "local") {
         const local = flatLocalRows[entry.index];
         if (local) navigateLocal(local);
-      } else {
+      } else if (entry.kind === "tmdb") {
         const tmdb = tmdbRows[entry.index];
         if (!tmdb) return;
         if (tmdb.inLibrary && tmdb.localId) {
@@ -251,6 +311,9 @@ export function SearchPalette() {
         } else if (!tmdb.inLibrary) {
           handleAddTmdb(tmdb);
         }
+      } else if (entry.kind === "quick-create") {
+        const qc = quickCreateRows[entry.index];
+        if (qc) handleQuickCreate(qc.type);
       }
     }
   };
@@ -305,102 +368,149 @@ export function SearchPalette() {
           {query.length >= 2 &&
             !bothPending &&
             !hasAnyResults &&
-            !showTmdbGroup && (
+            !showTmdbGroup &&
+            !showQuickCreate && (
               <div className="p-6 text-center text-[13px] text-muted-foreground">
                 No results for &ldquo;{query}&rdquo;
               </div>
             )}
 
-          {query.length >= 2 && !bothPending && (hasAnyResults || showTmdbGroup) && (
-            <div className="max-h-[60vh] overflow-y-auto p-2">
-              {(() => {
-                let runningLocalIdx = 0;
-                let renderedAnyGroup = false;
-                const localBlocks = localGroups.map((group) => {
-                  const isFirst = !renderedAnyGroup;
-                  renderedAnyGroup = true;
-                  const baseIdx = runningLocalIdx;
-                  runningLocalIdx += group.rows.length;
-                  return (
-                    <div key={`local-${group.type}`}>
-                      <SearchPaletteGroupHeader
-                        label={group.label}
-                        count={group.rows.length}
-                        isFirst={isFirst}
-                      />
-                      {group.rows.map((row, i) => {
-                        const flatIdx = baseIdx + i;
-                        const entryIdx = selectable.findIndex(
-                          (e) => e.kind === "local" && e.index === flatIdx,
-                        );
-                        const isSelected = entryIdx === selectedIndex;
-                        return (
-                          <SearchPaletteLocalRow
-                            key={`${row.type}-${row.id}`}
-                            result={row}
-                            isSelected={isSelected}
-                            onSelect={() => navigateLocal(row)}
-                          />
-                        );
-                      })}
-                    </div>
-                  );
-                });
-
-                let tmdbBlock: React.ReactNode = null;
-                if (showTmdbGroup) {
-                  const isFirst = !renderedAnyGroup;
-                  renderedAnyGroup = true;
-                  tmdbBlock = (
-                    <div key="tmdb">
-                      <SearchPaletteGroupHeader
-                        label="TV & Movies"
-                        count={tmdbRows.length}
-                        isFirst={isFirst}
-                      />
-                      {tmdbPending && tmdbRows.length === 0 ? (
-                        <TmdbSkeletonRows />
-                      ) : tmdbError && tmdbRows.length === 0 ? (
-                        <p className="px-3 py-2 text-[12px] text-muted-foreground">
-                          Couldn&apos;t reach TMDB. Try again.
-                        </p>
-                      ) : (
-                        tmdbRows.map((row, i) => {
+          {query.length >= 2 &&
+            !bothPending &&
+            (hasAnyResults || showTmdbGroup || showQuickCreate) && (
+              <div className="max-h-[60vh] overflow-y-auto p-2">
+                {(() => {
+                  let runningLocalIdx = 0;
+                  let renderedAnyGroup = false;
+                  const localBlocks = localGroups.map((group) => {
+                    const isFirst = !renderedAnyGroup;
+                    renderedAnyGroup = true;
+                    const baseIdx = runningLocalIdx;
+                    runningLocalIdx += group.rows.length;
+                    return (
+                      <div key={`local-${group.type}`}>
+                        <SearchPaletteGroupHeader
+                          label={group.label}
+                          count={group.rows.length}
+                          isFirst={isFirst}
+                        />
+                        {group.rows.map((row, i) => {
+                          const flatIdx = baseIdx + i;
                           const entryIdx = selectable.findIndex(
-                            (e) => e.kind === "tmdb" && e.index === i,
+                            (e) => e.kind === "local" && e.index === flatIdx,
                           );
                           const isSelected = entryIdx === selectedIndex;
-                          const key = `${row.mediaType}-${row.tmdbId}`;
-                          const isThisRowPending = pendingTmdbKey === key;
                           return (
-                            <SearchPaletteTmdbRow
-                              key={key}
+                            <SearchPaletteLocalRow
+                              key={`${row.type}-${row.id}`}
                               result={row}
                               isSelected={isSelected}
-                              isThisRowPending={isThisRowPending}
-                              isAnyAddPending={pendingTmdbKey != null}
-                              onAdd={() => handleAddTmdb(row)}
-                              onNavigateToLocal={() =>
-                                row.localId &&
-                                navigateToLocalMovie(row.localId)
-                              }
+                              onSelect={() => navigateLocal(row)}
                             />
                           );
-                        })
-                      )}
-                    </div>
-                  );
-                }
+                        })}
+                      </div>
+                    );
+                  });
 
-                return (
-                  <>
-                    {localBlocks}
-                    {tmdbBlock}
-                  </>
-                );
-              })()}
-            </div>
-          )}
+                  let tmdbBlock: React.ReactNode = null;
+                  if (showTmdbGroup) {
+                    const isFirst = !renderedAnyGroup;
+                    renderedAnyGroup = true;
+                    tmdbBlock = (
+                      <div key="tmdb">
+                        <SearchPaletteGroupHeader
+                          label="TV & Movies"
+                          count={tmdbRows.length}
+                          isFirst={isFirst}
+                        />
+                        {tmdbPending && tmdbRows.length === 0 ? (
+                          <TmdbSkeletonRows />
+                        ) : tmdbError && tmdbRows.length === 0 ? (
+                          <p className="px-3 py-2 text-[12px] text-muted-foreground">
+                            Couldn&apos;t reach TMDB. Try again.
+                          </p>
+                        ) : (
+                          tmdbRows.map((row, i) => {
+                            const entryIdx = selectable.findIndex(
+                              (e) => e.kind === "tmdb" && e.index === i,
+                            );
+                            const isSelected = entryIdx === selectedIndex;
+                            const key = `${row.mediaType}-${row.tmdbId}`;
+                            const isThisRowPending = pendingTmdbKey === key;
+                            return (
+                              <SearchPaletteTmdbRow
+                                key={key}
+                                result={row}
+                                isSelected={isSelected}
+                                isThisRowPending={isThisRowPending}
+                                isAnyAddPending={pendingTmdbKey != null}
+                                onAdd={() => handleAddTmdb(row)}
+                                onNavigateToLocal={() =>
+                                  row.localId &&
+                                  navigateToLocalMovie(row.localId)
+                                }
+                              />
+                            );
+                          })
+                        )}
+                      </div>
+                    );
+                  }
+
+                  let quickCreateBlock: React.ReactNode = null;
+                  if (showQuickCreate) {
+                    const isFirst = !renderedAnyGroup;
+                    renderedAnyGroup = true;
+                    quickCreateBlock = (
+                      <div key="quick-create">
+                        <SearchPaletteGroupHeader
+                          label="Create"
+                          count={quickCreateRows.length}
+                          isFirst={isFirst}
+                        />
+                        {!hasAnyResults && (
+                          <p className="px-3 pb-1.5 pt-0.5 text-[12px] text-muted-foreground">
+                            No results for &ldquo;{query}&rdquo;
+                          </p>
+                        )}
+                        {quickCreateRows.map((row, i) => {
+                          const entryIdx = selectable.findIndex(
+                            (e) =>
+                              e.kind === "quick-create" && e.index === i,
+                          );
+                          const isSelected = entryIdx === selectedIndex;
+                          return (
+                            <button
+                              key={row.type}
+                              type="button"
+                              onClick={() => handleQuickCreate(row.type)}
+                              onMouseEnter={() => setSelectedIndex(entryIdx)}
+                              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-[13px] transition-colors ${
+                                isSelected
+                                  ? "bg-accent text-accent-foreground"
+                                  : "hover:bg-accent/60"
+                              }`}
+                            >
+                              {row.icon}
+                              <span className="truncate">{row.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      {localBlocks}
+                      {tmdbBlock}
+                      {quickCreateBlock}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
         </div>
       </div>
     </div>

@@ -19,8 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useTasks, useDeleteTask } from "@/lib/hooks/use-tasks";
+import { useTasks, useDeleteTask, useUpdateTask } from "@/lib/hooks/use-tasks";
 import { TaskDialog } from "./task-dialog";
+import { TimerStartButton } from "@/components/layout/timer";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
@@ -74,7 +75,14 @@ export function TaskList({ projectId }: TaskListProps) {
   const [subtaskParentId, setSubtaskParentId] = useState<string | null>(null);
   const { data: allTasks, isLoading } = useTasks(projectId);
   const deleteTask = useDeleteTask();
+  const updateTask = useUpdateTask();
   const confirm = useConfirm();
+
+  const handleToggleDone = (task: Task) => {
+    if (task.status === "cancelled") return; // preserve cancelled — toggling would silently lose state
+    const next = task.status === "done" ? "not_started" : "done";
+    updateTask.mutate({ id: task.id, data: { status: next } });
+  };
 
   const handleDelete = async (id: string) => {
     if (
@@ -118,12 +126,19 @@ export function TaskList({ projectId }: TaskListProps) {
       className={`transition-opacity duration-200 ${isDone || isCancelled ? "opacity-60" : ""}`}
     >
       <TableCell className="font-medium">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={isDone}
+            onChange={() => handleToggleDone(task)}
+            aria-label={isDone ? "Mark task as not started" : "Mark task as done"}
+            className="h-4 w-4 shrink-0 cursor-pointer rounded border-input accent-primary"
+          />
           {isSubtask && (
             <ChevronRight className="h-3 w-3 text-muted-foreground" />
           )}
           <span
-            className={`transition-all duration-300 ${isSubtask ? "pl-2" : ""} ${isDone ? "line-through text-muted-foreground" : ""}`}
+            className={`transition-all duration-300 ${isSubtask ? "pl-1" : ""} ${isDone ? "line-through text-muted-foreground" : ""}`}
           >
             {task.title}
           </span>
@@ -146,7 +161,14 @@ export function TaskList({ projectId }: TaskListProps) {
         </Badge>
       </TableCell>
       <TableCell>
-        <div className="flex gap-1">
+        <div className="flex items-center gap-1">
+          <div className="hidden md:block">
+            <TimerStartButton
+              size="sm"
+              loggableType="task"
+              loggableId={task.id}
+            />
+          </div>
           {!isSubtask && (
             <Button
               variant="ghost"
@@ -196,6 +218,13 @@ export function TaskList({ projectId }: TaskListProps) {
         className={`rounded-lg border bg-card p-3 transition-opacity ${faded ? "opacity-60" : ""} ${isSubtask ? "ml-5 border-l-2 border-l-muted-foreground/30" : ""}`}
       >
         <div className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            checked={isDone}
+            onChange={() => handleToggleDone(task)}
+            aria-label={isDone ? "Mark task as not started" : "Mark task as done"}
+            className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-input accent-primary"
+          />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               {isSubtask && (
@@ -300,7 +329,7 @@ export function TaskList({ projectId }: TaskListProps) {
                   <TableHead>Priority</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-28" />
+                  <TableHead className="w-44" />
                 </TableRow>
               </TableHeader>
               <TableBody>

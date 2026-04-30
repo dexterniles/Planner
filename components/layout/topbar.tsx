@@ -12,6 +12,7 @@ import {
 import { ThemeToggle } from "./theme-toggle";
 import { ActiveTimer } from "./timer";
 import { Sidebar } from "./sidebar";
+import { GlobalCapture } from "./global-capture";
 import { useSearchPalette } from "./search-palette-context";
 import { useCurrentDate } from "@/lib/hooks/use-current-date";
 
@@ -79,6 +80,7 @@ export function Topbar() {
 
         {/* Right cluster */}
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <GlobalCapture />
           <ActiveTimer />
           <div
             className="hidden lg:flex items-baseline gap-2 border-l border-border py-1 pl-3 font-serif text-[14.5px] text-muted-foreground"

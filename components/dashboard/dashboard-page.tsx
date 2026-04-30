@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -10,17 +10,27 @@ import {
   CalendarDays,
   ListChecks,
   CalendarClock,
+  ArrowRight,
 } from "lucide-react";
 import { parseDate } from "@/lib/parse-date";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   useInbox,
   useCreateInboxItem,
   useDeleteInboxItem,
   useTriageInboxItem,
 } from "@/lib/hooks/use-inbox";
+import { useCreateNote, useDeleteNote } from "@/lib/hooks/use-notes";
+import { useProjects } from "@/lib/hooks/use-projects";
+import { useWorkspaces } from "@/lib/hooks/use-workspaces";
 import { useAllItems } from "@/lib/hooks/use-all-items";
 import { useCurrentDate } from "@/lib/hooks/use-current-date";
 import { StatsRow } from "@/components/dashboard/stats-row";
@@ -30,6 +40,9 @@ import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
 import { BillsThisPeriod } from "@/components/dashboard/bills-this-period";
 import { GradeSnapshot } from "@/components/dashboard/grade-snapshot";
 import { PageHeader } from "@/components/layout/page-header";
+import { useSearchPalette } from "@/components/layout/search-palette-context";
+import { TaskDialog } from "@/components/projects/task-dialog";
+import { EventDialog } from "@/components/events/event-dialog";
 import { getItemLink } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -49,6 +62,13 @@ interface AllItem {
   parentId: string;
   parentName: string;
   parentColor: string | null;
+}
+
+interface ConvertTarget {
+  type: "event" | "task";
+  inboxId: string | null;
+  prefillTitle: string;
+  prefillDate: string | null;
 }
 
 function formatInboxTimestamp(iso: string, now: Date): string {
@@ -91,10 +111,64 @@ export function DashboardPage() {
   const createInboxItem = useCreateInboxItem();
   const deleteInboxItem = useDeleteInboxItem();
   const triageInboxItem = useTriageInboxItem();
+  const createNote = useCreateNote();
+  const deleteNote = useDeleteNote();
+  const { data: workspaces } = useWorkspaces();
+  const projectsWorkspace = workspaces?.find(
+    (w: { type: string }) => w.type === "projects",
+  );
+  const { data: projects } = useProjects(projectsWorkspace?.id);
+  const projectsCount = projects?.length ?? 0;
+  const canConvertToTask = projectsCount > 0;
   const { data: allItems } = useAllItems();
+  const { pendingQuickCreate, consumeQuickCreate } = useSearchPalette();
 
-  const untriagedItems = (inboxItems ?? []).filter(
-    (item: InboxItem) => !item.triagedAt,
+  const [convertTarget, setConvertTarget] = useState<ConvertTarget | null>(
+    null,
+  );
+
+  // React to search-palette quick-create requests
+  useEffect(() => {
+    if (!pendingQuickCreate) return;
+    const { type, title } = pendingQuickCreate;
+    consumeQuickCreate();
+    if (type === "task" || type === "event") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- triggered by external context request
+      setConvertTarget({
+        type,
+        inboxId: null,
+        prefillTitle: title,
+        prefillDate: null,
+      });
+    } else if (type === "note") {
+      (async () => {
+        try {
+          await createNote.mutateAsync({
+            parentType: "standalone",
+            parentId: null,
+            content: title,
+          });
+          toast.success("Note created");
+        } catch {
+          toast.error("Failed to create note");
+        }
+      })();
+    }
+  }, [pendingQuickCreate, consumeQuickCreate, createNote]);
+
+  const untriagedItems = useMemo(
+    () =>
+      ((inboxItems ?? []) as InboxItem[]).filter((item) => !item.triagedAt),
+    [inboxItems],
+  );
+
+  const parsedInbox = useMemo(
+    () =>
+      untriagedItems.map((item) => ({
+        item,
+        parsed: parseDate(item.content),
+      })),
+    [untriagedItems],
   );
 
   const now = useCurrentDate();
@@ -126,6 +200,89 @@ export function DashboardPage() {
       toast.error("Failed to capture");
     }
   };
+
+  const startConvert = (
+    type: "event" | "task" | "note",
+    item: InboxItem,
+  ) => {
+    const parsedItemDate = parseDate(item.content);
+    const prefillDate = parsedItemDate
+      ? parsedItemDate.date.toISOString()
+      : null;
+    const prefillTitle = parsedItemDate?.remainingText?.trim()
+      ? parsedItemDate.remainingText.trim()
+      : item.content;
+    if (type === "note") {
+      (async () => {
+        let createdNoteId: string | null = null;
+        try {
+          const created = (await createNote.mutateAsync({
+            parentType: "standalone",
+            parentId: null,
+            content: item.content,
+          })) as { id: string };
+          createdNoteId = created.id;
+          try {
+            await triageInboxItem.mutateAsync({
+              id: item.id,
+              resultingItemType: "note",
+              resultingItemId: created.id,
+            });
+          } catch {
+            // best-effort rollback of the just-created note
+            try {
+              await deleteNote.mutateAsync(createdNoteId);
+            } catch {
+              /* swallow — already surfacing one error toast */
+            }
+            toast.error("Failed to convert. Inbox not updated.");
+            return;
+          }
+          toast.success("Converted to note");
+        } catch {
+          toast.error("Failed to convert");
+        }
+      })();
+      return;
+    }
+    setConvertTarget({
+      type,
+      inboxId: item.id,
+      prefillTitle,
+      prefillDate,
+    });
+  };
+
+  const handleConvertedEntity = async (
+    entityType: "task" | "event",
+    entityId: string,
+  ) => {
+    const inboxId = convertTarget?.inboxId;
+    if (inboxId) {
+      try {
+        await triageInboxItem.mutateAsync({
+          id: inboxId,
+          resultingItemType: entityType,
+          resultingItemId: entityId,
+        });
+      } catch {
+        toast.error("Failed to mark inbox item triaged");
+      }
+    }
+    setConvertTarget(null);
+  };
+
+  const taskDefaultDueDate = (() => {
+    if (!convertTarget || convertTarget.type !== "task") return undefined;
+    return convertTarget.prefillDate ?? undefined;
+  })();
+
+  const eventDefaultStart = (() => {
+    if (!convertTarget || convertTarget.type !== "event") return undefined;
+    if (convertTarget.prefillDate) return convertTarget.prefillDate;
+    const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
+    return inOneHour.toISOString();
+  })();
 
   return (
     <div>
@@ -210,11 +367,9 @@ export function DashboardPage() {
             </div>
           )}
 
-          {untriagedItems.length > 0 && (
+          {parsedInbox.length > 0 && (
             <div className="mt-3 space-y-1">
-              {untriagedItems.map((item: InboxItem) => {
-                const itemDate = parseDate(item.content);
-                return (
+              {parsedInbox.map(({ item, parsed: itemDate }) => (
                 <div
                   key={item.id}
                   className="group flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
@@ -229,11 +384,48 @@ export function DashboardPage() {
                   <span className="text-xs text-muted-foreground">
                     {formatInboxTimestamp(item.capturedAt, now)}
                   </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={`Convert "${item.content}"`}
+                          title="Convert"
+                        />
+                      }
+                    >
+                      <ArrowRight className="h-3 w-3" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => startConvert("event", item)}
+                      >
+                        Convert to Event
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => startConvert("task", item)}
+                        disabled={!canConvertToTask}
+                        title={
+                          canConvertToTask
+                            ? undefined
+                            : "Create a project first to convert tasks."
+                        }
+                      >
+                        Convert to Task
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => startConvert("note", item)}
+                      >
+                        Convert to Note
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button
                     variant="ghost"
                     size="icon-xs"
                     title="Mark as triaged"
-                    onClick={() => triageInboxItem.mutate(item.id)}
+                    onClick={() => triageInboxItem.mutate({ id: item.id })}
                   >
                     <Check className="h-3 w-3" />
                   </Button>
@@ -247,8 +439,7 @@ export function DashboardPage() {
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
-                );
-              })}
+              ))}
             </div>
           )}
         </Card>
@@ -324,6 +515,35 @@ export function DashboardPage() {
       {/* Grade Snapshot */}
       <GradeSnapshot />
       </div>
+
+      {convertTarget?.type === "task" && (
+        <TaskDialog
+          open
+          onOpenChange={(o) => {
+            if (!o) setConvertTarget(null);
+          }}
+          showProjectSelect
+          prefill={{
+            title: convertTarget.prefillTitle,
+            dueDate: taskDefaultDueDate,
+          }}
+          onCreated={(created) => handleConvertedEntity("task", created.id)}
+        />
+      )}
+
+      {convertTarget?.type === "event" && (
+        <EventDialog
+          open
+          onOpenChange={(o) => {
+            if (!o) setConvertTarget(null);
+          }}
+          prefill={{
+            title: convertTarget.prefillTitle,
+            startsAt: eventDefaultStart,
+          }}
+          onCreated={(created) => handleConvertedEntity("event", created.id)}
+        />
+      )}
     </div>
   );
 }

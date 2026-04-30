@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Play, Square, Timer, Clock } from "lucide-react";
+import { Play, Square, Timer, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   useActiveTimer,
   useStartTimer,
@@ -146,7 +151,6 @@ export function TimerStartButton({
   const { data: activeLog } = useActiveTimer();
   const startTimer = useStartTimer();
   const stopTimer = useStopTimer();
-  const [showOptions, setShowOptions] = useState(false);
   const [pomodoroMinutes, setPomodoroMinutes] = useState(
     POMODORO_DEFAULT_MINUTES,
   );
@@ -170,7 +174,6 @@ export function TimerStartButton({
         wasPomodoro: pomodoro,
         pomodoroIntervalMinutes: minutes,
       });
-      setShowOptions(false);
       toast.success(
         pomodoro ? `Pomodoro started (${minutes} min)` : "Timer started",
       );
@@ -202,35 +205,41 @@ export function TimerStartButton({
     );
   }
 
+  const caretSize = size === "sm" ? "h-7 w-6" : "h-8 w-7";
+
   return (
-    <div className="relative">
+    <div className="inline-flex">
       <Button
         variant="outline"
         size={size}
-        onClick={() => setShowOptions(!showOptions)}
+        onClick={() => handleStart(false)}
         disabled={startTimer.isPending}
+        className="rounded-r-none border-r-0"
       >
         <Play className="mr-1.5 h-3.5 w-3.5" />
         {label ?? "Timer"}
       </Button>
-      {showOptions && (
-        <Card className="absolute right-0 top-full z-50 mt-1 w-44 p-1.5 space-y-0.5">
-          <button
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
-            onClick={() => handleStart(false)}
-          >
-            <Clock className="h-3.5 w-3.5" />
-            Stopwatch
-          </button>
-          <button
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
-            onClick={() => handleStart(true)}
-          >
-            <Timer className="h-3.5 w-3.5" />
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="outline"
+              size={size}
+              disabled={startTimer.isPending}
+              aria-label="Timer options"
+              className={`${caretSize} rounded-l-none px-0`}
+            />
+          }
+        >
+          <ChevronDown className="h-3 w-3" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => handleStart(true)}>
+            <Timer className="mr-1.5 h-3.5 w-3.5" />
             Pomodoro ({pomodoroMinutes} min)
-          </button>
-        </Card>
-      )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

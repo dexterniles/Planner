@@ -86,6 +86,7 @@ export function useUpdateTask() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["all-items"] });
     },
   });
 }
@@ -98,6 +99,9 @@ export function useDeleteTask() {
       if (!res.ok) throw new Error("Failed to delete task");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["all-items"] });
+    },
   });
 }

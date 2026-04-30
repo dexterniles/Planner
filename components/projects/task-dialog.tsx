@@ -8,6 +8,8 @@ import {
   type CreateTaskInput,
 } from "@/lib/validations/task";
 import { useCreateTask, useUpdateTask } from "@/lib/hooks/use-tasks";
+import { useProjects } from "@/lib/hooks/use-projects";
+import { useWorkspaces } from "@/lib/hooks/use-workspaces";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,10 +47,16 @@ const PRIORITY_OPTIONS = [
   { value: "urgent", label: "Urgent" },
 ] as const;
 
+interface TaskPrefill {
+  title?: string;
+  dueDate?: string;
+  projectId?: string;
+}
+
 interface TaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  projectId: string;
+  projectId?: string;
   task?: {
     id: string;
     title: string;
@@ -61,6 +69,19 @@ interface TaskDialogProps {
     recurrenceRuleId: string | null;
   };
   parentTaskId?: string | null;
+  prefill?: TaskPrefill;
+  showProjectSelect?: boolean;
+  onCreated?: (task: { id: string }) => void;
+}
+
+interface ProjectRow {
+  id: string;
+  name: string;
+}
+
+interface WorkspaceRow {
+  id: string;
+  type: string;
 }
 
 export function TaskDialog({
@@ -69,10 +90,24 @@ export function TaskDialog({
   projectId,
   task,
   parentTaskId,
+  prefill,
+  showProjectSelect,
+  onCreated,
 }: TaskDialogProps) {
   const isEditing = !!task;
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+
+  const { data: workspaces } = useWorkspaces();
+  const projectsWorkspace = (workspaces as WorkspaceRow[] | undefined)?.find(
+    (w) => w.type === "projects",
+  );
+  const { data: projectList } = useProjects(
+    showProjectSelect ? projectsWorkspace?.id : undefined,
+  );
+  const projects = (projectList ?? []) as ProjectRow[];
+  const defaultProjectId =
+    prefill?.projectId ?? projectId ?? projects[0]?.id ?? "";
 
   const {
     register,
@@ -84,10 +119,10 @@ export function TaskDialog({
   } = useForm<CreateTaskInput>({
     resolver: zodResolver(createTaskSchema),
     defaultValues: {
-      projectId,
-      title: task?.title ?? "",
+      projectId: defaultProjectId,
+      title: task?.title ?? prefill?.title ?? "",
       description: task?.description ?? "",
-      dueDate: toLocalDateTimeInput(task?.dueDate),
+      dueDate: toLocalDateTimeInput(task?.dueDate ?? prefill?.dueDate ?? null),
       status: task?.status ?? "not_started",
       priority: task?.priority ?? "medium",
       parentTaskId: task?.parentTaskId ?? parentTaskId ?? null,
@@ -97,24 +132,31 @@ export function TaskDialog({
 
   useEffect(() => {
     reset({
-      projectId,
-      title: task?.title ?? "",
+      projectId: task ? projectId ?? "" : defaultProjectId,
+      title: task?.title ?? prefill?.title ?? "",
       description: task?.description ?? "",
-      dueDate: toLocalDateTimeInput(task?.dueDate),
+      dueDate: toLocalDateTimeInput(task?.dueDate ?? prefill?.dueDate ?? null),
       status: task?.status ?? "not_started",
       priority: task?.priority ?? "medium",
       parentTaskId: task?.parentTaskId ?? parentTaskId ?? null,
       notes: task?.notes ?? "",
     });
-  }, [task, open, projectId, parentTaskId, reset]);
+  }, [
+    task,
+    open,
+    projectId,
+    parentTaskId,
+    prefill,
+    defaultProjectId,
+    reset,
+  ]);
 
   const currentStatus = watch("status");
   const currentPriority = watch("priority");
+  const currentProjectId = watch("projectId");
 
   const onSubmit = async (data: CreateTaskInput) => {
     try {
-      // Convert local datetime-local input to a proper UTC ISO string so the
-      // server (running in UTC) doesn't misinterpret it as a UTC wall-clock.
       const payload: CreateTaskInput = {
         ...data,
         dueDate: data.dueDate
@@ -126,8 +168,9 @@ export function TaskDialog({
         await updateTask.mutateAsync({ id: task.id, data: updateData });
         toast.success("Task updated");
       } else {
-        await createTask.mutateAsync(payload);
+        const created = await createTask.mutateAsync(payload);
         toast.success("Task created");
+        if (onCreated) onCreated(created);
       }
       reset();
       onOpenChange(false);
@@ -165,6 +208,39 @@ export function TaskDialog({
               </p>
             )}
           </div>
+
+          {!isEditing && showProjectSelect && (
+            <div className="space-y-2">
+              <Label>Project *</Label>
+              <Select
+                value={currentProjectId}
+                onValueChange={(val) =>
+                  setValue("projectId", typeof val === "string" ? val : "")
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {(value) =>
+                      projects.find((p) => p.id === value)?.name ??
+                      "Choose a project"
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.projectId && (
+                <p className="text-sm text-destructive">
+                  {errors.projectId.message}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>

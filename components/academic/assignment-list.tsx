@@ -20,11 +20,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAssignments, useDeleteAssignment } from "@/lib/hooks/use-assignments";
+import {
+  useAssignments,
+  useDeleteAssignment,
+  useUpdateAssignment,
+} from "@/lib/hooks/use-assignments";
 import { useGradeCategories } from "@/lib/hooks/use-grade-categories";
 import { useCourse } from "@/lib/hooks/use-courses";
 import { groupByWeek } from "@/lib/utils/group-by-week";
 import { AssignmentDialog } from "./assignment-dialog";
+import { TimerStartButton } from "@/components/layout/timer";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
@@ -88,7 +93,15 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
   const { data: categories } = useGradeCategories(courseId);
   const { data: course } = useCourse(courseId);
   const deleteAssignment = useDeleteAssignment();
+  const updateAssignment = useUpdateAssignment();
   const confirm = useConfirm();
+
+  const handleToggleDone = (a: Assignment) => {
+    if (a.status === "graded") return; // preserve graded — un-checking would lose the grade
+    const next: Assignment["status"] =
+      a.status === "submitted" ? "not_started" : "submitted";
+    updateAssignment.mutate({ id: a.id, data: { status: next } });
+  };
 
   const categoryMap = useMemo(
     () =>
@@ -268,10 +281,21 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
                       return (
                         <li
                           key={a.id}
-                          className={`group/row flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/40 ${
-                            done ? "opacity-70" : ""
+                          className={`group/row flex items-center gap-3 px-4 py-2.5 transition-opacity transition-colors hover:bg-muted/40 ${
+                            done ? "opacity-60" : ""
                           }`}
                         >
+                          <input
+                            type="checkbox"
+                            checked={done}
+                            onChange={() => handleToggleDone(a)}
+                            aria-label={
+                              done
+                                ? "Mark assignment as not started"
+                                : "Mark assignment as submitted"
+                            }
+                            className="h-4 w-4 shrink-0 cursor-pointer rounded border-input accent-primary"
+                          />
                           <FileText
                             className="h-4 w-4 shrink-0 text-muted-foreground"
                             strokeWidth={1.75}
@@ -317,6 +341,14 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
                           >
                             {statusLabels[a.status] ?? a.status}
                           </Badge>
+
+                          <div className="hidden md:block shrink-0">
+                            <TimerStartButton
+                              size="sm"
+                              loggableType="assignment"
+                              loggableId={a.id}
+                            />
+                          </div>
 
                           <DropdownMenu>
                             <DropdownMenuTrigger

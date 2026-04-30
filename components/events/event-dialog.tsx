@@ -33,6 +33,11 @@ import { EventCategoryPicker } from "./event-category-picker";
 import { RecurrencePicker } from "@/components/recurrence-picker";
 import { toast } from "sonner";
 
+interface EventPrefill {
+  title?: string;
+  startsAt?: string;
+}
+
 interface EventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -51,6 +56,8 @@ interface EventDialogProps {
     color: string | null;
     recurrenceRuleId: string | null;
   };
+  prefill?: EventPrefill;
+  onCreated?: (event: { id: string }) => void;
 }
 
 function toLocalInput(iso: string | null | undefined, allDay: boolean): string {
@@ -84,7 +91,13 @@ function formInputToISO(value: string, allDay: boolean): string {
   return local.toISOString();
 }
 
-export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
+export function EventDialog({
+  open,
+  onOpenChange,
+  event,
+  prefill,
+  onCreated,
+}: EventDialogProps) {
   const isEditing = !!event;
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
@@ -119,15 +132,20 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
 
   useEffect(() => {
     const isAllDay = event?.allDay ?? false;
+    const prefillStart = prefill?.startsAt
+      ? toLocalInput(prefill.startsAt, isAllDay)
+      : "";
     reset({
-      title: event?.title ?? "",
+      title: event?.title ?? prefill?.title ?? "",
       description: event?.description ?? "",
       categoryId: event?.categoryId ?? null,
       startsAt: event?.startsAt
         ? toLocalInput(event.startsAt, isAllDay)
-        : isAllDay
-          ? ""
-          : defaultEventStart(),
+        : prefillStart
+          ? prefillStart
+          : isAllDay
+            ? ""
+            : defaultEventStart(),
       endsAt: event?.endsAt ? toLocalInput(event.endsAt, isAllDay) : "",
       allDay: isAllDay,
       location: event?.location ?? "",
@@ -136,7 +154,7 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
       status: event?.status ?? "confirmed",
       color: event?.color ?? "",
     });
-  }, [event, open, reset]);
+  }, [event, open, prefill, reset]);
 
   const onSubmit = async (data: CreateEventInput) => {
     try {
@@ -160,8 +178,9 @@ export function EventDialog({ open, onOpenChange, event }: EventDialogProps) {
         await updateEvent.mutateAsync({ id: event.id, data: payload });
         toast.success("Event updated");
       } else {
-        await createEvent.mutateAsync(payload);
+        const created = await createEvent.mutateAsync(payload);
         toast.success("Event created");
+        if (onCreated) onCreated(created);
       }
       onOpenChange(false);
       reset();

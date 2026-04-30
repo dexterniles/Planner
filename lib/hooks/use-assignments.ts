@@ -36,6 +36,7 @@ export function useCreateAssignment() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["all-items"] });
     },
   });
 }
@@ -99,6 +100,7 @@ export function useUpdateAssignment() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["all-items"] });
     },
   });
 }
@@ -114,6 +116,7 @@ export function useDeleteAssignment() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["all-items"] });
     },
   });
 }
