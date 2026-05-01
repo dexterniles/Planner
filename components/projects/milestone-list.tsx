@@ -7,9 +7,12 @@ import {
   useMilestones,
   useUpdateMilestone,
   useDeleteMilestone,
+  useBulkMilestones,
 } from "@/lib/hooks/use-milestones";
 import { MilestoneDialog } from "./milestone-dialog";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { BulkActionBar, type BulkAction } from "@/components/shared/bulk-action-bar";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface MilestoneListProps {
@@ -29,10 +32,45 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(
     null,
   );
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const { data: milestones, isLoading } = useMilestones(projectId);
   const updateMilestone = useUpdateMilestone();
   const deleteMilestone = useDeleteMilestone();
+  const bulkMilestones = useBulkMilestones();
   const confirm = useConfirm();
+
+  const selectionMode = selected.size > 0;
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulk = async (action: BulkAction, days?: number) => {
+    try {
+      const res = await bulkMilestones.mutateAsync({
+        ids: Array.from(selected),
+        action,
+        days,
+      });
+      const verb =
+        action === "delete"
+          ? "deleted"
+          : action === "mark-done"
+          ? "completed"
+          : "rescheduled";
+      toast.success(
+        `${res.count} milestone${res.count === 1 ? "" : "s"} ${verb}`,
+      );
+      setSelected(new Set());
+    } catch {
+      toast.error("Bulk action failed");
+    }
+  };
 
   const handleToggleComplete = async (milestone: Milestone) => {
     try {
@@ -91,6 +129,19 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
         </Button>
       </div>
 
+      {selectionMode && (
+        <div className="mb-3">
+          <BulkActionBar
+            count={selected.size}
+            entityLabel="milestone"
+            markDoneLabel="Mark complete"
+            isPending={bulkMilestones.isPending}
+            onAction={handleBulk}
+            onClear={() => setSelected(new Set())}
+          />
+        </div>
+      )}
+
       {rows.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -109,6 +160,7 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
           />
           {rows.map((ms) => {
             const done = !!ms.completedAt;
+            const isSelected = selected.has(ms.id);
             return (
               <li key={ms.id} className="group relative">
                 {/* Timeline dot */}
@@ -135,8 +187,24 @@ export function MilestoneList({ projectId }: MilestoneListProps) {
                 </button>
 
                 <div
-                  className={`flex items-start gap-3 transition-opacity ${done ? "opacity-60" : ""}`}
+                  className={cn(
+                    "flex items-start gap-3 transition-opacity",
+                    done && "opacity-60",
+                    isSelected && "rounded-md ring-2 ring-primary/40 bg-primary/5 -m-1 p-1",
+                  )}
                 >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelect(ms.id)}
+                    aria-label={`Select ${ms.title}`}
+                    className={cn(
+                      "mt-1.5 h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-muted-foreground/40 accent-foreground transition-opacity",
+                      isSelected || selectionMode
+                        ? "opacity-100"
+                        : "opacity-60 hover:opacity-100",
+                    )}
+                  />
                   <div className="min-w-0 flex-1">
                     <h4
                       className={`font-serif text-[16px] font-medium leading-tight tracking-tight ${done ? "line-through" : ""}`}

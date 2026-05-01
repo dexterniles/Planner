@@ -120,3 +120,29 @@ export function useDeleteAssignment() {
     },
   });
 }
+
+export interface BulkAssignmentsPayload {
+  ids: string[];
+  action: "mark-done" | "delete" | "reschedule";
+  days?: number;
+}
+
+export function useBulkAssignments() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: BulkAssignmentsPayload) => {
+      const res = await fetch("/api/assignments/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Bulk assignment action failed");
+      return res.json() as Promise<{ count: number }>;
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["all-items"] });
+    },
+  });
+}

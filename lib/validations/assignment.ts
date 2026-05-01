@@ -34,5 +34,17 @@ export const updateAssignmentSchema = assignmentObjectSchema
   .partial()
   .omit({ courseId: true, recurrence: true });
 
+export const bulkAssignmentsSchema = z
+  .object({
+    ids: z.array(z.string().uuid()).min(1),
+    action: z.enum(["mark-done", "delete", "reschedule"]),
+    days: z.number().int().min(-365).max(365).optional(),
+  })
+  .refine(
+    (data) => data.action !== "reschedule" || typeof data.days === "number",
+    { message: "days is required for reschedule", path: ["days"] },
+  );
+
 export type CreateAssignmentInput = z.infer<typeof createAssignmentSchema>;
 export type UpdateAssignmentInput = z.infer<typeof updateAssignmentSchema>;
+export type BulkAssignmentsInput = z.infer<typeof bulkAssignmentsSchema>;

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { SearchPaletteProvider } from "@/components/layout/search-palette-context";
+import { CaptureProvider } from "@/components/layout/global-capture";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -30,8 +31,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       >
         <ConfirmProvider>
           <SearchPaletteProvider>
-            {children}
-            <Toaster />
+            <CaptureProvider>
+              {children}
+              <Toaster />
+            </CaptureProvider>
           </SearchPaletteProvider>
         </ConfirmProvider>
       </ThemeProvider>

@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/select";
 import { MovieTile } from "@/components/movies/movie-tile";
 import { useSearchPalette } from "@/components/layout/search-palette-context";
+import {
+  SavedViewsButton,
+  SavedViewsStrip,
+} from "@/components/layout/saved-views";
 import { useMediaList, type MediaItem } from "@/lib/hooks/use-movies";
 import type { MediaStatus, MediaType } from "@/lib/validations/media";
 import { cn } from "@/lib/utils";
@@ -220,7 +224,12 @@ export function MoviesPage() {
               ))}
             </SelectContent>
           </Select>
+          <SavedViewsButton routeKey="movies" />
         </div>
+      </div>
+
+      <div className="empty:hidden mb-4">
+        <SavedViewsStrip routeKey="movies" />
       </div>
 
       {isLoading ? (

@@ -24,6 +24,7 @@ import {
   useAssignments,
   useDeleteAssignment,
   useUpdateAssignment,
+  useBulkAssignments,
 } from "@/lib/hooks/use-assignments";
 import { useGradeCategories } from "@/lib/hooks/use-grade-categories";
 import { useCourse } from "@/lib/hooks/use-courses";
@@ -31,6 +32,8 @@ import { groupByWeek } from "@/lib/utils/group-by-week";
 import { AssignmentDialog } from "./assignment-dialog";
 import { TimerStartButton } from "@/components/layout/timer";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { BulkActionBar, type BulkAction } from "@/components/shared/bulk-action-bar";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface AssignmentListProps {
@@ -89,12 +92,47 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] =
     useState<Assignment | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const { data: assignments, isLoading } = useAssignments(courseId);
   const { data: categories } = useGradeCategories(courseId);
   const { data: course } = useCourse(courseId);
   const deleteAssignment = useDeleteAssignment();
   const updateAssignment = useUpdateAssignment();
+  const bulkAssignments = useBulkAssignments();
   const confirm = useConfirm();
+
+  const selectionMode = selected.size > 0;
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulk = async (action: BulkAction, days?: number) => {
+    try {
+      const res = await bulkAssignments.mutateAsync({
+        ids: Array.from(selected),
+        action,
+        days,
+      });
+      const verb =
+        action === "delete"
+          ? "deleted"
+          : action === "mark-done"
+          ? "submitted"
+          : "rescheduled";
+      toast.success(
+        `${res.count} assignment${res.count === 1 ? "" : "s"} ${verb}`,
+      );
+      setSelected(new Set());
+    } catch {
+      toast.error("Bulk action failed");
+    }
+  };
 
   const handleToggleDone = (a: Assignment) => {
     if (a.status === "graded") return; // preserve graded — un-checking would lose the grade
@@ -207,6 +245,19 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
         </Button>
       </div>
 
+      {selectionMode && (
+        <div className="mb-3">
+          <BulkActionBar
+            count={selected.size}
+            entityLabel="assignment"
+            markDoneLabel="Mark submitted"
+            isPending={bulkAssignments.isPending}
+            onAction={handleBulk}
+            onClear={() => setSelected(new Set())}
+          />
+        </div>
+      )}
+
       {!assignments || assignments.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -278,13 +329,28 @@ export function AssignmentList({ courseId }: AssignmentListProps) {
                         : null;
                       const score = formatScore(a);
                       const done = FINISHED_STATUSES.has(a.status);
+                      const isSelected = selected.has(a.id);
                       return (
                         <li
                           key={a.id}
-                          className={`group/row flex items-center gap-3 px-4 py-2.5 transition-opacity transition-colors hover:bg-muted/40 ${
-                            done ? "opacity-60" : ""
-                          }`}
+                          className={cn(
+                            "group/row flex items-center gap-3 px-4 py-2.5 transition-opacity transition-colors hover:bg-muted/40",
+                            done && "opacity-60",
+                            isSelected && "bg-primary/5",
+                          )}
                         >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(a.id)}
+                            aria-label={`Select ${a.title}`}
+                            className={cn(
+                              "h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-muted-foreground/40 accent-foreground transition-opacity",
+                              isSelected || selectionMode
+                                ? "opacity-100"
+                                : "opacity-60 hover:opacity-100",
+                            )}
+                          />
                           <input
                             type="checkbox"
                             checked={done}

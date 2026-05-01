@@ -11,6 +11,10 @@ import { useRecipes } from "@/lib/hooks/use-recipes";
 import { useTags } from "@/lib/hooks/use-tags";
 import { RecipeTile, type RecipeRow } from "@/components/recipes/recipe-tile";
 import { RecipeDialog } from "@/components/recipes/recipe-dialog";
+import {
+  SavedViewsButton,
+  SavedViewsStrip,
+} from "@/components/layout/saved-views";
 import { cn } from "@/lib/utils";
 
 interface TagRow {
@@ -76,18 +80,24 @@ export function RecipesPage() {
 
       <div className="space-y-5">
         <div className="space-y-3">
-          <div className="relative max-w-sm">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
-              strokeWidth={1.75}
-            />
-            <Input
-              value={inputValue}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search recipes..."
-              className="pl-9"
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative max-w-sm flex-1">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+                strokeWidth={1.75}
+              />
+              <Input
+                data-page-search
+                value={inputValue}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="Search recipes..."
+                className="pl-9"
+              />
+            </div>
+            <SavedViewsButton routeKey="recipes" />
           </div>
+
+          <SavedViewsStrip routeKey="recipes" />
 
           {tagList.length > 0 && (
             <div className="flex flex-wrap gap-2">

@@ -31,5 +31,17 @@ export const updateTaskSchema = taskObjectSchema
   .partial()
   .omit({ projectId: true, recurrence: true });
 
+export const bulkTasksSchema = z
+  .object({
+    ids: z.array(z.string().uuid()).min(1),
+    action: z.enum(["mark-done", "delete", "reschedule"]),
+    days: z.number().int().min(-365).max(365).optional(),
+  })
+  .refine(
+    (data) => data.action !== "reschedule" || typeof data.days === "number",
+    { message: "days is required for reschedule", path: ["days"] },
+  );
+
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+export type BulkTasksInput = z.infer<typeof bulkTasksSchema>;

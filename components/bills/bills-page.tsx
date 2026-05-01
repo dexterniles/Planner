@@ -28,6 +28,10 @@ import {
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/page-header";
 import type { PayFrequency } from "@/lib/validations/bill";
+import {
+  SavedViewsButton,
+  SavedViewsStrip,
+} from "@/components/layout/saved-views";
 
 type Tab = "all" | "period";
 type StatusFilter = "all" | "unpaid" | "overdue" | "paid" | "skipped";
@@ -204,6 +208,8 @@ export function BillsPage() {
     return { dueThisMonth, paidThisMonth, overdueCount, minimumNeeded };
   }, [allBills, paySchedule]);
 
+  // Sticky bulk action bar shows when anything is selected; the per-row
+  // checkbox is always rendered (low contrast → full when selected).
   const selectionMode = selected.size > 0;
 
   const toggleSelect = (id: string) => {
@@ -360,7 +366,13 @@ export function BillsPage() {
             ))}
           </div>
         )}
+
+        <div className="ml-auto">
+          <SavedViewsButton routeKey="bills" />
+        </div>
       </div>
+
+      <SavedViewsStrip routeKey="bills" />
 
       {/* Pay period navigator */}
       {tab === "period" && payPeriod && (
@@ -489,7 +501,7 @@ export function BillsPage() {
                 selected={selected.has(bill.id)}
                 onToggleSelect={() => toggleSelect(bill.id)}
                 onEdit={() => openEdit(bill)}
-                selectionMode={selectionMode || selected.size > 0}
+                selectionMode={selectionMode}
               />
             ))}
           </div>

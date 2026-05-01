@@ -19,10 +19,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useTasks, useDeleteTask, useUpdateTask } from "@/lib/hooks/use-tasks";
+import {
+  useTasks,
+  useDeleteTask,
+  useUpdateTask,
+  useBulkTasks,
+} from "@/lib/hooks/use-tasks";
 import { TaskDialog } from "./task-dialog";
 import { TimerStartButton } from "@/components/layout/timer";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { BulkActionBar, type BulkAction } from "@/components/shared/bulk-action-bar";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface TaskListProps {
@@ -73,10 +80,43 @@ export function TaskList({ projectId }: TaskListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [subtaskParentId, setSubtaskParentId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const { data: allTasks, isLoading } = useTasks(projectId);
   const deleteTask = useDeleteTask();
   const updateTask = useUpdateTask();
+  const bulkTasks = useBulkTasks();
   const confirm = useConfirm();
+
+  const selectionMode = selected.size > 0;
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulk = async (action: BulkAction, days?: number) => {
+    try {
+      const res = await bulkTasks.mutateAsync({
+        ids: Array.from(selected),
+        action,
+        days,
+      });
+      const verb =
+        action === "delete"
+          ? "deleted"
+          : action === "mark-done"
+          ? "marked done"
+          : "rescheduled";
+      toast.success(`${res.count} task${res.count === 1 ? "" : "s"} ${verb}`);
+      setSelected(new Set());
+    } catch {
+      toast.error("Bulk action failed");
+    }
+  };
 
   const handleToggleDone = (task: Task) => {
     if (task.status === "cancelled") return; // preserve cancelled — toggling would silently lose state
@@ -120,13 +160,30 @@ export function TaskList({ projectId }: TaskListProps) {
   const renderTaskRow = (task: Task, isSubtask = false) => {
     const isDone = task.status === "done";
     const isCancelled = task.status === "cancelled";
+    const isSelected = selected.has(task.id);
     return (
     <TableRow
       key={task.id}
-      className={`transition-opacity duration-200 ${isDone || isCancelled ? "opacity-60" : ""}`}
+      className={cn(
+        "transition-opacity duration-200",
+        (isDone || isCancelled) && "opacity-60",
+        isSelected && "bg-primary/5",
+      )}
     >
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleSelect(task.id)}
+            aria-label={`Select ${task.title}`}
+            className={cn(
+              "h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-muted-foreground/40 accent-foreground transition-opacity",
+              isSelected || selectionMode
+                ? "opacity-100"
+                : "opacity-60 hover:opacity-100",
+            )}
+          />
           <input
             type="checkbox"
             checked={isDone}
@@ -212,12 +269,30 @@ export function TaskList({ projectId }: TaskListProps) {
     const isDone = task.status === "done";
     const isCancelled = task.status === "cancelled";
     const faded = isDone || isCancelled;
+    const isSelected = selected.has(task.id);
     return (
       <div
         key={task.id}
-        className={`rounded-lg border bg-card p-3 transition-opacity ${faded ? "opacity-60" : ""} ${isSubtask ? "ml-5 border-l-2 border-l-muted-foreground/30" : ""}`}
+        className={cn(
+          "rounded-lg border bg-card p-3 transition-opacity",
+          faded && "opacity-60",
+          isSubtask && "ml-5 border-l-2 border-l-muted-foreground/30",
+          isSelected && "ring-2 ring-primary/50 border-primary/40",
+        )}
       >
         <div className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleSelect(task.id)}
+            aria-label={`Select ${task.title}`}
+            className={cn(
+              "mt-1 h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-muted-foreground/40 accent-foreground transition-opacity",
+              isSelected || selectionMode
+                ? "opacity-100"
+                : "opacity-60 hover:opacity-100",
+            )}
+          />
           <input
             type="checkbox"
             checked={isDone}
@@ -309,6 +384,18 @@ export function TaskList({ projectId }: TaskListProps) {
           Add
         </Button>
       </div>
+
+      {selectionMode && (
+        <div className="mb-3">
+          <BulkActionBar
+            count={selected.size}
+            entityLabel="task"
+            isPending={bulkTasks.isPending}
+            onAction={handleBulk}
+            onClear={() => setSelected(new Set())}
+          />
+        </div>
+      )}
 
       {topLevelTasks.length === 0 ? (
         <div className="flex flex-col items-center py-10 text-center">

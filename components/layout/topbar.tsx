@@ -13,6 +13,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { ActiveTimer } from "./timer";
 import { Sidebar } from "./sidebar";
 import { GlobalCapture } from "./global-capture";
+import { PageShortcuts } from "./page-shortcuts";
 import { useSearchPalette } from "./search-palette-context";
 import { useCurrentDate } from "@/lib/hooks/use-current-date";
 
@@ -94,6 +95,7 @@ export function Topbar() {
           <ThemeToggle />
         </div>
       </div>
+      <PageShortcuts />
     </header>
   );
 }

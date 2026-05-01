@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { CalendarClock, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,8 +21,41 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCreateInboxItem } from "@/lib/hooks/use-inbox";
 import { parseDate } from "@/lib/parse-date";
 
-export function GlobalCapture() {
+interface CaptureContextValue {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  openCapture: () => void;
+}
+
+const CaptureContext = createContext<CaptureContextValue | null>(null);
+
+export function CaptureProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+
+  const openCapture = useCallback(() => {
+    setOpen(true);
+  }, []);
+
+  const value = useMemo(
+    () => ({ open, setOpen, openCapture }),
+    [open, openCapture],
+  );
+
+  return (
+    <CaptureContext.Provider value={value}>{children}</CaptureContext.Provider>
+  );
+}
+
+export function useCapture() {
+  const ctx = useContext(CaptureContext);
+  if (!ctx) {
+    throw new Error("useCapture must be used within CaptureProvider");
+  }
+  return ctx;
+}
+
+export function GlobalCapture() {
+  const { open, setOpen } = useCapture();
   const [text, setText] = useState("");
   const createInboxItem = useCreateInboxItem();
   const textareaRef = useRef<HTMLTextAreaElement>(null);

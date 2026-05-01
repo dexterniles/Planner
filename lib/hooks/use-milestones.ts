@@ -104,3 +104,29 @@ export function useDeleteMilestone() {
       queryClient.invalidateQueries({ queryKey: ["milestones"] }),
   });
 }
+
+export interface BulkMilestonesPayload {
+  ids: string[];
+  action: "mark-done" | "delete" | "reschedule";
+  days?: number;
+}
+
+export function useBulkMilestones() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: BulkMilestonesPayload) => {
+      const res = await fetch("/api/milestones/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Bulk milestone action failed");
+      return res.json() as Promise<{ count: number }>;
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["milestones"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["all-items"] });
+    },
+  });
+}

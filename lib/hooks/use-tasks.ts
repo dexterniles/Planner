@@ -105,3 +105,29 @@ export function useDeleteTask() {
     },
   });
 }
+
+export interface BulkTasksPayload {
+  ids: string[];
+  action: "mark-done" | "delete" | "reschedule";
+  days?: number;
+}
+
+export function useBulkTasks() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: BulkTasksPayload) => {
+      const res = await fetch("/api/tasks/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Bulk task action failed");
+      return res.json() as Promise<{ count: number }>;
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["all-items"] });
+    },
+  });
+}

@@ -13,6 +13,10 @@ import { getEventCategoryMeta } from "@/components/events/event-categories";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/layout/page-header";
 import { useCurrentDate } from "@/lib/hooks/use-current-date";
+import {
+  SavedViewsButton,
+  SavedViewsStrip,
+} from "@/components/layout/saved-views";
 
 type TimeFilter = "upcoming" | "past" | "all";
 const TIME_VALUES: TimeFilter[] = ["upcoming", "past", "all"];
@@ -100,23 +104,30 @@ export function EventsPage() {
       <div className="space-y-5">
         {/* Filters */}
         <div className="space-y-3">
-          {/* Time filter segmented control */}
-          <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
-            {TIME_VALUES.map((t) => (
-              <button
-                key={t}
-                onClick={() => setParam("time", t, "upcoming")}
-                className={cn(
-                  "px-3 py-1 text-[12.5px] font-medium capitalize rounded-[5px] transition-colors duration-150",
-                  timeFilter === t
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Time filter segmented control */}
+            <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
+              {TIME_VALUES.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setParam("time", t, "upcoming")}
+                  className={cn(
+                    "px-3 py-1 text-[12.5px] font-medium capitalize rounded-[5px] transition-colors duration-150",
+                    timeFilter === t
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <div className="ml-auto">
+              <SavedViewsButton routeKey="events" />
+            </div>
           </div>
+
+          <SavedViewsStrip routeKey="events" />
 
           {/* Category filter strip */}
           <div className="flex flex-wrap gap-2">

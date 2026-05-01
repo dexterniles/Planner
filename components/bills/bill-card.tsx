@@ -115,15 +115,18 @@ export function BillCard({
         overdue && !selected && "border-destructive/40",
       )}
     >
-      {selectionMode && (
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggleSelect}
-          aria-label={`Select ${bill.name}`}
-          className="h-4 w-4 rounded border-input accent-primary cursor-pointer shrink-0"
-        />
-      )}
+      <input
+        type="checkbox"
+        checked={selected}
+        onChange={onToggleSelect}
+        aria-label={`Select ${bill.name}`}
+        className={cn(
+          "h-4 w-4 rounded border-input accent-primary cursor-pointer shrink-0 transition-opacity",
+          selected || selectionMode
+            ? "opacity-100"
+            : "opacity-60 hover:opacity-100",
+        )}
+      />
 
       {/* Category color pip */}
       <div
