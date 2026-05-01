@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Film, Plus } from "lucide-react";
+import { Film, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/layout/page-header";
@@ -14,6 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MovieTile } from "@/components/movies/movie-tile";
+import {
+  MovieFiltersPopover,
+  type MovieFiltersPatch,
+} from "@/components/movies/movie-filters-popover";
 import { useSearchPalette } from "@/components/layout/search-palette-context";
 import {
   SavedViewsButton,
@@ -100,16 +104,47 @@ export function MoviesPage() {
     ? (rawSort as SortKey)
     : "recent";
   const genreFilter = searchParams.get("genre") ?? ALL_GENRES;
+  const director = searchParams.get("director") || null;
+  const composer = searchParams.get("composer") || null;
+  const actor = searchParams.get("actor") || null;
+  const yearMinRaw = searchParams.get("yearMin");
+  const yearMaxRaw = searchParams.get("yearMax");
+  const yearMin =
+    yearMinRaw != null && Number.isFinite(parseInt(yearMinRaw, 10))
+      ? parseInt(yearMinRaw, 10)
+      : null;
+  const yearMax =
+    yearMaxRaw != null && Number.isFinite(parseInt(yearMaxRaw, 10))
+      ? parseInt(yearMaxRaw, 10)
+      : null;
 
-  const setParam = (key: string, value: string, defaultValue: string) => {
+  const writeParams = (patch: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams);
-    if (value === defaultValue) {
-      params.delete(key);
-    } else {
-      params.set(key, value);
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null || value === "") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
     }
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  const setParam = (key: string, value: string, defaultValue: string) => {
+    writeParams({ [key]: value === defaultValue ? null : value });
+  };
+
+  const handleFiltersChange = (patch: MovieFiltersPatch) => {
+    const next: Record<string, string | null> = {};
+    if ("director" in patch) next.director = patch.director ?? null;
+    if ("composer" in patch) next.composer = patch.composer ?? null;
+    if ("actor" in patch) next.actor = patch.actor ?? null;
+    if ("yearMin" in patch)
+      next.yearMin = patch.yearMin == null ? null : String(patch.yearMin);
+    if ("yearMax" in patch)
+      next.yearMax = patch.yearMax == null ? null : String(patch.yearMax);
+    writeParams(next);
   };
 
   const { data: items, isLoading } = useMediaList({
@@ -125,14 +160,74 @@ export function MoviesPage() {
     return Array.from(set).sort();
   }, [items]);
 
+  const facetDomains = useMemo(() => {
+    const directors = new Set<string>();
+    const composers = new Set<string>();
+    const actors = new Set<string>();
+    let yearLo: number | null = null;
+    let yearHi: number | null = null;
+    for (const item of items ?? []) {
+      const meta = item.metadata;
+      if (meta?.director) directors.add(meta.director);
+      if (meta?.composer) composers.add(meta.composer);
+      for (const c of meta?.cast ?? []) {
+        if (c.name) actors.add(c.name);
+      }
+      if (item.releaseYear != null) {
+        if (yearLo == null || item.releaseYear < yearLo) yearLo = item.releaseYear;
+        if (yearHi == null || item.releaseYear > yearHi) yearHi = item.releaseYear;
+      }
+    }
+    return {
+      directors: Array.from(directors).sort(),
+      composers: Array.from(composers).sort(),
+      actors: Array.from(actors).sort(),
+      yearBounds:
+        yearLo != null && yearHi != null
+          ? ([yearLo, yearHi] as const)
+          : null,
+    };
+  }, [items]);
+
+  const advancedActiveCount =
+    (director ? 1 : 0) +
+    (composer ? 1 : 0) +
+    (actor ? 1 : 0) +
+    (yearMin != null || yearMax != null ? 1 : 0);
+
   const visible = useMemo(() => {
     if (!items) return [];
-    const filtered =
-      genreFilter === ALL_GENRES
-        ? items
-        : items.filter((item) => (item.genres ?? []).includes(genreFilter));
+    const filtered = items
+      .filter(
+        (item) =>
+          genreFilter === ALL_GENRES ||
+          (item.genres ?? []).includes(genreFilter),
+      )
+      .filter((item) => !director || item.metadata?.director === director)
+      .filter((item) => !composer || item.metadata?.composer === composer)
+      .filter(
+        (item) =>
+          !actor ||
+          (item.metadata?.cast ?? []).some((c) => c.name === actor),
+      )
+      .filter((item) => {
+        if (yearMin == null && yearMax == null) return true;
+        if (item.releaseYear == null) return false;
+        if (yearMin != null && item.releaseYear < yearMin) return false;
+        if (yearMax != null && item.releaseYear > yearMax) return false;
+        return true;
+      });
     return sortItems(filtered, sortBy);
-  }, [items, genreFilter, sortBy]);
+  }, [items, genreFilter, director, composer, actor, yearMin, yearMax, sortBy]);
+
+  const yearChipLabel = (() => {
+    if (yearMin != null && yearMax != null) {
+      return yearMin === yearMax ? `${yearMin}` : `${yearMin}–${yearMax}`;
+    }
+    if (yearMin != null) return `${yearMin}+`;
+    if (yearMax != null) return `–${yearMax}`;
+    return null;
+  })();
 
   return (
     <div>
@@ -224,12 +319,55 @@ export function MoviesPage() {
               ))}
             </SelectContent>
           </Select>
+          <MovieFiltersPopover
+            director={director}
+            composer={composer}
+            actor={actor}
+            yearMin={yearMin}
+            yearMax={yearMax}
+            domains={facetDomains}
+            onChange={handleFiltersChange}
+            activeCount={advancedActiveCount}
+          />
           <SavedViewsButton routeKey="movies" />
         </div>
       </div>
 
       <div className="empty:hidden mb-4">
         <SavedViewsStrip routeKey="movies" />
+      </div>
+
+      <div className="empty:hidden mb-4 flex flex-wrap gap-2">
+        {director && (
+          <FilterChip
+            label="Director"
+            value={director}
+            onClear={() => handleFiltersChange({ director: null })}
+          />
+        )}
+        {composer && (
+          <FilterChip
+            label="Composer"
+            value={composer}
+            onClear={() => handleFiltersChange({ composer: null })}
+          />
+        )}
+        {actor && (
+          <FilterChip
+            label="Actor"
+            value={actor}
+            onClear={() => handleFiltersChange({ actor: null })}
+          />
+        )}
+        {yearChipLabel && (
+          <FilterChip
+            label="Year"
+            value={yearChipLabel}
+            onClear={() =>
+              handleFiltersChange({ yearMin: null, yearMax: null })
+            }
+          />
+        )}
       </div>
 
       {isLoading ? (
@@ -281,5 +419,28 @@ export function MoviesPage() {
       )}
 
     </div>
+  );
+}
+
+function FilterChip({
+  label,
+  value,
+  onClear,
+}: {
+  label: string;
+  value: string;
+  onClear: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClear}
+      aria-label={`Clear ${label} filter`}
+      className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary shadow-sm transition-all hover:bg-primary/15 hover:border-primary/60"
+    >
+      <X className="h-3 w-3 shrink-0" />
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="max-w-[180px] truncate text-foreground">{value}</span>
+    </button>
   );
 }
