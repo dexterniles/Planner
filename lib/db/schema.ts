@@ -131,6 +131,8 @@ export const timeLogParentTypeEnum = pgEnum("time_log_parent_type", [
   "task",
 ]);
 
+export const incomeKindEnum = pgEnum("income_kind", ["paycheck", "misc"]);
+
 // ─── Helper: common timestamp columns ───────────────────────────────────────
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -651,4 +653,27 @@ export const recipeEquipment = pgTable(
     ...timestamps,
   },
   (table) => [index("recipe_equipment_recipe_id_idx").on(table.recipeId)],
+);
+
+export const incomeEntries = pgTable(
+  "income_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull(),
+    kind: incomeKindEnum("kind").notNull(),
+    receivedDate: date("received_date").notNull(),
+    amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    source: text("source"),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [
+    index("income_entries_user_id_idx").on(table.userId),
+    index("income_entries_received_date_idx").on(table.receivedDate),
+    index("income_entries_user_kind_date_idx").on(
+      table.userId,
+      table.kind,
+      table.receivedDate,
+    ),
+  ],
 );
