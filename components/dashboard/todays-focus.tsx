@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
 import { useAllItems } from "@/lib/hooks/use-all-items";
 import { useUpdateTask } from "@/lib/hooks/use-tasks";
 import { useUpdateAssignment } from "@/lib/hooks/use-assignments";
-import { getItemLink } from "@/lib/utils";
+import { getItemLink, cn } from "@/lib/utils";
+import { StatusDot } from "@/components/ui/status-dot";
 
 interface Item {
   id: string;
@@ -42,13 +42,6 @@ export function TodaysFocus() {
       !["done", "cancelled", "graded", "submitted"].includes(item.status),
   );
 
-  const tagline =
-    todayItems.length === 0
-      ? "Nothing due today. Take a breath."
-      : todayItems.length === 1
-        ? "One thing, then rest."
-        : `${todayItems.length} things, then rest.`;
-
   const handleToggle = (item: Item) => {
     if (item.type === "task") {
       const next = item.status === "done" ? "not_started" : "done";
@@ -63,66 +56,67 @@ export function TodaysFocus() {
     }
   };
 
+  if (todayItems.length === 0) {
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        Nothing due today. Take a breath.
+      </p>
+    );
+  }
+
   return (
-    <Card className="relative overflow-hidden p-5 sm:p-6">
-      {/* concentric circle accent — editorial flourish */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 rounded-full border border-primary/20 opacity-60"
-      />
-      <div className="relative">
-        <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-primary">
-          Today&apos;s focus
-        </p>
-        <h2 className="mt-1 font-serif text-[19px] sm:text-[22px] font-medium leading-tight tracking-tight">
-          {tagline}
-        </h2>
-        {todayItems.length > 0 && (
-          <div className="mt-4 space-y-1">
-            {todayItems.map((item: Item) => {
-              const checkable = item.type === "task" || item.type === "assignment";
-              const isDone =
-                item.type === "task"
-                  ? item.status === "done"
-                  : item.type === "assignment"
-                    ? ASSIGNMENT_FINISHED.has(item.status)
-                    : false;
-              return (
-                <div
-                  key={`${item.type}-${item.id}`}
-                  className={`group/row flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors hover:bg-accent/60 ${isDone ? "opacity-60" : ""}`}
-                >
-                  {checkable && (
-                    <input
-                      type="checkbox"
-                      checked={isDone}
-                      onChange={() => handleToggle(item)}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={isDone ? "Mark as not done" : "Mark as done"}
-                      className="h-4 w-4 shrink-0 cursor-pointer rounded border-input accent-primary"
-                    />
-                  )}
-                  <span
-                    className="h-2 w-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: item.parentColor ?? "#888" }}
-                  />
-                  <Link
-                    href={getItemLink(item)}
-                    className={`flex flex-1 min-w-0 items-center gap-3 ${isDone ? "line-through" : ""}`}
-                  >
-                    <span className="flex-1 font-medium truncate">
-                      {item.title}
-                    </span>
-                    <span className="hidden md:inline text-xs text-muted-foreground truncate max-w-[140px]">
-                      {item.parentName}
-                    </span>
-                  </Link>
-                </div>
-              );
-            })}
+    <div className="space-y-0">
+      {todayItems.map((item: Item) => {
+        const checkable = item.type === "task" || item.type === "assignment";
+        const isDone =
+          item.type === "task"
+            ? item.status === "done"
+            : item.type === "assignment"
+              ? ASSIGNMENT_FINISHED.has(item.status)
+              : false;
+        return (
+          <div
+            key={`${item.type}-${item.id}`}
+            className={cn(
+              "group/row flex items-center gap-2 rounded-md px-1 py-1.5 text-[13px] transition-colors hover:bg-muted/50",
+              isDone && "opacity-60",
+            )}
+          >
+            {checkable && (
+              <input
+                type="checkbox"
+                checked={isDone}
+                onChange={() => handleToggle(item)}
+                onClick={(e) => e.stopPropagation()}
+                aria-label={isDone ? "Mark as not done" : "Mark as done"}
+                className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-input accent-primary"
+              />
+            )}
+            <StatusDot
+              tone="muted"
+              style={
+                item.parentColor
+                  ? { backgroundColor: item.parentColor }
+                  : undefined
+              }
+            />
+            <Link
+              href={getItemLink(item)}
+              className={cn(
+                "flex flex-1 min-w-0 items-center gap-2",
+                isDone && "line-through",
+              )}
+            >
+              <span className="flex-1 truncate font-medium">
+                {item.title}
+              </span>
+              <span className="hidden md:inline text-[11.5px] text-muted-foreground truncate max-w-[140px]">
+                {item.parentName}
+              </span>
+            </Link>
           </div>
-        )}
-      </div>
-    </Card>
+        );
+      })}
+    </div>
   );
 }
