@@ -3,6 +3,7 @@ import { projects } from "@/lib/db/schema";
 import { createProjectSchema } from "@/lib/validations/project";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { userOwnsWorkspace } from "@/lib/auth/ownership";
 import { getProjects } from "@/lib/server/data/projects";
 
 export async function GET(request: Request) {
@@ -26,6 +27,10 @@ export async function POST(request: Request) {
   const parsed = createProjectSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  if (!(await userOwnsWorkspace(parsed.data.workspaceId, userId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const [project] = await db

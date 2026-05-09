@@ -3,6 +3,7 @@ import { notes } from "@/lib/db/schema";
 import { createNoteSchema } from "@/lib/validations/note";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { userOwnsNoteParent } from "@/lib/auth/ownership";
 import { getNotes, type NoteParentType } from "@/lib/server/data/notes";
 
 export async function GET(request: Request) {
@@ -36,6 +37,17 @@ export async function POST(request: Request) {
   const parsed = createNoteSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  if (
+    parsed.data.parentId &&
+    !(await userOwnsNoteParent(
+      parsed.data.parentType,
+      parsed.data.parentId,
+      userId,
+    ))
+  ) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const [note] = await db

@@ -4,6 +4,7 @@ import { startTimeLogSchema } from "@/lib/validations/time-log";
 import { eq, and, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { userOwnsLoggable } from "@/lib/auth/ownership";
 import { getTimeLogs } from "@/lib/server/data/time-logs";
 
 export async function GET(request: Request) {
@@ -31,6 +32,16 @@ export async function POST(request: Request) {
   const parsed = startTimeLogSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  if (
+    !(await userOwnsLoggable(
+      parsed.data.loggableType,
+      parsed.data.loggableId,
+      userId,
+    ))
+  ) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const running = await db

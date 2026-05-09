@@ -3,6 +3,7 @@ import { courses } from "@/lib/db/schema";
 import { createCourseSchema } from "@/lib/validations/course";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { userOwnsWorkspace } from "@/lib/auth/ownership";
 import { getCourses } from "@/lib/server/data/courses";
 
 export async function GET(request: Request) {
@@ -27,6 +28,10 @@ export async function POST(request: Request) {
   const parsed = createCourseSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  if (!(await userOwnsWorkspace(parsed.data.workspaceId, userId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const [course] = await db

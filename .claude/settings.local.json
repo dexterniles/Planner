@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm view *)",
+      "PowerShell(npm view lucide-react@1.8.0 name version dist.tarball maintainers 2>&1)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "PowerShell(Get-Command node, npm, npx -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-ChildItem \"$env:APPDATA\\\\nvm\", \"$env:LOCALAPPDATA\\\\nvm\", \"$env:ProgramFiles\\\\nodejs\", \"C:\\\\nvm\" -ErrorAction SilentlyContinue -Recurse -Filter node.exe | Select-Object -First 5 FullName)"
+    ]
+  }
+}

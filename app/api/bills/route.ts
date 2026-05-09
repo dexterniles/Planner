@@ -3,6 +3,7 @@ import { bills, recurrenceRules } from "@/lib/db/schema";
 import { createBillSchema, billStatusValues } from "@/lib/validations/bill";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { userOwnsBillCategory } from "@/lib/auth/ownership";
 import { z } from "zod";
 import { getBills } from "@/lib/server/data/bills";
 
@@ -56,6 +57,13 @@ export async function POST(request: Request) {
   }
 
   const { recurrence, amount, paidAmount, paidAt, ...rest } = parsed.data;
+
+  if (
+    rest.categoryId &&
+    !(await userOwnsBillCategory(rest.categoryId, userId))
+  ) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   if (!recurrence) {
     const [bill] = await db

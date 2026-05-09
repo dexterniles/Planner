@@ -3,6 +3,7 @@ import { tasks, recurrenceRules } from "@/lib/db/schema";
 import { createTaskSchema } from "@/lib/validations/task";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { userOwnsProject, userOwnsTask } from "@/lib/auth/ownership";
 import { getTasks } from "@/lib/server/data/tasks";
 
 export async function GET(request: Request) {
@@ -29,6 +30,13 @@ export async function POST(request: Request) {
   }
 
   const { dueDate, recurrence, ...rest } = parsed.data;
+
+  if (!(await userOwnsProject(rest.projectId, userId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if (rest.parentTaskId && !(await userOwnsTask(rest.parentTaskId, userId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   if (!recurrence) {
     const [task] = await db

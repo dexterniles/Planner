@@ -3,6 +3,7 @@ import { assignments, recurrenceRules } from "@/lib/db/schema";
 import { createAssignmentSchema } from "@/lib/validations/assignment";
 import { NextResponse } from "next/server";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { userOwnsCourse, userOwnsGradeCategory } from "@/lib/auth/ownership";
 import { getAssignments } from "@/lib/server/data/assignments";
 
 export async function GET(request: Request) {
@@ -29,6 +30,16 @@ export async function POST(request: Request) {
   }
 
   const { dueDate, recurrence, ...rest } = parsed.data;
+
+  if (!(await userOwnsCourse(rest.courseId, userId))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if (
+    rest.categoryId &&
+    !(await userOwnsGradeCategory(rest.categoryId, userId))
+  ) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   if (!recurrence) {
     const [assignment] = await db

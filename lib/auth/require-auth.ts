@@ -6,7 +6,11 @@ import {
 
 // Trusts headers stamped by proxy.ts after a verified getUser(); fails closed if absent.
 
-const ALLOWED_EMAIL = process.env.ALLOWED_ADMIN_EMAIL?.toLowerCase();
+const RAW_ALLOWED_EMAIL = process.env.ALLOWED_ADMIN_EMAIL?.trim();
+if (!RAW_ALLOWED_EMAIL) {
+  throw new Error("ALLOWED_ADMIN_EMAIL is not set; refusing to boot.");
+}
+const ALLOWED_EMAIL = RAW_ALLOWED_EMAIL.toLowerCase();
 
 export type AuthResult =
   | { ok: true; userId: string; email: string }
@@ -23,7 +27,7 @@ export async function requireAuthGuard(request: Request): Promise<AuthResult> {
     };
   }
 
-  if (ALLOWED_EMAIL && email.toLowerCase() !== ALLOWED_EMAIL) {
+  if (email.toLowerCase() !== ALLOWED_EMAIL) {
     return {
       ok: false,
       response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),

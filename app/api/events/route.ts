@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { events, recurrenceRules } from "@/lib/db/schema";
 import { createEventSchema, eventStatusValues } from "@/lib/validations/event";
 import { requireAuthGuard } from "@/lib/auth/require-auth";
+import { userOwnsEventCategory } from "@/lib/auth/ownership";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getEvents } from "@/lib/server/data/events";
@@ -40,6 +41,13 @@ export async function POST(request: Request) {
   }
 
   const { startsAt, endsAt, recurrence, ...rest } = parsed.data;
+
+  if (
+    rest.categoryId &&
+    !(await userOwnsEventCategory(rest.categoryId, userId))
+  ) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   if (!recurrence) {
     const [event] = await db
