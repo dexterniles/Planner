@@ -23,8 +23,6 @@ const NAVIGATION: Shortcut[] = [
   { keys: ["g", "c"], description: "Go to Calendar" },
   { keys: ["g", "p"], description: "Go to Projects" },
   { keys: ["g", "a"], description: "Go to Academic" },
-  { keys: ["g", "r"], description: "Go to Recipes" },
-  { keys: ["g", "m"], description: "Go to TV & Movies" },
   { keys: ["g", "b"], description: "Go to Bills" },
   { keys: ["g", "e"], description: "Go to Events" },
 ];

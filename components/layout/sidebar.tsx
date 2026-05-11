@@ -11,8 +11,6 @@ import {
   FolderKanban,
   PartyPopper,
   Wallet,
-  Film,
-  ChefHat,
   LogOut,
   Settings,
   PanelLeftClose,
@@ -45,11 +43,6 @@ const WORKSPACE_NAV: NavItem[] = [
   { label: "Academic", href: "/academic", icon: GraduationCap },
   { label: "Projects", href: "/projects", icon: FolderKanban },
   { label: "Events", href: "/events", icon: PartyPopper },
-];
-
-const LIBRARY_NAV: NavItem[] = [
-  { label: "Movies", href: "/movies", icon: Film },
-  { label: "Recipes", href: "/recipes", icon: ChefHat },
 ];
 
 interface SidebarProps {
@@ -348,15 +341,6 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
           name="workspace"
           label="Workspace"
           items={WORKSPACE_NAV}
-          pathname={pathname}
-          isCollapsed={isCollapsed}
-          onClose={onClose}
-        />
-
-        <SectionGroup
-          name="library"
-          label="Library"
-          items={LIBRARY_NAV}
           pathname={pathname}
           isCollapsed={isCollapsed}
           onClose={onClose}

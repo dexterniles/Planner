@@ -14,8 +14,6 @@ const NAV_MAP: Record<string, string> = {
   c: "/calendar",
   p: "/projects",
   a: "/academic",
-  r: "/recipes",
-  m: "/movies",
   b: "/bills",
   e: "/events",
 };

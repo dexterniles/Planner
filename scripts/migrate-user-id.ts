@@ -44,8 +44,6 @@ const TABLES_WITH_USER_ID = [
   "tags",
   "inbox_items",
   "time_logs",
-  "media_items",
-  "recipes",
 ] as const;
 
 function fail(msg: string): never {

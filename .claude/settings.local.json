@@ -5,7 +5,17 @@
       "PowerShell(npm view lucide-react@1.8.0 name version dist.tarball maintainers 2>&1)",
       "WebFetch(domain:registry.npmjs.org)",
       "PowerShell(Get-Command node, npm, npx -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-ChildItem \"$env:APPDATA\\\\nvm\", \"$env:LOCALAPPDATA\\\\nvm\", \"$env:ProgramFiles\\\\nodejs\", \"C:\\\\nvm\" -ErrorAction SilentlyContinue -Recurse -Filter node.exe | Select-Object -First 5 FullName)"
+      "PowerShell(Get-ChildItem \"$env:APPDATA\\\\nvm\", \"$env:LOCALAPPDATA\\\\nvm\", \"$env:ProgramFiles\\\\nodejs\", \"C:\\\\nvm\" -ErrorAction SilentlyContinue -Recurse -Filter node.exe | Select-Object -First 5 FullName)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\Planner\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs grep -l \"recipes\\\\|movies\\\\|mediaItems\")",
+      "PowerShell(npm install 2>&1)",
+      "PowerShell(npm.cmd install 2>&1)",
+      "PowerShell(npm.cmd run build 2>&1)",
+      "PowerShell($ErrorActionPreference = 'Continue')",
+      "PowerShell(vercel.cmd env pull --environment=production --yes .env.local 2>&1)",
+      "PowerShell(npm.cmd run db:migrate 2>&1)",
+      "PowerShell($env:CI = \"true\"; $env:NO_COLOR = \"1\"; $ErrorActionPreference = 'Continue'; npm.cmd run db:migrate 2>&1 | Out-String)"
     ]
   }
 }

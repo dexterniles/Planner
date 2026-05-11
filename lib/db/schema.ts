@@ -116,14 +116,6 @@ export const recurrenceFrequencyEnum = pgEnum("recurrence_frequency", [
   "custom",
 ]);
 
-export const mediaTypeEnum = pgEnum("media_type", ["movie", "tv"]);
-
-export const mediaStatusEnum = pgEnum("media_status", [
-  "watchlist",
-  "watching",
-  "watched",
-]);
-
 export const timeLogParentTypeEnum = pgEnum("time_log_parent_type", [
   "course",
   "project",
@@ -548,111 +540,6 @@ export const timeLogs = pgTable(
       .on(table.userId, table.endedAt)
       .where(sql`ended_at IS NULL`),
   ],
-);
-
-export type MediaMetadata = {
-  director?: string | null;
-  createdBy?: string[] | null;
-  composer?: string | null;
-  cast?: Array<{ name: string; character: string; profilePath: string | null }>;
-  tagline?: string | null;
-  episodeCount?: number | null;
-  originalLanguage?: string | null;
-};
-
-export const mediaItems = pgTable(
-  "media_items",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: uuid("user_id").notNull(),
-    mediaType: mediaTypeEnum("media_type").notNull(),
-    tmdbId: integer("tmdb_id").notNull(),
-    imdbId: text("imdb_id"),
-    title: text("title").notNull(),
-    posterPath: text("poster_path"),
-    backdropPath: text("backdrop_path"),
-    overview: text("overview"),
-    releaseYear: integer("release_year"),
-    runtime: integer("runtime"),
-    genres: jsonb("genres"),
-    status: mediaStatusEnum("status").default("watchlist").notNull(),
-    rating: decimal("rating", { precision: 2, scale: 1 }),
-    watchedAt: timestamp("watched_at", { withTimezone: true }),
-    notes: text("notes"),
-    metadata: jsonb("metadata").$type<MediaMetadata>(),
-    ...timestamps,
-  },
-  (table) => [
-    index("media_items_user_id_idx").on(table.userId),
-    uniqueIndex("media_items_user_media_unique").on(
-      table.userId,
-      table.mediaType,
-      table.tmdbId,
-    ),
-    index("media_items_user_created_idx").on(table.userId, table.createdAt),
-  ],
-);
-
-export const recipes = pgTable(
-  "recipes",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    userId: uuid("user_id").notNull(),
-    title: text("title").notNull(),
-    description: text("description"),
-    prepTimeMinutes: integer("prep_time_minutes"),
-    cookTimeMinutes: integer("cook_time_minutes"),
-    portions: integer("portions").default(1).notNull(),
-    notes: text("notes"),
-    sourceUrl: text("source_url"),
-    ...timestamps,
-  },
-  (table) => [index("recipes_user_id_idx").on(table.userId)],
-);
-
-export const recipeIngredients = pgTable(
-  "recipe_ingredients",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    recipeId: uuid("recipe_id")
-      .references(() => recipes.id, { onDelete: "cascade" })
-      .notNull(),
-    sortOrder: integer("sort_order").default(0).notNull(),
-    quantity: decimal("quantity", { precision: 10, scale: 3 }),
-    unit: text("unit"),
-    name: text("name").notNull(),
-    ...timestamps,
-  },
-  (table) => [index("recipe_ingredients_recipe_id_idx").on(table.recipeId)],
-);
-
-export const recipeSteps = pgTable(
-  "recipe_steps",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    recipeId: uuid("recipe_id")
-      .references(() => recipes.id, { onDelete: "cascade" })
-      .notNull(),
-    sortOrder: integer("sort_order").default(0).notNull(),
-    body: text("body").notNull(),
-    durationMinutes: integer("duration_minutes"),
-    ...timestamps,
-  },
-  (table) => [index("recipe_steps_recipe_id_idx").on(table.recipeId)],
-);
-
-export const recipeEquipment = pgTable(
-  "recipe_equipment",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    recipeId: uuid("recipe_id")
-      .references(() => recipes.id, { onDelete: "cascade" })
-      .notNull(),
-    sortOrder: integer("sort_order").default(0).notNull(),
-    name: text("name").notNull(),
-    ...timestamps,
-  },
-  (table) => [index("recipe_equipment_recipe_id_idx").on(table.recipeId)],
 );
 
 export const incomeEntries = pgTable(

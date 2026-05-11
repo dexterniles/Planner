@@ -26,16 +26,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@base-ui/react"],
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "image.tmdb.org",
-        pathname: "/t/p/**",
-      },
-    ],
-    minimumCacheTTL: 2592000, // 30 days; TMDB poster URLs are immutable
-  },
   async headers() {
     return [
       {

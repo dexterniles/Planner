@@ -8,7 +8,6 @@ import {
   eventCategories,
   bills,
   billCategories,
-  recipes,
 } from "@/lib/db/schema";
 import { and, eq, ilike, or, sql } from "drizzle-orm";
 import { escapeLike } from "@/lib/utils";
@@ -41,7 +40,6 @@ export async function getSearch(
     taskResults,
     eventResults,
     billResults,
-    recipeResults,
   ] = await Promise.all([
     db
       .select({
@@ -139,19 +137,6 @@ export async function getSearch(
       .leftJoin(billCategories, eq(bills.categoryId, billCategories.id))
       .where(and(eq(bills.userId, userId), ilike(bills.name, pattern)))
       .limit(5),
-    db
-      .select({
-        id: recipes.id,
-        type: sql<string>`'recipe'`.as("type"),
-        title: recipes.title,
-        subtitle: recipes.description,
-        color: sql<string | null>`null`.as("color"),
-        parentId: recipes.id,
-        category: sql<string | null>`null`.as("category"),
-      })
-      .from(recipes)
-      .where(and(eq(recipes.userId, userId), ilike(recipes.title, pattern)))
-      .limit(5),
   ]);
 
   return [
@@ -161,6 +146,5 @@ export async function getSearch(
     ...taskResults,
     ...eventResults,
     ...billResults,
-    ...recipeResults,
   ].slice(0, 20);
 }
