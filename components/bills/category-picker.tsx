@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { cn } from "@/lib/utils";
 import {
   useBillCategories,
@@ -63,51 +64,31 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-1.5">
-        <button
-          type="button"
-          onClick={() => onChange(null)}
-          className={cn(
-            "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all",
-            value === null
-              ? "bg-primary text-primary-foreground border-primary shadow-sm"
-              : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted",
-          )}
-        >
+        <FilterChip active={value === null} onClick={() => onChange(null)}>
           Uncategorized
-        </button>
+        </FilterChip>
 
-        {cats.map((cat) => {
-          const active = value === cat.id;
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => onChange(cat.id)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all",
-                active
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "bg-muted/50 text-foreground border-border/60 hover:bg-muted",
-              )}
+        {cats.map((cat) => (
+          <FilterChip
+            key={cat.id}
+            active={value === cat.id}
+            onClick={() => onChange(cat.id)}
+          >
+            <span
+              className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold text-white"
+              style={{ backgroundColor: cat.color ?? defaultCategoryColor }}
             >
-              <span
-                className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold text-white"
-                style={{
-                  backgroundColor: cat.color ?? defaultCategoryColor,
-                }}
-              >
-                {categoryInitial(cat.name)}
-              </span>
-              {cat.name}
-            </button>
-          );
-        })}
+              {categoryInitial(cat.name)}
+            </span>
+            {cat.name}
+          </FilterChip>
+        ))}
 
         {!composing && (
           <button
             type="button"
             onClick={() => setComposing(true)}
-            className="flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-all hover:border-primary hover:text-primary"
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-dashed border-border/60 px-2.5 text-[11.5px] font-medium text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
           >
             <Plus className="h-3 w-3" />
             New
@@ -116,7 +97,7 @@ export function CategoryPicker({ value, onChange }: CategoryPickerProps) {
       </div>
 
       {composing && (
-        <div className="rounded-lg border border-border/60 bg-muted/30 p-3 space-y-3">
+        <div className="rounded-md border border-border/60 bg-muted/30 p-3 space-y-3">
           <div className="flex items-center gap-2">
             <Input
               value={name}

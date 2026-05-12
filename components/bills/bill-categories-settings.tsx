@@ -13,6 +13,7 @@ import {
 } from "@/lib/hooks/use-bill-categories";
 import { defaultCategoryColor } from "@/components/bills/bill-utils";
 import { ColorTile } from "@/components/ui/color-tile";
+import { SectionHeader } from "@/components/ui/section-header";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
@@ -102,20 +103,20 @@ export function BillCategoriesSettings() {
 
   return (
     <div>
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Bill Categories</h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Create your own — Housing, Subscriptions, Car… whatever fits your bills.
-          </p>
-        </div>
-        {!composing && !editingId && (
-          <Button size="sm" onClick={() => setComposing(true)}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            New
-          </Button>
-        )}
-      </div>
+      <SectionHeader
+        label="BILL CATEGORIES"
+        action={
+          !composing && !editingId ? (
+            <Button size="sm" variant="outline" onClick={() => setComposing(true)}>
+              <Plus className="mr-1.5 h-3 w-3" />
+              New
+            </Button>
+          ) : undefined
+        }
+      />
+      <p className="-mt-1 mb-4 text-[11.5px] text-muted-foreground">
+        Create your own — Housing, Subscriptions, Car… whatever fits your bills.
+      </p>
 
       {(composing || editingId) && (
         <Card className="p-3 mb-3 space-y-3">

@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Check, Plus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FilterChip } from "@/components/ui/filter-chip";
+import { SectionHeader } from "@/components/ui/section-header";
 import { cn } from "@/lib/utils";
 import { useBills, useBulkMarkPaid } from "@/lib/hooks/use-bills";
 import { useBillCategories } from "@/lib/hooks/use-bill-categories";
@@ -355,54 +356,55 @@ export function BillsPage() {
       <PageHeader
         title="Bills"
         actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={openLogIncome}>
-              <Plus className="mr-1.5 h-4 w-4" />
+          <>
+            <Button variant="outline" size="sm" onClick={openLogIncome}>
+              <Plus className="mr-1.5 h-3 w-3" />
               Log income
             </Button>
-            <Button onClick={openCreateBill}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              New Bill
+            <Button size="sm" onClick={openCreateBill}>
+              <Plus className="mr-1.5 h-3 w-3" />
+              New bill
             </Button>
-          </div>
+          </>
         }
       />
 
       <div className="space-y-5">
         {/* Stats row */}
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          <StatCard
+        <div className="grid grid-cols-2 lg:grid-cols-4 lg:divide-x divide-border/60 gap-y-2">
+          <StatTile
             label="Due this month"
             value={formatCurrency(stats.dueThisMonth)}
           />
-          <StatCard
+          <StatTile
             label="Paid this month"
             value={formatCurrency(stats.paidThisMonth)}
           />
-          <StatCard
+          <StatTile
             label="Overdue"
             value={String(stats.overdueCount)}
             tone={stats.overdueCount > 0 ? "danger" : "muted"}
           />
-          <StatCard
+          <StatTile
             label="Min. needed (2 periods)"
             value={
               stats.minimumNeeded != null
                 ? formatCurrency(stats.minimumNeeded)
                 : "Set schedule"
             }
+            tone={stats.minimumNeeded == null ? "muted" : "default"}
           />
         </div>
 
         {/* Tabs: All bills / Pay period / Income */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
+          <div className="inline-flex rounded-md border border-border/60 p-[3px] gap-[2px]">
             <button
               onClick={() => setTab("all")}
               className={cn(
-                "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors duration-150",
+                "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors",
                 tab === "all"
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -412,9 +414,9 @@ export function BillsPage() {
               onClick={() => setTab("period")}
               disabled={!paySchedule}
               className={cn(
-                "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors duration-150 disabled:opacity-50",
+                "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors disabled:opacity-50",
                 tab === "period"
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
               title={
@@ -428,9 +430,9 @@ export function BillsPage() {
             <button
               onClick={() => setTab("income")}
               className={cn(
-                "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors duration-150",
+                "px-3 py-1 text-[12.5px] font-medium rounded-[5px] transition-colors",
                 tab === "income"
-                  ? "bg-background text-foreground shadow-sm"
+                  ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -441,57 +443,43 @@ export function BillsPage() {
           {/* Bills filters — hidden on Income tab */}
           {tab !== "income" && (
             <>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 {STATUS_VALUES.map((s) => (
-                  <button
+                  <FilterChip
                     key={s}
+                    active={statusFilter === s}
                     onClick={() => setStatusFilter(s)}
-                    className={cn(
-                      "px-2.5 py-1 text-xs font-medium rounded-full border capitalize transition-all",
-                      statusFilter === s
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                        : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted",
-                    )}
+                    className="capitalize"
                   >
                     {s}
-                  </button>
+                  </FilterChip>
                 ))}
               </div>
 
               {categories && categories.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  <button
+                  <FilterChip
+                    active={categoryFilter === null}
                     onClick={() => setCategoryFilter(null)}
-                    className={cn(
-                      "px-2.5 py-1 text-xs font-medium rounded-full border transition-all",
-                      categoryFilter === null
-                        ? "bg-foreground text-background border-foreground shadow-sm"
-                        : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted",
-                    )}
                   >
                     All categories
-                  </button>
+                  </FilterChip>
                   {(categories as Category[]).map((cat) => (
-                    <button
+                    <FilterChip
                       key={cat.id}
+                      active={categoryFilter === cat.id}
                       onClick={() =>
                         setCategoryFilter(
                           categoryFilter === cat.id ? null : cat.id,
                         )
                       }
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border transition-all",
-                        categoryFilter === cat.id
-                          ? "bg-foreground text-background border-foreground shadow-sm"
-                          : "bg-muted/50 text-foreground border-border/60 hover:bg-muted",
-                      )}
                     >
                       <span
                         className="h-2 w-2 rounded-full"
                         style={{ backgroundColor: cat.color ?? "#6366F1" }}
                       />
                       {cat.name}
-                    </button>
+                    </FilterChip>
                   ))}
                 </div>
               )}
@@ -500,20 +488,15 @@ export function BillsPage() {
 
           {/* Income kind filter — only on Income tab */}
           {tab === "income" && (
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1">
               {INCOME_KIND_FILTERS.map((k) => (
-                <button
+                <FilterChip
                   key={k}
+                  active={incomeKindFilter === k}
                   onClick={() => setIncomeKindFilter(k)}
-                  className={cn(
-                    "px-2.5 py-1 text-xs font-medium rounded-full border capitalize transition-all",
-                    incomeKindFilter === k
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted",
-                  )}
                 >
                   {k === "all" ? "All" : INCOME_KIND_LABELS[k]}
-                </button>
+                </FilterChip>
               ))}
             </div>
           )}
@@ -548,13 +531,13 @@ export function BillsPage() {
 
         {/* Bulk action bar (bills tabs only) */}
         {tab !== "income" && selectionMode && (
-          <div className="sticky top-2 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 shadow-md backdrop-blur-sm">
-            <span className="font-serif text-[15px] font-medium leading-none tabular-nums">
+          <div className="sticky top-2 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-border/60 bg-background/95 px-4 py-2 shadow-md backdrop-blur-sm">
+            <span className="text-[13px] font-medium tabular-nums">
               {selected.size} selected
             </span>
             <span className="text-[11.5px] text-muted-foreground">
               Total{" "}
-              <span className="font-serif text-[15px] font-medium text-foreground tabular-nums">
+              <span className="text-[13px] font-medium text-foreground tabular-nums">
                 {formatCurrency(
                   filtered
                     .filter((b) => selected.has(b.id))
@@ -568,7 +551,7 @@ export function BillsPage() {
               onClick={handleBulkMarkPaid}
               disabled={bulkMarkPaid.isPending}
             >
-              <Check className="mr-1.5 h-3.5 w-3.5" />
+              <Check className="mr-1.5 h-3 w-3" />
               Mark all paid
             </Button>
             <Button
@@ -606,9 +589,9 @@ export function BillsPage() {
             {/* Bills list */}
             {isLoading ? (
               <div className="space-y-2">
-                <Skeleton className="h-[74px] w-full rounded-xl" />
-                <Skeleton className="h-[74px] w-full rounded-xl" />
-                <Skeleton className="h-[74px] w-full rounded-xl" />
+                <Skeleton className="h-[68px] w-full rounded-md" />
+                <Skeleton className="h-[68px] w-full rounded-md" />
+                <Skeleton className="h-[68px] w-full rounded-md" />
               </div>
             ) : filtered.length === 0 ? (
               <BillsEmptyState
@@ -617,11 +600,7 @@ export function BillsPage() {
               />
             ) : (
               <>
-                {tab === "period" && (
-                  <h2 className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground px-1 pt-2">
-                    Bills due
-                  </h2>
-                )}
+                {tab === "period" && <SectionHeader label="BILLS DUE" />}
                 {/* Select-all toggle */}
                 <div className="flex items-center gap-2 px-1">
                   <button
@@ -737,22 +716,22 @@ function PeriodIncomeSection({
 }) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between px-1 pt-1">
-        <h2 className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-          Income
-        </h2>
-        <button
-          onClick={onLogIncome}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          + Log income
-        </button>
-      </div>
+      <SectionHeader
+        label="INCOME"
+        action={
+          <button
+            onClick={onLogIncome}
+            className="text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+          >
+            + Log income
+          </button>
+        }
+      />
       {isLoading ? (
-        <Skeleton className="h-[68px] w-full rounded-xl" />
+        <Skeleton className="h-[68px] w-full rounded-md" />
       ) : incomes.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card/50 px-4 py-5 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-md border border-dashed border-border/60 px-4 py-5 text-center">
+          <p className="text-[13px] text-muted-foreground">
             No income logged for this period yet.
           </p>
           <Button
@@ -761,7 +740,7 @@ function PeriodIncomeSection({
             onClick={onLogIncome}
             className="mt-2"
           >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <Plus className="mr-1.5 h-3 w-3" />
             Log income
           </Button>
         </div>
@@ -798,9 +777,9 @@ function IncomeTabBody({
   if (isLoading) {
     return (
       <div className="space-y-2">
-        <Skeleton className="h-[68px] w-full rounded-xl" />
-        <Skeleton className="h-[68px] w-full rounded-xl" />
-        <Skeleton className="h-[68px] w-full rounded-xl" />
+        <Skeleton className="h-[68px] w-full rounded-md" />
+        <Skeleton className="h-[68px] w-full rounded-md" />
+        <Skeleton className="h-[68px] w-full rounded-md" />
       </div>
     );
   }
@@ -830,7 +809,7 @@ function IncomeTabBody({
   );
 }
 
-function StatCard({
+function StatTile({
   label,
   value,
   tone = "default",
@@ -840,20 +819,20 @@ function StatCard({
   tone?: "default" | "danger" | "muted";
 }) {
   return (
-    <Card className="p-4 sm:p-5">
-      <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+    <div className="flex flex-col gap-1 px-3 py-2 lg:py-0 lg:first:pl-0 lg:last:pr-0">
+      <p className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </p>
       <p
         className={cn(
-          "mt-1 font-serif text-[20px] sm:text-[24px] font-medium leading-none tabular-nums truncate",
+          "text-[18px] font-medium leading-none tabular-nums truncate",
           tone === "danger" && "text-destructive",
           tone === "muted" && "text-muted-foreground",
         )}
       >
         {value}
       </p>
-    </Card>
+    </div>
   );
 }
 
@@ -867,18 +846,21 @@ function BillsEmptyState({
   if (!hasBills) {
     return (
       <div className="mt-12 flex flex-col items-center text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-          <Wallet className="h-6 w-6 text-primary" strokeWidth={1.75} />
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+          <Wallet
+            className="h-5 w-5 text-muted-foreground"
+            strokeWidth={1.75}
+          />
         </div>
-        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">
+        <h3 className="text-[15px] font-semibold tracking-tight">
           Track what you owe
         </h3>
-        <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+        <p className="mt-1 max-w-sm text-[13px] text-muted-foreground">
           Add bills with due dates and amounts. Tag with categories you create
           on the fly. See what&apos;s coming up each paycheck.
         </p>
-        <Button className="mt-5" onClick={onCreate}>
-          <Plus className="mr-1.5 h-4 w-4" />
+        <Button size="sm" className="mt-4" onClick={onCreate}>
+          <Plus className="mr-1.5 h-3 w-3" />
           Add your first bill
         </Button>
       </div>
@@ -887,7 +869,7 @@ function BillsEmptyState({
 
   return (
     <div className="flex flex-col items-center py-12 text-center">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-[13px] text-muted-foreground">
         No bills match the current filters.
       </p>
     </div>
@@ -904,21 +886,21 @@ function IncomeEmptyState({
   if (!hasAnyIncome) {
     return (
       <div className="mt-12 flex flex-col items-center text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10">
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-emerald-500/10">
           <Wallet
-            className="h-6 w-6 text-emerald-600 dark:text-emerald-500"
+            className="h-5 w-5 text-emerald-600 dark:text-emerald-500"
             strokeWidth={1.75}
           />
         </div>
-        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">
+        <h3 className="text-[15px] font-semibold tracking-tight">
           Track money in
         </h3>
-        <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+        <p className="mt-1 max-w-sm text-[13px] text-muted-foreground">
           Log paychecks and misc income as they come in. See income vs bills
           for each pay period.
         </p>
-        <Button className="mt-5" onClick={onCreate}>
-          <Plus className="mr-1.5 h-4 w-4" />
+        <Button size="sm" className="mt-4" onClick={onCreate}>
+          <Plus className="mr-1.5 h-3 w-3" />
           Log your first income
         </Button>
       </div>
@@ -927,7 +909,7 @@ function IncomeEmptyState({
 
   return (
     <div className="flex flex-col items-center py-12 text-center">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-[13px] text-muted-foreground">
         No income matches the current filters.
       </p>
     </div>

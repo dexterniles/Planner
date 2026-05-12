@@ -57,18 +57,18 @@ export function IncomeCard({ income, onEdit }: IncomeCardProps) {
   return (
     <div
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-all",
+        "group relative flex items-center gap-3 rounded-md border border-border/60 px-4 py-3 transition-colors",
       )}
     >
       {/* Kind icon */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-500">
-        <Icon className="h-4 w-4" strokeWidth={1.75} />
+      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-500">
+        <Icon className="h-3 w-3" strokeWidth={1.75} />
       </div>
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="text-[14px] font-medium leading-tight truncate">
+          <h3 className="text-[13px] font-medium leading-tight truncate">
             {income.source?.trim() || kindLabel}
           </h3>
           <Badge
@@ -92,7 +92,7 @@ export function IncomeCard({ income, onEdit }: IncomeCardProps) {
 
       {/* Amount */}
       <div className="text-right shrink-0">
-        <p className="font-serif text-[18px] font-medium leading-none tabular-nums tracking-tight text-emerald-600 dark:text-emerald-500">
+        <p className="text-[15px] font-medium leading-none tabular-nums text-emerald-600 dark:text-emerald-500">
           +{formatCurrency(income.amount)}
         </p>
       </div>

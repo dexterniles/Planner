@@ -18,6 +18,7 @@ import {
 } from "@/lib/hooks/use-pay-schedule";
 import { payFrequencyValues } from "@/lib/validations/bill";
 import type { PayFrequency } from "@/lib/validations/bill";
+import { SectionHeader } from "@/components/ui/section-header";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
@@ -83,12 +84,10 @@ export function PayScheduleSettings() {
 
   return (
     <div>
-      <div className="mb-4">
-        <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Pay Schedule</h2>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          Tell us when you get paid so bills can be grouped per paycheck.
-        </p>
-      </div>
+      <SectionHeader label="PAY SCHEDULE" />
+      <p className="-mt-1 mb-4 text-[11.5px] text-muted-foreground">
+        Tell us when you get paid so bills can be grouped per paycheck.
+      </p>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading...</p>

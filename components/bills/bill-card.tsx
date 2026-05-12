@@ -108,8 +108,8 @@ export function BillCard({
   return (
     <div
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-sm transition-all",
-        selected && "ring-2 ring-primary/50 border-primary/40",
+        "group relative flex items-center gap-3 rounded-md border border-border/60 px-4 py-3 transition-colors",
+        selected && "border-foreground/40 bg-muted/30",
         paid && "opacity-60",
         skipped && "opacity-50",
         overdue && !selected && "border-destructive/40",
@@ -140,7 +140,7 @@ export function BillCard({
         <div className="flex items-center gap-2 flex-wrap">
           <h3
             className={cn(
-              "text-[14px] font-medium leading-tight truncate",
+              "text-[13px] font-medium leading-tight truncate",
               paid && "line-through",
             )}
           >
@@ -192,7 +192,7 @@ export function BillCard({
 
       {/* Amount */}
       <div className="text-right shrink-0">
-        <p className="font-serif text-[18px] font-medium leading-none tabular-nums tracking-tight">
+        <p className="text-[15px] font-medium leading-none tabular-nums">
           {formatCurrency(bill.amount)}
         </p>
       </div>
