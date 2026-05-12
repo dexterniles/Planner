@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SectionHeader } from "@/components/ui/section-header";
 import {
   useNotes,
   useCreateNote,
@@ -208,15 +209,17 @@ export function NotesList({
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Notes</h3>
-        {!composing && !editingId && (
-          <Button size="sm" onClick={startCompose}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            New Note
-          </Button>
-        )}
-      </div>
+      <SectionHeader
+        label="NOTES"
+        action={
+          !composing && !editingId ? (
+            <Button size="sm" variant="outline" onClick={startCompose}>
+              <Plus className="mr-1.5 h-3 w-3" />
+              New Note
+            </Button>
+          ) : undefined
+        }
+      />
 
       {composing && (
         <Card className="p-4 mb-4">

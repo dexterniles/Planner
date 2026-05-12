@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import {
   LayoutDashboard,
   Calendar,
@@ -18,14 +17,13 @@ import {
   X,
   Search,
   PenSquare,
-  ChevronDown,
-  ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
 import { useSearchPalette } from "./search-palette-context";
 import { useCapture } from "./global-capture";
+import { SectionGroup } from "./section-group";
 
 interface NavItem {
   label: string;
@@ -48,29 +46,6 @@ const WORKSPACE_NAV: NavItem[] = [
 interface SidebarProps {
   forceExpanded?: boolean;
   onClose?: () => void;
-}
-
-function readSectionExpanded(name: string, fallback = true): boolean {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(`planner:sidebar:section:${name}`);
-    if (raw === null) return fallback;
-    return raw === "true";
-  } catch {
-    return fallback;
-  }
-}
-
-function writeSectionExpanded(name: string, value: boolean) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(
-      `planner:sidebar:section:${name}`,
-      String(value),
-    );
-  } catch {
-    /* ignore */
-  }
 }
 
 interface NavRowProps {
@@ -115,89 +90,6 @@ function NavRow({ item, isCollapsed, isActive, onClick }: NavRowProps) {
         </span>
       )}
     </Link>
-  );
-}
-
-interface SectionGroupProps {
-  name: string;
-  label: string;
-  items: NavItem[];
-  pathname: string;
-  isCollapsed: boolean;
-  onClose?: () => void;
-}
-
-function SectionGroup({
-  name,
-  label,
-  items,
-  pathname,
-  isCollapsed,
-  onClose,
-}: SectionGroupProps) {
-  const [expanded, setExpanded] = useState<boolean>(() =>
-    readSectionExpanded(name, true),
-  );
-
-  const toggle = () => {
-    setExpanded((prev) => {
-      const next = !prev;
-      writeSectionExpanded(name, next);
-      return next;
-    });
-  };
-
-  if (isCollapsed) {
-    return (
-      <div className="mt-2 space-y-0.5">
-        {items.map((item) => {
-          const isActive = pathname.startsWith(item.href);
-          return (
-            <NavRow
-              key={item.href}
-              item={item}
-              isCollapsed
-              isActive={isActive}
-              onClick={onClose}
-            />
-          );
-        })}
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-3">
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={expanded}
-        className="flex w-full items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground/80 transition-colors hover:text-foreground"
-      >
-        {expanded ? (
-          <ChevronDown className="h-3 w-3 shrink-0" strokeWidth={2} />
-        ) : (
-          <ChevronRight className="h-3 w-3 shrink-0" strokeWidth={2} />
-        )}
-        <span>{label}</span>
-      </button>
-      {expanded && (
-        <div className="mt-0.5 space-y-0.5">
-          {items.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <NavRow
-                key={item.href}
-                item={item}
-                isCollapsed={false}
-                isActive={isActive}
-                onClick={onClose}
-              />
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -338,13 +230,22 @@ export function Sidebar({ forceExpanded = false, onClose }: SidebarProps) {
         </div>
 
         <SectionGroup
-          name="workspace"
+          storageKey="planner:sidebar:section:workspace"
           label="Workspace"
-          items={WORKSPACE_NAV}
-          pathname={pathname}
-          isCollapsed={isCollapsed}
-          onClose={onClose}
-        />
+          hideHeader={isCollapsed}
+          className={isCollapsed ? "mt-2" : "mt-3"}
+          contentClassName="space-y-0.5"
+        >
+          {WORKSPACE_NAV.map((item) => (
+            <NavRow
+              key={item.href}
+              item={item}
+              isCollapsed={isCollapsed}
+              isActive={pathname.startsWith(item.href)}
+              onClick={onClose}
+            />
+          ))}
+        </SectionGroup>
       </nav>
 
       {!forceExpanded && (

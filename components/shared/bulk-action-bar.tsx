@@ -26,9 +26,8 @@ interface BulkActionBarProps {
 
 /**
  * Sticky bar that appears at the top of an entity list when one or more rows
- * are selected. Mirrors the bills bulk pattern — `sticky top-2 z-10` over a
- * primary-tinted backdrop, with mark-done / reschedule (popover) / delete
- * (confirm) / clear actions.
+ * are selected. `sticky top-2 z-10` over a low-contrast translucent backdrop,
+ * with mark-done / reschedule (popover) / delete (confirm) / clear actions.
  */
 export function BulkActionBar({
   count,
@@ -62,8 +61,8 @@ export function BulkActionBar({
   };
 
   return (
-    <div className="sticky top-2 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 shadow-md backdrop-blur-sm">
-      <span className="font-serif text-[15px] font-medium leading-none tabular-nums">
+    <div className="sticky top-2 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-border/60 bg-background/95 px-4 py-2 shadow-md backdrop-blur-sm">
+      <span className="text-[13px] font-medium tabular-nums">
         {count} selected
       </span>
       <div className="flex-1" />

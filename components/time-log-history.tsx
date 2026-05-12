@@ -2,6 +2,7 @@
 
 import { Clock, Timer, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SectionHeader } from "@/components/ui/section-header";
 import { useTimeLogs, useDeleteTimeLog } from "@/lib/hooks/use-time-logs";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { formatDurationLong } from "@/lib/utils";
@@ -58,17 +59,13 @@ export function TimeLogHistory({
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Time Logged</h3>
-          {completedLogs.length > 0 && (
-            <p className="text-sm text-muted-foreground">
-              Total: {formatDurationLong(totalSeconds)} across{" "}
-              {completedLogs.length} session{completedLogs.length !== 1 ? "s" : ""}
-            </p>
-          )}
-        </div>
-      </div>
+      <SectionHeader label="TIME LOGGED" />
+      {completedLogs.length > 0 && (
+        <p className="text-[11.5px] text-muted-foreground mb-3">
+          Total: {formatDurationLong(totalSeconds)} across{" "}
+          {completedLogs.length} session{completedLogs.length !== 1 ? "s" : ""}
+        </p>
+      )}
 
       {completedLogs.length === 0 ? (
         <p className="text-sm text-muted-foreground">
