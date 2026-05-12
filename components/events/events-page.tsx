@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PartyPopper, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { useEvents } from "@/lib/hooks/use-events";
 import { useEventCategories } from "@/lib/hooks/use-event-categories";
 import { EventCard, type EventCardData } from "@/components/events/event-card";
@@ -94,9 +95,9 @@ export function EventsPage() {
       <PageHeader
         title="Events"
         actions={
-          <Button onClick={openCreate}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            New Event
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="mr-1.5 h-3 w-3" />
+            New event
           </Button>
         }
       />
@@ -106,15 +107,15 @@ export function EventsPage() {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             {/* Time filter segmented control */}
-            <div className="inline-flex rounded-md border border-border bg-card p-[3px] shadow-sm gap-[2px]">
+            <div className="inline-flex rounded-md border border-border/60 p-[3px] gap-[2px]">
               {TIME_VALUES.map((t) => (
                 <button
                   key={t}
                   onClick={() => setParam("time", t, "upcoming")}
                   className={cn(
-                    "px-3 py-1 text-[12.5px] font-medium capitalize rounded-[5px] transition-colors duration-150",
+                    "px-3 py-1 text-[12.5px] font-medium capitalize rounded-[5px] transition-colors",
                     timeFilter === t
-                      ? "bg-background text-foreground shadow-sm"
+                      ? "bg-muted text-foreground"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -130,36 +131,30 @@ export function EventsPage() {
           <SavedViewsStrip routeKey="events" />
 
           {/* Category filter strip */}
-          <div className="flex flex-wrap gap-2">
-            <button
+          <div className="flex flex-wrap gap-1">
+            <FilterChip
+              active={categoryFilter === null}
               onClick={() => setParam("category", "", "")}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded-full border transition-all",
-                categoryFilter === null
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground",
-              )}
             >
               All
-            </button>
+            </FilterChip>
             {cats.map((cat) => {
               const active = categoryFilter === cat.id;
               const meta = getEventCategoryMeta(cat.name, cat.color);
               const Icon = meta.icon;
               return (
-                <button
+                <FilterChip
                   key={cat.id}
+                  active={active}
                   onClick={() => setParam("category", active ? "" : cat.id, "")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border transition-all",
-                    active
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-muted/50 text-muted-foreground border-border/60 hover:bg-muted hover:text-foreground",
-                  )}
                 >
-                  <Icon className="h-3 w-3" />
+                  <Icon
+                    className="h-3 w-3"
+                    strokeWidth={1.75}
+                    style={{ color: cat.color ?? meta.defaultColor }}
+                  />
                   {cat.name}
-                </button>
+                </FilterChip>
               );
             })}
           </div>
@@ -167,11 +162,11 @@ export function EventsPage() {
 
         {/* List */}
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <Skeleton className="h-[240px] w-full rounded-xl" />
-            <Skeleton className="h-[240px] w-full rounded-xl" />
-            <Skeleton className="h-[240px] w-full rounded-xl" />
-            <Skeleton className="h-[240px] w-full rounded-xl" />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <Skeleton className="h-[180px] w-full rounded-md" />
+            <Skeleton className="h-[180px] w-full rounded-md" />
+            <Skeleton className="h-[180px] w-full rounded-md" />
+            <Skeleton className="h-[180px] w-full rounded-md" />
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
@@ -180,7 +175,7 @@ export function EventsPage() {
             onCreate={openCreate}
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map((event) => (
               <EventCard key={event.id} event={event} onEdit={() => openEdit(event)} />
             ))}
@@ -209,16 +204,21 @@ function EmptyState({
   if (!hasEvents) {
     return (
       <div className="mt-12 flex flex-col items-center text-center">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-          <PartyPopper className="h-6 w-6 text-primary" strokeWidth={1.75} />
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+          <PartyPopper
+            className="h-5 w-5 text-muted-foreground"
+            strokeWidth={1.75}
+          />
         </div>
-        <h3 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Keep your plans in one place</h3>
-        <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+        <h3 className="text-[15px] font-semibold tracking-tight">
+          Keep your plans in one place
+        </h3>
+        <p className="mt-1 max-w-sm text-[13px] text-muted-foreground">
           Dinners, concerts, vacations, hangouts — track the life stuff
           alongside your work.
         </p>
-        <Button className="mt-5" onClick={onCreate}>
-          <Plus className="mr-1.5 h-4 w-4" />
+        <Button size="sm" className="mt-4" onClick={onCreate}>
+          <Plus className="mr-1.5 h-3 w-3" />
           Add your first event
         </Button>
       </div>
@@ -233,7 +233,7 @@ function EmptyState({
 
   return (
     <div className="flex flex-col items-center py-12 text-center">
-      <p className="text-sm text-muted-foreground">{messages[timeFilter]}</p>
+      <p className="text-[13px] text-muted-foreground">{messages[timeFilter]}</p>
     </div>
   );
 }

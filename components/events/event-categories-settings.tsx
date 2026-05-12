@@ -12,6 +12,7 @@ import {
   useUpdateEventCategory,
 } from "@/lib/hooks/use-event-categories";
 import { ColorTile } from "@/components/ui/color-tile";
+import { SectionHeader } from "@/components/ui/section-header";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
@@ -101,20 +102,20 @@ export function EventCategoriesSettings() {
 
   return (
     <div>
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight">Event Categories</h2>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            Customize how you bucket your plans — Birthdays, Date Night, Travel… whatever fits.
-          </p>
-        </div>
-        {!composing && !editingId && (
-          <Button size="sm" onClick={() => setComposing(true)}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            New
-          </Button>
-        )}
-      </div>
+      <SectionHeader
+        label="EVENT CATEGORIES"
+        action={
+          !composing && !editingId ? (
+            <Button size="sm" variant="outline" onClick={() => setComposing(true)}>
+              <Plus className="mr-1.5 h-3 w-3" />
+              New
+            </Button>
+          ) : undefined
+        }
+      />
+      <p className="-mt-1 mb-4 text-[11.5px] text-muted-foreground">
+        Customize how you bucket your plans — Birthdays, Date Night, Travel… whatever fits.
+      </p>
 
       {(composing || editingId) && (
         <Card className="p-3 mb-3 space-y-3">
