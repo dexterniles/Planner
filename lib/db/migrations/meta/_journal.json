@@ -85,6 +85,13 @@
       "when": 1777420800000,
       "tag": "0011_income_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1778544000000,
+      "tag": "0012_drop_movies_recipes",
+      "breakpoints": true
     }
   ]
 }
